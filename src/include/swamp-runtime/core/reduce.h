@@ -15,6 +15,13 @@ typedef const struct swamp_value* (*swamp_c_fn_reducer_work_check)(struct swamp_
                                                                    const struct swamp_value* b,
                                                                    swamp_bool* should_continue);
 
+const struct swamp_value* swamp_foldl_internal_single_fn(struct swamp_allocator* allocator,
+    const struct swamp_value** arguments,
+    int argument_count,
+    swamp_c_fn_reducer_work_check single_check,
+    const char* debug);
+
+
 const struct swamp_value* swamp_reducer_reduce_internal_single_fn(struct swamp_allocator* allocator,
                                                                   const struct swamp_value** arguments,
                                                                   int argument_count,

@@ -3,13 +3,10 @@
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/allocator.h>
-#include <swamp-runtime/core/transduce.h>
 #include <swamp-runtime/log.h>
-#include <swamp-runtime/print.h>
-#include <swamp-runtime/ref_count.h>
 #include <swamp-runtime/swamp.h>
-
 #include <swamp-runtime/core/execute.h>
+
 const swamp_value* swamp_execute_1(swamp_allocator* allocator, const swamp_function* predicate_fn_object, const swamp_value* item)
 {
 	const int verbose_flag = 0;

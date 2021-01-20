@@ -23,6 +23,7 @@ swamp_external_fn swamp_core_find_function(const char* function_name)
 	binding_info info[] = {
 		{"coreListMap", swamp_core_map},
 		{"coreListMap2", swamp_core_map2},
+        {"coreListIndexedMap", swamp_core_indexed_map},
 		{"coreListAny", swamp_core_any},
 		{"coreListFilter", swamp_core_filter},
 		{"coreListFilterMap", swamp_core_filter_map},

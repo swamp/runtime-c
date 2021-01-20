@@ -33,7 +33,7 @@ const struct swamp_value* swamp_transduce_internal(swamp_allocator* allocator, s
 		if (should_add_it) {
 			result_list = swamp_allocator_alloc_list_conj(allocator, result_list, object_to_add);
 		} else {
-			SWAMP_LOG_INFO("we shouldn't add it, ignoring...");
+			//SWAMP_LOG_INFO("we shouldn't add it, ignoring...");
 		}
 		if (!should_continue) {
 			break;

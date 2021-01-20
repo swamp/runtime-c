@@ -10,6 +10,35 @@
 #include <swamp-runtime/ref_count.h>
 #include <swamp-runtime/swamp.h>
 
+
+
+const struct swamp_value* swamp_foldl_internal_single_fn(swamp_allocator* allocator, const swamp_value** arguments,
+    int argument_count, swamp_c_fn_reducer_work_check single_check,
+    const char* debug)
+{
+    if (argument_count < 2) {
+        SWAMP_ERROR("Must have at least one arguments");
+    }
+
+    swamp_function predicate_fn_object = swamp_value_function(arguments[0]);
+    const swamp_value* accumulator = arguments[1];
+    const swamp_list* seq_object = swamp_value_list(arguments[2]);
+
+    const swamp_value* a = accumulator;
+    swamp_bool should_continue;
+
+    SWAMP_LIST_FOR_LOOP(seq_object)
+        const swamp_value* predicate_value = swamp_execute_2(allocator, &predicate_fn_object, value, a);
+        a = single_check(allocator, predicate_value, value, &should_continue);
+        if (!should_continue) {
+            break;
+        }
+    SWAMP_LIST_FOR_LOOP_END()
+
+    return a;
+}
+
+
 const struct swamp_value* swamp_reducer_reduce_internal_single_fn(swamp_allocator* allocator, const swamp_value** arguments,
 																  int argument_count, swamp_c_fn_reducer_work_check single_check,
 																  const char* debug)

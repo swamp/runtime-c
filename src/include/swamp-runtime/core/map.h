@@ -9,6 +9,7 @@
 
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_map);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_map2);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_indexed_map);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_any);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_filter);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_filter_map);

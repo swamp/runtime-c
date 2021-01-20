@@ -26,6 +26,20 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_map)
 	return swamp_transduce_internal_cast(allocator, do_map, swamp_false, arguments, argument_count);
 }
 
+static const swamp_value* do_indexed_map(const struct swamp_value* predicate_value, const struct swamp_value* item,
+    swamp_bool* should_add_it, swamp_bool* should_continue)
+{
+    *should_add_it = swamp_true;
+    *should_continue = swamp_true;
+    return predicate_value;
+}
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_indexed_map)
+{
+    return swamp_transduce_internal_cast(allocator, do_indexed_map, swamp_true, arguments, argument_count);
+}
+
+
 SWAMP_FUNCTION_EXPOSE(swamp_core_map2)
 {
     const struct swamp_function fn = swamp_value_function(arguments[0]);
@@ -258,9 +272,16 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_reduce)
 	return 0;
 }
 
+static const swamp_value* do_foldl(swamp_allocator* allocator, const swamp_value* predicate_value, const swamp_value* item,
+    swamp_bool* should_continue)
+{
+    *should_continue = 1;
+    return predicate_value;
+}
+
 SWAMP_FUNCTION_EXPOSE(swamp_core_foldl)
 {
-	return 0;
+	return swamp_foldl_internal_single_fn(allocator, arguments, argument_count, do_foldl, "foldl");
 }
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_reduce_stop)

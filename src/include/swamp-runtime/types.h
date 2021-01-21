@@ -187,6 +187,8 @@ swamp_bool swamp_boolean_truth(const swamp_boolean* v);
 swamp_bool swamp_blob_is_empty(const swamp_blob* v);
 const swamp_value* swamp_value_just(const swamp_value* v);
 
+int swamp_values_equal(const swamp_value* a, const swamp_value* b);
+
 #define SWAMP_VALUE_IS_ALIVE(v) ((v)->internal.erase_code == 0xc0de)
 
 #define SWAMP_LIST_FOR_LOOP(LIST)                                                                                      \

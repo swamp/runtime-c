@@ -11,10 +11,10 @@
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_maybe_with_default)
 {
-	if (swamp_value_is_just(arguments[1])) {
-		return swamp_value_just(arguments[1]);
-	}
+    if (swamp_value_is_just(arguments[1])) {
+        return swamp_value_just(arguments[1]);
+    }
 
-	INC_REF(arguments[0]);
-	return arguments[0];
+    INC_REF(arguments[0]);
+    return arguments[0];
 }

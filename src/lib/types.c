@@ -56,6 +56,17 @@ swamp_bool swamp_value_is_list(const swamp_value* v)
     return v->internal.type == swamp_type_list;
 }
 
+swamp_bool swamp_list_validate(const swamp_list* list)
+{
+    SWAMP_LIST_FOR_LOOP(list)
+    if (value == 0) {
+        return swamp_false;
+    }
+    SWAMP_LIST_FOR_LOOP_END()
+
+    return swamp_true;
+}
+
 swamp_bool swamp_value_bool(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_boolean) {
@@ -70,6 +81,14 @@ swamp_bool swamp_value_is_int(const swamp_value* v)
 }
 
 swamp_int32 swamp_value_int(const swamp_value* v)
+{
+    if (v->internal.type == swamp_type_integer) {
+        return ((const swamp_int*) v)->value;
+    }
+    SWAMP_ERROR("expected int");
+}
+
+swamp_resource_name_id swamp_value_resource_name(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_integer) {
         return ((const swamp_int*) v)->value;

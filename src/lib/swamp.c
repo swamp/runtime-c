@@ -499,7 +499,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
 
                 if (arg_count != func->parameter_count) {
                     swamp_func_print(func, "parameter count mismatch");
-                    SWAMP_LOG_INFO("ERROR: arg count mismatch %d vs called %d+%d %s", func->parameter_count, arg_count,
+                    SWAMP_LOG_INFO("ERROR: arg count mismatch %zu vs called %d+%d %s", func->parameter_count, arg_count,
                                    func->constant_parameter_count, func->debug_name);
                     return 0;
                 }
@@ -676,8 +676,14 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     return 0;
                 }
                 const swamp_value* item = GET_REGISTER(context, item_register);
+#if SWAMP_CONFIG_DEBUG
+                SWAMP_ASSERT(swamp_list_validate(swamp_list_value), "source list is broken");
+#endif
                 const swamp_list* swamp_new_list_value = swamp_allocator_alloc_list_conj(
                     allocator, (const swamp_list*) swamp_list_value, item);
+#if SWAMP_CONFIG_DEBUG
+                SWAMP_ASSERT(swamp_list_validate(swamp_new_list_value), "new list is broken");
+#endif
                 SET_REGISTER(context, target_register, (const swamp_value*) swamp_new_list_value);
             } break;
 

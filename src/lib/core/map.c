@@ -143,7 +143,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_list_find)
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_list_member)
 {
-    swamp_value* value_to_compare_with = arguments[0];
+    const swamp_value* value_to_compare_with = arguments[0];
     const swamp_list* seq_object = swamp_value_list(arguments[1]);
 
     SWAMP_LIST_FOR_LOOP(seq_object)

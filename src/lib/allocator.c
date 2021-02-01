@@ -258,16 +258,26 @@ const swamp_boolean* swamp_allocator_alloc_boolean_ex(swamp_allocator* self, int
 const swamp_list* swamp_allocator_alloc_list_conj(swamp_allocator* self, const swamp_list* next_list,
                                                   const swamp_value* item)
 {
+    if (item == 0) {
+        SWAMP_ERROR("can not add null item")
+    }
+#if CONFIGURATION_DEBUG
+    if (next_list != 0) {
+        SWAMP_ASSERT(swamp_list_validate(next_list), "next_list is broken")
+    }
+#endif
+
     swamp_list* t = calloc(1, sizeof(swamp_list));
     t->value = item;
     INC_REF(item);
-    t->next = next_list;
-    if (t->next) {
+    if (next_list && next_list->count > 0) {
+        t->next = next_list;
+        INC_REF((swamp_value*) next_list);
         t->count = t->next->count + 1;
     } else {
+        t->next = 0;
         t->count = 1;
     }
-    INC_REF_CHECK_NULL((swamp_value*) next_list);
     setup_internal(&t->internal, swamp_type_list);
 
     return t;

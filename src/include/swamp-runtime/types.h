@@ -21,6 +21,12 @@ typedef int swamp_bool;
     SWAMP_LOG_INFO(__VA_ARGS__);                                                                                       \
     abort();
 
+#define SWAMP_ASSERT(expr, ...)                                                                                        \
+    if (!(expr)) {                                                                                                     \
+        SWAMP_LOG_INFO(__VA_ARGS__);                                                                                   \
+        abort();                                                                                                       \
+    }
+
 /// BASIC INTERNALS
 typedef enum swamp_type {
     swamp_type_integer,
@@ -86,6 +92,7 @@ SWAMP_VALUE_END(swamp_enum)
 
 typedef int32_t swamp_int32;
 typedef int32_t swamp_fixed32;
+typedef uint32_t swamp_resource_name_id;
 
 #define SWAMP_FIXED32_TO_FLOAT(v) (v / (float) SWAMP_FIXED_FACTOR)
 #define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v)->value);
@@ -170,6 +177,7 @@ swamp_bool swamp_value_is_list(const swamp_value* v);
 const swamp_list* swamp_value_list(const swamp_value* v);
 swamp_bool swamp_value_bool(const swamp_value* v);
 swamp_int32 swamp_value_int(const swamp_value* v);
+swamp_resource_name_id swamp_value_resource_name(const swamp_value* v);
 swamp_fixed32 swamp_value_fixed(const swamp_value* v);
 float swamp_value_fixed_to_float(const swamp_value* v);
 swamp_bool swamp_value_is_int(const swamp_value* v);
@@ -186,6 +194,7 @@ const swamp_string* swamp_value_string(const swamp_value* v);
 swamp_bool swamp_boolean_truth(const swamp_boolean* v);
 swamp_bool swamp_blob_is_empty(const swamp_blob* v);
 const swamp_value* swamp_value_just(const swamp_value* v);
+swamp_bool swamp_list_validate(const swamp_list* list);
 
 int swamp_values_equal(const swamp_value* a, const swamp_value* b);
 

@@ -115,7 +115,7 @@ static int swamp_value_equal(const swamp_value* a, const swamp_value* b)
 static const char* g_swamp_opcode_names[] = {
     "nop",       "crs",     "upd",   "get",  "lr",  "conj", "case",         "brfa",  "jump", "call",
     "ret",       "calle",   "tail",  "add",  "sub", "mul",  "div",          "eql",   "ne",   "less",
-    "lessequal", "greater", "gte",   "band", "bor", "bxor", "bnot",         "not",   "n/a",  "n/a",
+    "lessequal", "greater", "gte",   "band", "bor", "bxor", "bnot",         "not",   "bt",   "n/a",
     "n/a",       "n/a",     "curry", "crl",  "lap", "cre",  "stringappend", "fxmul", "fxdiv"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
@@ -816,19 +816,20 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 GET_UNARY_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(~a);
             } break;
-
-            case swamp_opcode_cmp_equal: {
-                uint8_t target_register = *pc++;
-                uint8_t a_register = *pc++;
-                uint8_t b_register = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
-                }
-                const swamp_value* a_item = GET_REGISTER(context, a_register);
-                const swamp_value* b_item = GET_REGISTER(context, b_register);
-                int truth = swamp_value_equal(a_item, b_item);
-                SET_REGISTER_BOOLEAN(context, target_register, truth);
-            } break;
+                /*
+                            case swamp_opcode_cmp_equal: {
+                                uint8_t target_register = *pc++;
+                                uint8_t a_register = *pc++;
+                                uint8_t b_register = *pc++;
+                                if (verbose_flag) {
+                                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
+                                }
+                                const swamp_value* a_item = GET_REGISTER(context, a_register);
+                                const swamp_value* b_item = GET_REGISTER(context, b_register);
+                                int truth = swamp_value_equal(a_item, b_item);
+                                SET_REGISTER_BOOLEAN(context, target_register, truth);
+                            } break;
+                            */
 
             case swamp_opcode_bool_not: {
                 uint8_t target_register = *pc++;

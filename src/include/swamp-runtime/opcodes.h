@@ -34,7 +34,7 @@
 #define swamp_opcode_fixed_mul 0x25
 #define swamp_opcode_fixed_div 0x26
 // -------------------------------------------------------------
-#define swamp_opcode_int_eql 0xe1
+#define swamp_opcode_int_eql 0x11
 #define swamp_opcode_int_neql 0x12
 #define swamp_opcode_int_less 0x13
 #define swamp_opcode_int_lessequal 0x14
@@ -46,7 +46,7 @@
 #define swamp_opcode_int_xor 0x19
 #define swamp_opcode_int_not 0x1a
 // -------------------------------------------------------------
-#define swamp_opcode_cmp_equal 0x11
+//#define swamp_opcode_cmp_equal 0x11
 // -------------------------------------------------------------
 #define swamp_opcode_bool_not 0x1b
 #define swamp_opcode_branch_true 0x1c

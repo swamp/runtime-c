@@ -50,8 +50,6 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_indexed_map)
 
     uint8_t* copy = malloc(blob->octet_count);
 
-    SWAMP_LOG_DEBUG("indexed Map %s", fn->debug_name);
-
     for (size_t i = 0; i < blob->octet_count; ++i) {
         const uint8_t* v = blob->octets[i];
         const swamp_int* indexValue = swamp_allocator_alloc_integer_ex(allocator, i);
@@ -169,7 +167,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_grab_2d)
 
     if (index < 0 || index >= blob->octet_count) {
         SWAMP_LOG_ERROR("position is out of octet count bounds %d %d", index, blob->octet_count);
-        return swamp_allocator_alloc_nothing(allocator);
+        return 0;
     }
 
     const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octets[index]);
@@ -205,12 +203,12 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set_2d)
 
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
-    if (position->x->value < 0 || position->x->value > size->width->value) {
+    if (position->x->value < 0 || position->x->value >= size->width->value) {
         SWAMP_LOG_SOFT_ERROR("position X is out of bounds %d %d", position->x->value, size->width->value);
         return blob;
     }
 
-    if (position->y->value < 0 || position->y->value > size->height->value) {
+    if (position->y->value < 0 || position->y->value >= size->height->value) {
         SWAMP_LOG_SOFT_ERROR("position Y is out of bounds %d %d", position->y->value, size->height->value);
         return blob;
     }

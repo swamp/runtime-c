@@ -6,6 +6,7 @@
 #include <swamp-runtime/core/blob.h>
 #include <swamp-runtime/core/debug.h>
 #include <swamp-runtime/core/int.h>
+#include <swamp-runtime/core/char.h>
 #include <swamp-runtime/core/map.h>
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/core/maybe.h>
@@ -59,6 +60,11 @@ swamp_external_fn swamp_core_find_function(const char* function_name)
 
         {"coreIntToFixed", swamp_core_int_to_fixed},
         {"coreFixedToInt", swamp_core_fixed_to_int},
+
+        {"coreCharOrd", swamp_core_char_to_code},
+        {"coreCharToCode", swamp_core_char_to_code},
+        {"coreCharFromCode", swamp_core_char_from_code},
+
 
         {"coreBlobIsEmpty", swamp_core_blob_is_empty},
         {"coreBlobFromList", swamp_core_blob_from_list},

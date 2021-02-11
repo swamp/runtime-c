@@ -411,6 +411,56 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 pc = jump_to_use;
             } break;
 
+            case swamp_opcode_enum_case_pattern_matching: {
+                /* uint8_t target_register = * */ pc++;
+                uint8_t source_register = *pc++;
+                const swamp_value* source_instance = GET_REGISTER(context, source_register);
+                if (!source_instance) {
+                    SWAMP_LOG_INFO("error nothing at %d", source_register);
+                    return 0;
+                }
+                const swamp_value* source_value = source_instance;
+                uint8_t case_count = *pc++;
+                int found = 0;
+                const uint8_t* jump_to_use = 0;
+                const uint8_t* previous_jump_target_pc = 0;
+                for (uint8_t case_index = 0; case_index < case_count; ++case_index) {
+                    uint8_t literal_register = *pc++;
+                    const swamp_value* literal_value = 0;
+
+                    uint8_t rel_jump_case = *pc++;
+
+                    //SWAMP_LOG_DEBUG("casepm literal register %02X jump %02X", literal_register, rel_jump_case);
+                    if (!previous_jump_target_pc) {
+                        previous_jump_target_pc = pc;
+                    }
+                    previous_jump_target_pc += rel_jump_case;
+                    uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+
+                    // SWAMP_LOG_INFO("...case %02X count:%d rel:%02X jump_addr:%04X", enum_type, arg_count,
+                    // rel_jump_case, absolute_jump_addr);
+                    if (literal_register != 0x00) {
+                        literal_value = GET_REGISTER(context, literal_register);
+                    }
+                    if (literal_register == 0x00 || swamp_value_equal(literal_value, source_value)) {
+                        jump_to_use = previous_jump_target_pc;
+                        uint8_t rest = case_count - case_index - 1;
+                        pc += rest * 2;
+                        found = 1;
+                        //SWAMP_LOG_INFO("jumping %04X skipping %d", absolute_jump_addr, rest);
+                        break;
+                    }
+                }
+                if (!found) {
+                    // ERROR
+                    SWAMP_LOG_INFO("enum error! No case matching 0x%02X. This should "
+                                   "not be "
+                                   "possible.", source_register);
+                    return 0;
+                }
+                pc = jump_to_use;
+            } break;
+
             case swamp_opcode_reg_to_reg: {
                 uint8_t target_register_index = *pc++;
                 uint8_t source_register_index = *pc++;
@@ -503,11 +553,10 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                                    func->constant_parameter_count, func->debug_name);
                     return 0;
                 }
+
                 const size_t reserved_return_register_count = 1;
                 uint8_t source_constant_index;
-                if (verbose_flag) {
-                    swamp_value_print(swamp_func_value, "calling this function");
-                }
+
                 for (uint8_t i = 0; i < func->constant_parameter_count; ++i) {
                     target_register = i + reserved_return_register_count;
                     source_constant_index = i + func->constant_count - func->constant_parameter_count;

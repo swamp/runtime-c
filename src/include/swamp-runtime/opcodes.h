@@ -50,6 +50,7 @@
 // -------------------------------------------------------------
 #define swamp_opcode_bool_not 0x1b
 #define swamp_opcode_branch_true 0x1c
+#define swamp_opcode_enum_case_pattern_matching 0x1d
 #define swamp_opcode_curry 0x20
 #define swamp_opcode_create_list 0x21
 #define swamp_opcode_list_append 0x22

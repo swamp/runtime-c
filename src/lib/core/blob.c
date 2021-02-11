@@ -104,16 +104,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_grab)
     return intValue;
 }
 
-// DONT CHANGE ORDER of fields, must be alphanumerical.
-SWAMP_STRUCT(vec2)
-swamp_int* x;
-swamp_int* y;
-SWAMP_STRUCT_END(vec2)
 
-SWAMP_STRUCT(sz2)
-swamp_int* height;
-swamp_int* width;
-SWAMP_STRUCT_END(sz2)
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_get_2d)
 {

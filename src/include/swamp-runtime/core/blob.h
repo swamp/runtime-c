@@ -7,6 +7,17 @@
 
 #include <swamp-runtime/swamp.h>
 
+// DONT CHANGE ORDER of fields, must be alphanumerical.
+SWAMP_STRUCT(vec2)
+    swamp_int* x;
+    swamp_int* y;
+SWAMP_STRUCT_END(vec2)
+
+SWAMP_STRUCT(sz2)
+    swamp_int* height;
+    swamp_int* width;
+SWAMP_STRUCT_END(sz2)
+
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_is_empty);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_from_list);
 

@@ -21,7 +21,7 @@ typedef struct swamp_context {
 
 } swamp_context;
 
-static void swamp_registers_clear(const swamp_value** registers, size_t count)
+static inline void swamp_registers_clear(const swamp_value** registers, size_t count)
 {
     memset(registers, 0, sizeof(swamp_value*) * count);
 }
@@ -39,7 +39,7 @@ static void swamp_registers_print(const swamp_value** values, size_t count, cons
     }
 }
 
-static void swamp_release_function(swamp_func* f)
+static inline void swamp_release_function(swamp_func* f)
 {
     for (size_t i = 0; i < f->constant_count; ++i) {
         DEC_REF(f->constants[i]);

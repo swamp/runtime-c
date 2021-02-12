@@ -150,7 +150,11 @@ static const char* swamp_opcode_name(uint8_t opcode)
 
 #define GET_REGISTER(context, register) context->registers[register];
 
-#define GET_REGISTER_INT(context, register) ((const swamp_int*) context->registers[register])->value
+#if SWAMP_CONFIG_DEBUG
+    #define GET_REGISTER_INT(context, register) ((const swamp_int*) swamp_value_int(context->registers[register]))
+#else
+    #define GET_REGISTER_INT(context, register) ((const swamp_int*) context->registers[register])->value
+#endif
 
 #define GET_REGISTER_BOOLEAN(context, register) ((const swamp_boolean*) context->registers[register])->truth
 
@@ -343,7 +347,6 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             } break;
 
             case swamp_opcode_enum_case: {
-                /* uint8_t target_register = * */ pc++;
                 uint8_t source_register = *pc++;
                 const swamp_value* source_instance = GET_REGISTER(context, source_register);
                 if (!source_instance) {
@@ -412,7 +415,6 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             } break;
 
             case swamp_opcode_enum_case_pattern_matching: {
-                /* uint8_t target_register = * */ pc++;
                 uint8_t source_register = *pc++;
                 const swamp_value* source_instance = GET_REGISTER(context, source_register);
                 if (!source_instance) {
@@ -865,21 +867,30 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 GET_UNARY_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(~a);
             } break;
-                /*
-                            case swamp_opcode_cmp_equal: {
-                                uint8_t target_register = *pc++;
-                                uint8_t a_register = *pc++;
-                                uint8_t b_register = *pc++;
-                                if (verbose_flag) {
-                                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
-                                }
-                                const swamp_value* a_item = GET_REGISTER(context, a_register);
-                                const swamp_value* b_item = GET_REGISTER(context, b_register);
-                                int truth = swamp_value_equal(a_item, b_item);
-                                SET_REGISTER_BOOLEAN(context, target_register, truth);
-                            } break;
-                            */
-
+            case swamp_opcode_cmp_equal: {
+                uint8_t target_register = *pc++;
+                uint8_t a_register = *pc++;
+                uint8_t b_register = *pc++;
+                if (verbose_flag) {
+                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
+                }
+                const swamp_value* a_item = GET_REGISTER(context, a_register);
+                const swamp_value* b_item = GET_REGISTER(context, b_register);
+                int truth = swamp_value_equal(a_item, b_item);
+                SET_REGISTER_BOOLEAN(context, target_register, truth);
+            } break;
+            case swamp_opcode_cmp_not_equal: {
+                uint8_t target_register = *pc++;
+                uint8_t a_register = *pc++;
+                uint8_t b_register = *pc++;
+                if (verbose_flag) {
+                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
+                }
+                const swamp_value* a_item = GET_REGISTER(context, a_register);
+                const swamp_value* b_item = GET_REGISTER(context, b_register);
+                int truth = swamp_value_equal(a_item, b_item);
+                SET_REGISTER_BOOLEAN(context, target_register, !truth);
+            } break;
             case swamp_opcode_bool_not: {
                 uint8_t target_register = *pc++;
                 uint8_t source_register = *pc++;

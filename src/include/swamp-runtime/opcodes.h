@@ -46,11 +46,11 @@
 #define swamp_opcode_int_xor 0x19
 #define swamp_opcode_int_not 0x1a
 // -------------------------------------------------------------
-//#define swamp_opcode_cmp_equal 0x11
-// -------------------------------------------------------------
 #define swamp_opcode_bool_not 0x1b
 #define swamp_opcode_branch_true 0x1c
 #define swamp_opcode_enum_case_pattern_matching 0x1d
+#define swamp_opcode_cmp_equal 0x1e
+#define swamp_opcode_cmp_not_equal 0x1f
 #define swamp_opcode_curry 0x20
 #define swamp_opcode_create_list 0x21
 #define swamp_opcode_list_append 0x22

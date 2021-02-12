@@ -88,6 +88,15 @@ swamp_int32 swamp_value_int(const swamp_value* v)
     SWAMP_ERROR("expected int");
 }
 
+swamp_int* swamp_value_int_value(const swamp_value* v)
+{
+    if (v->internal.type == swamp_type_integer) {
+        return ((const swamp_int*) v);
+    }
+    SWAMP_ERROR("expected int value");
+}
+
+
 swamp_resource_name_id swamp_value_resource_name(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_integer) {

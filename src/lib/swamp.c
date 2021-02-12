@@ -172,9 +172,6 @@ static const char* swamp_opcode_name(uint8_t opcode)
 // -------------------------------------------------------------
 // Stack
 // -------------------------------------------------------------
-#define STACK_PUSH() ;
-
-#define STACK_POP() ;
 
 typedef struct swamp_call_stack_entry {
     const uint8_t* pc;
@@ -205,9 +202,6 @@ static void swamp_call_stack_entry_print(const swamp_call_stack_entry* entry)
     uint8_t target_register = *pc++;                                                                                   \
     uint8_t a_register = *pc++;                                                                                        \
     uint8_t b_register = *pc++;                                                                                        \
-    if (verbose_flag) {                                                                                                \
-        SWAMP_LOG_INFO("target:%02x a:%02x b:%02x", target_register, a_register, b_register);                          \
-    }                                                                                                                  \
     int32_t a = GET_REGISTER_INT(context, a_register);                                                                 \
     int32_t b = GET_REGISTER_INT(context, b_register);
 
@@ -284,11 +278,13 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
     }
 
     while (1) {
+#if SWAMP_CONFIG_DEBUG
         if (verbose_flag) {
             uint16_t addr = pc - call_stack_entry->pc;
             SWAMP_LOG_INFO("--- %04X  %s 0x%02x", addr, swamp_opcode_name(*pc), *pc);
             swamp_registers_print(context->registers, 14, "opcode");
         }
+#endif
         switch (*pc++) {
             case swamp_opcode_create_struct: {
                 uint8_t target_register = *pc++;
@@ -323,25 +319,23 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t target_register = *pc++;
                 uint8_t source_register = *pc++;
                 uint8_t drill_count = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("target:%d source:%d drill:%d", target_register, source_register, drill_count);
-                }
                 const swamp_value* source_instance = GET_REGISTER(context, source_register);
                 if (source_instance == 0) {
                     SWAMP_ERROR("couldn't lookup")
                 }
                 for (uint8_t i = 0; i < drill_count; ++i) {
                     uint8_t field_index = *pc++;
-                    if (verbose_flag) {
-                        SWAMP_LOG_INFO(" get index:%d", field_index);
-                    }
-                    if (!swamp_value_is_struct(source_instance)) {
+#if SWAMP_CONFIG_DEBUG
+                if (!swamp_value_is_struct(source_instance)) {
                         SWAMP_LOG_ERROR("can not get, source is not a struct");
                     }
+#endif
                     source_instance = GET_FIELD(source_instance, field_index);
+#if SWAMP_CONFIG_DEBUG
                     if (source_instance == 0) {
                         SWAMP_ERROR("couldn't lookup")
                     }
+#endif
                 }
                 SET_REGISTER(context, target_register, source_instance);
             } break;
@@ -349,15 +343,18 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             case swamp_opcode_enum_case: {
                 uint8_t source_register = *pc++;
                 const swamp_value* source_instance = GET_REGISTER(context, source_register);
+#if SWAMP_CONFIG_DEBUG
                 if (!source_instance) {
                     SWAMP_LOG_INFO("error nothing at %d", source_register);
                     return 0;
                 }
+
                 if (source_instance->internal.type != swamp_type_enum) {
                     // ERROR
                     SWAMP_LOG_INFO("error. Not enum type");
                     return 0;
                 }
+#endif
                 const swamp_enum* enum_info = (swamp_enum*) source_instance;
                 uint8_t case_count = *pc++;
                 const uint8_t* jump_to_use = 0;
@@ -380,12 +377,9 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     previous_jump_target_pc += rel_jump_case;
                     uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
 
-                    // SWAMP_LOG_INFO("...case %02X count:%d rel:%02X jump_addr:%04X", enum_type, arg_count,
-                    // rel_jump_case, absolute_jump_addr);
                     if (!found) {
                         if (enum_type == enum_info->enum_type || enum_type == 0xff) {
                             jump_to_use = previous_jump_target_pc;
-                            // SWAMP_LOG_INFO("jumping %04X", absolute_jump_addr);
                             found_argument_count = arg_count;
                             for (uint8_t arg_index = 0; arg_index < arg_count; ++arg_index) {
                                 found_argument_registers[arg_index] = args[arg_index];
@@ -395,6 +389,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                         }
                     }
                 }
+#if SWAMP_CONFIG_DEBUG
                 if (!found) {
                     // ERROR
                     SWAMP_LOG_INFO("enum error! No case matching 0x%02X. This should "
@@ -407,6 +402,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     SWAMP_LOG_INFO("Wrong number of arguments provided");
                     return 0;
                 }
+#endif
                 for (uint8_t arg_index = 0; arg_index < found_argument_count; ++arg_index) {
                     const swamp_value* real_value = enum_info->fields[arg_index];
                     SET_REGISTER(context, found_argument_registers[arg_index], real_value);
@@ -417,10 +413,12 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             case swamp_opcode_enum_case_pattern_matching: {
                 uint8_t source_register = *pc++;
                 const swamp_value* source_instance = GET_REGISTER(context, source_register);
+#if SWAMP_CONFIG_DEBUG
                 if (!source_instance) {
                     SWAMP_LOG_INFO("error nothing at %d", source_register);
                     return 0;
                 }
+#endif
                 const swamp_value* source_value = source_instance;
                 uint8_t case_count = *pc++;
                 int found = 0;
@@ -432,15 +430,12 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
 
                     uint8_t rel_jump_case = *pc++;
 
-                    //SWAMP_LOG_DEBUG("casepm literal register %02X jump %02X", literal_register, rel_jump_case);
                     if (!previous_jump_target_pc) {
                         previous_jump_target_pc = pc;
                     }
                     previous_jump_target_pc += rel_jump_case;
                     uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
 
-                    // SWAMP_LOG_INFO("...case %02X count:%d rel:%02X jump_addr:%04X", enum_type, arg_count,
-                    // rel_jump_case, absolute_jump_addr);
                     if (literal_register != 0x00) {
                         literal_value = GET_REGISTER(context, literal_register);
                     }
@@ -449,10 +444,10 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                         uint8_t rest = case_count - case_index - 1;
                         pc += rest * 2;
                         found = 1;
-                        //SWAMP_LOG_INFO("jumping %04X skipping %d", absolute_jump_addr, rest);
                         break;
                     }
                 }
+#if SWAMP_CONFIG_DEBUG
                 if (!found) {
                     // ERROR
                     SWAMP_LOG_INFO("enum error! No case matching 0x%02X. This should "
@@ -460,15 +455,13 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                                    "possible.", source_register);
                     return 0;
                 }
+#endif
                 pc = jump_to_use;
             } break;
 
             case swamp_opcode_reg_to_reg: {
                 uint8_t target_register_index = *pc++;
                 uint8_t source_register_index = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("%02X <= %02X", target_register_index, source_register_index);
-                }
                 SET_REGISTER(context, target_register_index, context->registers[source_register_index]);
             } break;
 
@@ -488,21 +481,10 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t arg_count = *pc++;
                 const swamp_value* curry_args[32];
 
-                if (verbose_flag) {
-                    swamp_registers_print(context->registers, 7, "before curry");
-                }
                 for (uint8_t i = 0; i < arg_count; ++i) {
                     uint8_t copy_from_reg = *pc++;
                     const swamp_value* arg_value = GET_REGISTER(context, copy_from_reg);
                     curry_args[i] = arg_value;
-                    if (verbose_flag) {
-                        SWAMP_LOG_INFO(" curry: copy prepare to curry %d <= %d", i + 1, copy_from_reg);
-                    }
-                }
-
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("target:%02x function:%02x", target_register, function_from_register);
-                    swamp_registers_print(context->registers, 7, "curry registers set");
                 }
 
                 const swamp_value* swamp_func_value = GET_REGISTER(context, function_from_register);
@@ -515,27 +497,25 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t target_register = *pc++;
                 uint8_t function_from_register = *pc++;
 
-                if (verbose_flag) {
-                    swamp_registers_print(context->registers, 24, "call");
-                    SWAMP_LOG_INFO("target:%02x function:%02x", target_register, function_from_register);
-                }
-
                 const swamp_value* swamp_func_value = GET_REGISTER(context, function_from_register);
                 const swamp_func* func = swamp_value_func(swamp_func_value);
                 const swamp_context* old_context = context;
 
                 swamp_call_stack_entry* old_entry = &stack->entries[stack->count];
+#if SWAMP_CONFIG_DEBUG
                 if (stack->count >= 31) {
                     SWAMP_LOG_ERROR("stack push overrun %zu", stack->count);
                 }
+#endif
 
                 call_stack_entry = &stack->entries[++stack->count];
                 call_stack_entry->func = func;
                 call_stack_entry->pc = func->opcodes;
                 call_stack_entry->return_register = target_register;
                 context = &call_stack_entry->context;
-                uint8_t arg_count = *pc++;
 
+#if SWAMP_CONFIG_DEBUG
+                uint8_t arg_count = *pc++;
                 if (verbose_flag) {
                     SWAMP_LOG_INFO(" **** call '%s' expected parameter_count:%zu actual parameter_count:%zu "
                                    "expected constant_count:%zu",
@@ -556,6 +536,9 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     return 0;
                 }
 
+#else
+                pc++;
+#endif
                 const size_t reserved_return_register_count = 1;
                 uint8_t source_constant_index;
 
@@ -568,18 +551,12 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
 
                 for (uint8_t i = 0; i < func->parameter_count; ++i) {
                     uint8_t copy_from_reg = *pc++;
-                    if (verbose_flag) {
-                        SWAMP_LOG_INFO(" copy prepare to call %d <= %d", i + 1, copy_from_reg);
-                    }
                     SET_EMPTY_REGISTER(context, i + reserved_return_register_count + func->constant_parameter_count,
                                        old_context->registers[copy_from_reg]);
                 }
                 for (uint8_t i = 0; i < func->constant_count - func->constant_parameter_count; ++i) {
                     uint8_t target_index = i + func->total_register_count_used + reserved_return_register_count;
                     SET_EMPTY_REGISTER(context, target_index, func->constants[i]);
-                }
-                if (verbose_flag) {
-                    swamp_registers_print(context->registers, 12, "call done");
                 }
                 old_entry->pc = pc;
                 pc = func->opcodes;
@@ -591,13 +568,11 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 INC_REF(return_value);
                 size_t total = call_stack_entry->func->total_register_and_constant_count_used +
                                reserved_return_register_count;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("clearing %zu registers", total);
-                }
+#if SWAMP_CONFIG_DEBUG
                 if (total > MAX_REGISTER_COUNT_IN_CONTEXT) {
                     SWAMP_ERROR("Illegal total %zu", total);
                 }
-
+#endif
                 swamp_registers_release(context->registers, total);
                 if (stack->count == 0) {
                     return return_value;
@@ -615,11 +590,12 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t destination_register = *pc++;
                 uint8_t function_from_register = *pc++;
                 uint8_t field_count = *pc++;
-                // swamp_registers_print(context->registers, 8);
+
                 const swamp_value* arguments[8];
 
                 const swamp_value* swamp_func_value = GET_REGISTER(context, function_from_register);
                 const swamp_external_func* func = (swamp_external_func*) swamp_func_value;
+#if SWAMP_CONFIG_DEBUG
                 if (verbose_flag) {
                     SWAMP_LOG_INFO("call external '%s' function_reg:%d destination:%d "
                                    "arg_count:%d",
@@ -631,16 +607,13 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                                    func->debug_name);
                     return 0;
                 }
-
+#endif
                 for (uint8_t i = 0; i < field_count; ++i) {
                     uint8_t copy_from_reg = *pc++;
                     arguments[i] = context->registers[copy_from_reg];
                 }
 
                 const swamp_value* return_value = func->fn(allocator, arguments, field_count);
-                if (verbose_flag) {
-                    swamp_value_print(return_value, "returned");
-                }
                 SET_REGISTER(context, destination_register, return_value);
                 DEC_REF(return_value);
             } break;
@@ -675,13 +648,13 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t list_to_append = *pc++;
 
                 const swamp_value* swamp_list_value = GET_REGISTER(context, list_from_register);
+
+#if SWAMP_CONFIG_DEBUG
                 if (swamp_list_value->internal.type != swamp_type_list) {
-                    // ERROR
-
-                    SWAMP_LOG_INFO("error!! append");
-
+                    SWAMP_LOG_ERROR("error!! append");
                     return 0;
                 }
+#endif
                 const swamp_value* list_to_append_value = GET_REGISTER(context, list_to_append);
                 const swamp_list* swamp_new_list_value = swamp_allocator_alloc_list_append(
                     allocator, (const swamp_list*) swamp_list_value, (const swamp_list*) list_to_append_value);
@@ -693,25 +666,25 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t string_to_append = *pc++;
 
                 const swamp_value* swamp_string_value = GET_REGISTER(context, string_from_register);
+
+#if SWAMP_CONFIG_DEBUG
                 if (swamp_string_value->internal.type != swamp_type_string) {
-                    // ERROR
-
-                    SWAMP_LOG_INFO("error!! append string");
+                    SWAMP_LOG_ERROR("error!! append string");
 
                     return 0;
                 }
+#endif
                 const swamp_value* string_to_append_value = GET_REGISTER(context, string_to_append);
+#if SWAMP_CONFIG_DEBUG
                 if (string_to_append_value->internal.type != swamp_type_string) {
-                    // ERROR
-
-                    SWAMP_LOG_INFO("error!! append string2");
+                    SWAMP_LOG_ERROR("error!! append string2");
 
                     return 0;
                 }
+#endif
                 static char buf[512];
                 strncpy(buf, ((const swamp_string*) swamp_string_value)->characters, 512);
                 strncat(buf, ((const swamp_string*) string_to_append_value)->characters, 512);
-                // printf("string append: '%s'\n", buf);
                 const swamp_value* swamp_new_string = swamp_allocator_alloc_string(allocator, buf);
                 SET_REGISTER(context, target_register, swamp_new_string);
             } break;
@@ -721,11 +694,13 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t item_register = *pc++;
 
                 const swamp_value* swamp_list_value = GET_REGISTER(context, list_from_register);
+#if SWAMP_CONFIG_DEBUG
                 if (swamp_list_value->internal.type != swamp_type_list) {
                     // ERROR
                     SWAMP_LOG_INFO("error!! conj");
                     return 0;
                 }
+#endif
                 const swamp_value* item = GET_REGISTER(context, item_register);
 #if SWAMP_CONFIG_DEBUG
                 SWAMP_ASSERT(swamp_list_validate(swamp_list_value), "source list is broken");
@@ -746,10 +721,8 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             case swamp_opcode_branch_false: {
                 uint8_t source_register = *pc++;
                 uint8_t jump = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("brfa %02x %02x", source_register, jump);
-                }
                 const swamp_value* item = GET_REGISTER(context, source_register);
+#if SWAMP_CONFIG_DEBUG
                 if (item == 0) {
                     swamp_registers_print(context->registers, 8, "branch false");
                     SWAMP_LOG_INFO("error: register %02X is null!", source_register);
@@ -760,7 +733,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     SWAMP_LOG_INFO("bool error");
                     return 0;
                 }
-
+#endif
                 const swamp_boolean* b = (const swamp_boolean*) item;
                 if (!b->truth) {
                     pc += jump;
@@ -769,10 +742,8 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             case swamp_opcode_branch_true: {
                 uint8_t source_register = *pc++;
                 uint8_t jump = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("brfa %02x %02x", source_register, jump);
-                }
                 const swamp_value* item = GET_REGISTER(context, source_register);
+#if SWAMP_CONFIG_DEBUG
                 if (item == 0) {
                     swamp_registers_print(context->registers, 8, "branch false");
                     SWAMP_LOG_INFO("error: register %02X is null!", source_register);
@@ -783,7 +754,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     SWAMP_LOG_INFO("bool error");
                     return 0;
                 }
-
+#endif
                 const swamp_boolean* b = (const swamp_boolean*) item;
                 if (b->truth) {
                     pc += jump;
@@ -871,9 +842,6 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t target_register = *pc++;
                 uint8_t a_register = *pc++;
                 uint8_t b_register = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
-                }
                 const swamp_value* a_item = GET_REGISTER(context, a_register);
                 const swamp_value* b_item = GET_REGISTER(context, b_register);
                 int truth = swamp_value_equal(a_item, b_item);
@@ -883,9 +851,6 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 uint8_t target_register = *pc++;
                 uint8_t a_register = *pc++;
                 uint8_t b_register = *pc++;
-                if (verbose_flag) {
-                    SWAMP_LOG_INFO("cmp_eq %02x %02x %02x", target_register, a_register, b_register);
-                }
                 const swamp_value* a_item = GET_REGISTER(context, a_register);
                 const swamp_value* b_item = GET_REGISTER(context, b_register);
                 int truth = swamp_value_equal(a_item, b_item);

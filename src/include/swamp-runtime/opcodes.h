@@ -31,9 +31,6 @@
 #define swamp_opcode_int_mul 0x0f
 #define swamp_opcode_int_div 0x10
 // -------------------------------------------------------------
-#define swamp_opcode_fixed_mul 0x25
-#define swamp_opcode_fixed_div 0x26
-// -------------------------------------------------------------
 #define swamp_opcode_int_eql 0x11
 #define swamp_opcode_int_neql 0x12
 #define swamp_opcode_int_less 0x13
@@ -54,8 +51,12 @@
 #define swamp_opcode_curry 0x20
 #define swamp_opcode_create_list 0x21
 #define swamp_opcode_list_append 0x22
-#define swamp_opcode_string_append 0x24
 #define swamp_opcode_create_enum 0x23
+#define swamp_opcode_string_append 0x24
+// -------------------------------------------------------------
+#define swamp_opcode_fixed_mul 0x25
+#define swamp_opcode_fixed_div 0x26
+#define swamp_opcode_int_negate 0x27
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------

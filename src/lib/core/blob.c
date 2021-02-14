@@ -169,14 +169,15 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_grab_2d)
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set)
 {
     const swamp_int* indexValue = swamp_value_int(arguments[0]);
-    const swamp_int* newValue = swamp_value_int(arguments[1]);
+    const swamp_int32 newValue = swamp_value_int(arguments[1]);
     const swamp_blob* blob = swamp_value_blob(arguments[2]);
     int index = indexValue->value;
     if (index < 0 || index >= blob->octet_count) {
         return blob;
     }
     uint8_t* copy = malloc(blob->octet_count);
-    copy[index] = newValue->value;
+    memcpy(copy, blob->octets, blob->octet_count);
+    copy[index] = newValue;
 
     const swamp_blob* blobCopy = swamp_allocator_alloc_blob_ex(allocator, copy, blob->octet_count, 0);
 
@@ -189,7 +190,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set_2d)
 {
     const vec2* position = SWAMP_VALUE_CAST(vec2, arguments[0]);
     const sz2* size = SWAMP_VALUE_CAST(sz2, arguments[1]);
-    const swamp_int* newValue = swamp_value_int(arguments[2]);
+    swamp_int32 newValue = swamp_value_int(arguments[2]);
     const swamp_blob* blob = swamp_value_blob(arguments[3]);
 
     // These checks are not really needed. You can just check the index, but this
@@ -212,7 +213,8 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set_2d)
     }
 
     uint8_t* copy = malloc(blob->octet_count);
-    copy[index] = newValue->value;
+    memcpy(copy, blob->octets, blob->octet_count);
+    copy[index] = newValue;
 
     const swamp_blob* blobCopy = swamp_allocator_alloc_blob_ex(allocator, copy, blob->octet_count, 0);
 

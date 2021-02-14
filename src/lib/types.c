@@ -86,6 +86,7 @@ swamp_int32 swamp_value_int(const swamp_value* v)
         return ((const swamp_int*) v)->value;
     }
     SWAMP_ERROR("expected int");
+    return INT32_MIN;
 }
 
 swamp_int* swamp_value_int_value(const swamp_value* v)

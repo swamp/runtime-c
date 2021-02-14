@@ -862,6 +862,10 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                 int truth = GET_REGISTER_BOOLEAN(context, source_register);
                 SET_REGISTER_BOOLEAN(context, target_register, !truth);
             } break;
+            case swamp_opcode_int_negate: {
+                GET_UNARY_OPERATOR_INT();
+                SET_OPERATOR_RESULT_INT(-a);
+            } break;
             default:
                 SWAMP_LOG_INFO("Unknown opcode: %02x", *(pc - 1));
                 return 0;

@@ -173,7 +173,8 @@ const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const
     swamp_list* mutable_last = 0;
     const swamp_list* next_list = 0;
     const swamp_list* created_list = 0;
-    const swamp_list* first_new_list = 0;
+    const swamp_list* first_item_in_list = 0;
+
     if (a->count == 0) {
         INC_REF(b);
         return b;
@@ -184,20 +185,21 @@ const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const
         return a;
     }
 
+
     SWAMP_LIST_FOR_LOOP(a)
     created_list = swamp_allocator_alloc_list_conj(self, next_list, value);
-    if (!mutable_last) {
-        first_new_list = created_list;
-    } else {
-        mutable_last->next = created_list;
+    if (!first_item_in_list) {
+        first_item_in_list = created_list;
     }
-    mutable_last = (swamp_list*) created_list;
+    next_list = created_list;
     SWAMP_LIST_FOR_LOOP_END()
 
-    ((swamp_list*) created_list)->next = b;
+    ((swamp_list*) first_item_in_list)->next = b;
     INC_REF(b);
 
-    return first_new_list;
+    ((swamp_list*)next_list)->count += b->count;
+
+    return next_list;
 }
 
 const swamp_value* swamp_allocator_alloc_enum(swamp_allocator* self, uint8_t enum_type, size_t field_count)
@@ -279,7 +281,9 @@ const swamp_list* swamp_allocator_alloc_list_conj(swamp_allocator* self, const s
         t->count = 1;
     }
     setup_internal(&t->internal, swamp_type_list);
-
+#if CONFIGURATION_DEBUG
+    SWAMP_ASSERT(swamp_list_validate(t), "next_list is broken")
+#endif
     return t;
 }
 

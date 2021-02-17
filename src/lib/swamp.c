@@ -48,13 +48,17 @@ static inline void swamp_release_function(swamp_func* f)
 
 void swamp_allocator_free(const swamp_value* v)
 {
-    // swamp_value_print(v, "destroying");
+    //swamp_value_print(v, "destroying");
     if (v->internal.type == swamp_type_function) {
         swamp_release_function((swamp_func*) v);
     }
 
     if (v->internal.type == swamp_type_blob) {
         free((void*) (((swamp_blob*) v)->octets));
+    }
+
+    if (v->internal.type == swamp_type_list) {
+        DEC_REF_CHECK_NULL(((swamp_list*)v)->next);
     }
 
     free((void*) v);

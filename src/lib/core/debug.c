@@ -50,7 +50,7 @@ static int toString(const swamp_value* v, char* buf, size_t maxCount)
                     strcat(buf, ", ");
                 }
                 toString(value, temp, 2048);
-                strcat(buf, temp);
+                strncat(buf, temp, 2048);
                 index++;
             SWAMP_LIST_FOR_LOOP_END()
             strcat(buf, "]");

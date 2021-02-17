@@ -16,6 +16,9 @@ const struct swamp_value* swamp_transduce_internal(swamp_allocator* allocator, s
     const swamp_list* result_list = 0;
     int index = 0;
 
+    const swamp_list* tempItems[512];
+    size_t itemCount = 0;
+
     while (iterator) {
         const swamp_value* item = iterator->value;
         const struct swamp_value* predicate_value;
@@ -31,7 +34,7 @@ const struct swamp_value* swamp_transduce_internal(swamp_allocator* allocator, s
         swamp_bool should_continue;
         const swamp_value* object_to_add = stepper(predicate_value, item, &should_add_it, &should_continue);
         if (should_add_it) {
-            result_list = swamp_allocator_alloc_list_conj(allocator, result_list, object_to_add);
+            result_list = tempItems[itemCount++] = object_to_add;
         } else {
             // SWAMP_LOG_INFO("we shouldn't add it, ignoring...");
         }
@@ -40,9 +43,12 @@ const struct swamp_value* swamp_transduce_internal(swamp_allocator* allocator, s
         }
         iterator = iterator->next;
     }
-    swamp_list_finalize(result_list);
 
-    return (const swamp_value*) result_list;
+    if (itemCount == 0) {
+        return swamp_allocator_alloc_list_empty(allocator);
+    }
+
+    return swamp_allocator_alloc_list_create(allocator, tempItems, itemCount);
 }
 
 const struct swamp_value* swamp_transduce_internal_cast(struct swamp_allocator* allocator,

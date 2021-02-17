@@ -31,6 +31,8 @@ const swamp_blob* swamp_allocator_alloc_blob_ex(swamp_allocator* self, const uin
 const swamp_list* swamp_allocator_alloc_list_empty(swamp_allocator* self);
 const swamp_list* swamp_allocator_alloc_list_create(swamp_allocator* self, const swamp_value** registers,
                                                     size_t field_count);
+const swamp_list* swamp_allocator_alloc_list_create_and_transfer(swamp_allocator* self, const swamp_value** constant_parameters,
+    size_t constant_parameter_count);
 const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const swamp_list* target,
                                                     const swamp_list* source);
 const swamp_value* swamp_allocator_alloc_enum(swamp_allocator* self, uint8_t enum_type, size_t field_count);

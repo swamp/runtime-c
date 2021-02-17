@@ -168,6 +168,23 @@ const swamp_list* swamp_allocator_alloc_list_create(swamp_allocator* self, const
     return head;
 }
 
+const swamp_list* swamp_allocator_alloc_list_create_and_transfer(swamp_allocator* self, const swamp_value** constant_parameters,
+    size_t constant_parameter_count)
+{
+    const swamp_list* head = 0;
+    if (constant_parameter_count == 0) {
+        return swamp_allocator_alloc_list_empty(self);
+    }
+
+    for (size_t i = 0; i < constant_parameter_count; ++i) {
+        const swamp_value* item = constant_parameters[(constant_parameter_count - 1) - i];
+        head = swamp_allocator_alloc_list_conj(self, head, item);
+        DEC_REF(item);
+    }
+
+    return head;
+}
+
 const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const swamp_list* a, const swamp_list* b)
 {
     swamp_list* mutable_last = 0;

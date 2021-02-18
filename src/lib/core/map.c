@@ -168,6 +168,72 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_filter)
     return swamp_transduce_internal_cast(allocator, do_filter, swamp_false, arguments, argument_count);
 }
 
+SWAMP_FUNCTION_EXPOSE(swamp_core_filter_2)
+{
+    const struct swamp_function boolFn = swamp_value_function(arguments[0]);
+    const swamp_list* sequenceA = swamp_value_list(arguments[1]);
+    const swamp_list* sequenceB = swamp_value_list(arguments[2]);
+
+    const swamp_value* values[1024];
+    int resultIndex = 0;
+
+    size_t minCount = sequenceA->count < sequenceB ? sequenceA->count : sequenceB->count;
+
+    const swamp_list* firstIterator = swamp_list_first(sequenceA);
+    const swamp_list* secondIterator = swamp_list_first(sequenceB);
+
+    for (int i = 0; i < minCount; i++) {
+        const swamp_value* firstValue = firstIterator->value;
+        const swamp_value* secondValue = secondIterator->value;
+
+        const swamp_value* truth = swamp_execute_2(allocator, &boolFn, firstValue, secondValue);
+        if (swamp_value_bool(truth)) {
+            values[resultIndex++] = secondValue;
+        }
+
+        firstIterator = firstIterator->next;
+        secondIterator = secondIterator->next;
+    }
+
+    const swamp_list* resultList = swamp_allocator_alloc_list_create(allocator, values, resultIndex);
+
+    return (const swamp_value*) resultList;
+}
+
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_remove_2)
+{
+    const struct swamp_function boolFn = swamp_value_function(arguments[0]);
+    const swamp_list* sequenceA = swamp_value_list(arguments[1]);
+    const swamp_list* sequenceB = swamp_value_list(arguments[2]);
+
+    const swamp_value* values[1024];
+    int resultIndex = 0;
+
+    size_t minCount = sequenceA->count < sequenceB ? sequenceA->count : sequenceB->count;
+
+    const swamp_list* firstIterator = swamp_list_first(sequenceA);
+    const swamp_list* secondIterator = swamp_list_first(sequenceB);
+
+    for (int i = 0; i < minCount; i++) {
+        const swamp_value* firstValue = firstIterator->value;
+        const swamp_value* secondValue = secondIterator->value;
+
+        const swamp_value* truth = swamp_execute_2(allocator, &boolFn, firstValue, secondValue);
+        if (!swamp_value_bool(truth)) {
+            values[resultIndex++] = secondValue;
+        }
+
+        firstIterator = firstIterator->next;
+        secondIterator = secondIterator->next;
+    }
+
+    const swamp_list* resultList = swamp_allocator_alloc_list_create(allocator, values, resultIndex);
+
+    return (const swamp_value*) resultList;
+}
+
+
 SWAMP_FUNCTION_EXPOSE(swamp_core_filter_map)
 {
     const struct swamp_function maybeFn = swamp_value_function(arguments[0]);
@@ -187,6 +253,39 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_filter_map)
 
     return (const swamp_value*) resultList;
 }
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_filter_map_2)
+{
+    const struct swamp_function maybeFn = swamp_value_function(arguments[0]);
+    const swamp_list* sequenceA = swamp_value_list(arguments[1]);
+    const swamp_list* sequenceB = swamp_value_list(arguments[2]);
+
+    const swamp_value* values[1024];
+    int resultIndex = 0;
+
+    size_t minCount = sequenceA->count < sequenceB ? sequenceA->count : sequenceB->count;
+
+    const swamp_list* firstIterator = swamp_list_first(sequenceA);
+    const swamp_list* secondIterator = swamp_list_first(sequenceB);
+
+    for (int i = 0; i < minCount; i++) {
+        const swamp_value* firstValue = firstIterator->value;
+        const swamp_value* secondValue = secondIterator->value;
+
+        const swamp_value* maybeResult = swamp_execute_2(allocator, &maybeFn, firstValue, secondValue);
+        if (swamp_value_is_just(maybeResult)) {
+            values[resultIndex++] = swamp_value_just(maybeResult);
+        }
+
+        firstIterator = firstIterator->next;
+        secondIterator = secondIterator->next;
+    }
+
+    const swamp_list* resultList = swamp_allocator_alloc_list_create(allocator, values, resultIndex);
+
+    return (const swamp_value*) resultList;
+}
+
 
 static const swamp_value* do_remove(const struct swamp_value* predicate_value, const struct swamp_value* item,
                                     swamp_bool* should_add_it, swamp_bool* should_continue)

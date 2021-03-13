@@ -32,5 +32,10 @@ SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_head);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_reduce);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_foldl);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_reduce_stop);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_list_unzip);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_tuple_first);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_tuple_second);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_tuple_third);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_tuple_fourth);
 
 #endif

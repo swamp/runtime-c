@@ -45,6 +45,12 @@ swamp_external_fn swamp_core_find_function(const char* function_name)
         {"coreListReduce", swamp_core_reduce},
         {"coreListFoldl", swamp_core_foldl},
         {"coreListFoldlStop", swamp_core_reduce_stop},
+        {"coreListUnzip", swamp_core_list_unzip},
+
+        {"coreTupleFirst", swamp_core_tuple_first},
+        {"coreTupleSecond", swamp_core_tuple_second},
+        {"coreTupleThird", swamp_core_tuple_third},
+        {"coreTupleFourth", swamp_core_tuple_fourth},
 
         {"coreArrayFromList", swamp_core_array_from_list},
         {"coreArrayGet", swamp_core_array_get},

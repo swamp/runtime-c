@@ -10,6 +10,7 @@
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/print.h>
 #include <swamp-runtime/swamp.h>
+#include <swamp-runtime/ref_count.h>
 
 // TODO: List.repeat, List.range, List.indexedMap
 
@@ -421,4 +422,98 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_foldl)
 SWAMP_FUNCTION_EXPOSE(swamp_core_reduce_stop)
 {
     return swamp_reducer_reduce_internal_stop_single_fn(allocator, arguments, argument_count, "swamp_core_reduce_stop");
+}
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_list_unzip)
+{
+    const swamp_list* seq_object = swamp_value_list(arguments[0]);
+
+    size_t count = seq_object->count;
+    const swamp_value** a_items = malloc(sizeof(const swamp_value*) * count);
+    const swamp_value** b_items = malloc(sizeof(const swamp_value*) * count);
+
+    int index = 0;
+    SWAMP_LIST_FOR_LOOP(seq_object)
+        const swamp_struct* tuple = swamp_value_struct(value);
+        if (tuple->info.field_count != 2) {
+            SWAMP_ERROR("can only have two fields in a tuple when unzipping");
+            return 0;
+        }
+        a_items[index] = tuple->fields[0];
+        b_items[index] = tuple->fields[1];
+        index++;
+    SWAMP_LIST_FOR_LOOP_END()
+
+    const swamp_list* a_list = swamp_allocator_alloc_list_create_and_transfer(allocator, a_items, count);
+    free(a_items);
+    const swamp_list* b_list = swamp_allocator_alloc_list_create_and_transfer(allocator, a_items, count);
+    free(b_items);
+
+    const swamp_value* tuple_values[2] = {a_list, b_list};
+    const swamp_struct* tuple = swamp_allocator_alloc_struct_create(allocator, tuple_values, 2);
+
+    return tuple;
+}
+
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_tuple_first)
+{
+    const swamp_struct* tuple = swamp_value_struct(arguments[0]);
+    if (tuple->info.field_count < 2) {
+        SWAMP_ERROR("must have at least two fields in a tuple when using first");
+        return 0;
+    }
+
+    const swamp_value* v = tuple->fields[0];
+
+    INC_REF(v);
+
+    return v;
+}
+
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_tuple_second)
+{
+    const swamp_struct* tuple = swamp_value_struct(arguments[0]);
+    if (tuple->info.field_count < 2) {
+        SWAMP_ERROR("must have at least two fields in a tuple when using first");
+        return 0;
+    }
+
+    const swamp_value* v = tuple->fields[1];
+
+    INC_REF(v);
+
+    return v;
+}
+
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_tuple_third)
+{
+    const swamp_struct* tuple = swamp_value_struct(arguments[0]);
+    if (tuple->info.field_count < 3) {
+        SWAMP_ERROR("must have at least two fields in a tuple when using first");
+        return 0;
+    }
+
+    const swamp_value* v = tuple->fields[2];
+
+    INC_REF(v);
+
+    return v;
+}
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_tuple_fourth)
+{
+    const swamp_struct* tuple = swamp_value_struct(arguments[0]);
+    if (tuple->info.field_count < 4) {
+        SWAMP_ERROR("must have at least two fields in a tuple when using first");
+        return 0;
+    }
+
+    const swamp_value* v = tuple->fields[3];
+
+    INC_REF(v);
+
+    return v;
 }

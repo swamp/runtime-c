@@ -284,13 +284,14 @@ static int mod(int v, int div)
     return ret;
 }
 
+// Same as in C99. Remainder, not euclidean mod. Negative numbers return negative results.
 SWAMP_FUNCTION_EXPOSE(swamp_core_math_remainder_by)
 {
     int divider = swamp_value_int(arguments[0]);
     int value = swamp_value_int(arguments[1]);
 
     if (divider == 0) {
-        SWAMP_LOG_SOFT_ERROR("Error rem can not handle 0");
+        SWAMP_LOG_SOFT_ERROR("Error remainderBy can not handle 0");
         return 0;
     }
 
@@ -299,13 +300,14 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_math_remainder_by)
     return r_value;
 }
 
+// Euclidean mod. Always returns positive results.
 SWAMP_FUNCTION_EXPOSE(swamp_core_math_mod)
 {
-    int value = swamp_value_int(arguments[0]);
-    int divider = swamp_value_int(arguments[1]);
+    int divider = swamp_value_int(arguments[0]);
+    int value = swamp_value_int(arguments[1]);
 
     if (divider == 0) {
-        SWAMP_LOG_SOFT_ERROR("Error rem can not handle 0");
+        SWAMP_LOG_SOFT_ERROR("Error modBy() can not handle 0");
         return 0;
     }
 

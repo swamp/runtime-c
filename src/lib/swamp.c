@@ -120,7 +120,7 @@ static const char* g_swamp_opcode_names[] = {
     "nop",       "crs",     "upd",   "get",  "lr",  "conj", "case",         "brfa",  "jump", "call",
     "ret",       "calle",   "tail",  "add",  "sub", "mul",  "div",          "eql",   "ne",   "less",
     "lessequal", "greater", "gte",   "band", "bor", "bxor", "bnot",         "not",   "bt",   "n/a",
-    "n/a",       "n/a",     "curry", "crl",  "lap", "cre",  "stringappend", "fxmul", "fxdiv"};
+    "n/a",       "n/a",     "curry", "crl",  "lap", "cre",  "stringappend", "fxmul", "fxdiv", "intdiv", "stsp"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {
@@ -869,6 +869,30 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
             case swamp_opcode_int_negate: {
                 GET_UNARY_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(-a);
+            } break;
+            case swamp_opcode_struct_split: {
+                uint8_t source_register = *pc++;
+                const swamp_value* source_instance = GET_REGISTER(context, source_register);
+                if (source_instance == 0) {
+                    SWAMP_ERROR("couldn't lookup")
+                }
+#if SWAMP_CONFIG_DEBUG
+                if (!swamp_value_is_struct(source_instance)) {
+                    SWAMP_LOG_ERROR("can not struct split, source is not a struct");
+                }
+#endif
+                uint8_t target_count = *pc++;
+                for (uint8_t i = 0; i < target_count; ++i) {
+                    uint8_t target_register = *pc++;
+                    const swamp_value* source_field_value = GET_FIELD(source_instance, i);
+#if SWAMP_CONFIG_DEBUG
+                    if (source_field_value == 0) {
+                        SWAMP_ERROR("couldn't lookup")
+                    }
+#endif
+                    SET_REGISTER(context, target_register, source_field_value);
+                }
+
             } break;
             default:
                 SWAMP_LOG_INFO("Unknown opcode: %02x", *(pc - 1));

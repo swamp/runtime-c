@@ -57,6 +57,7 @@
 #define swamp_opcode_fixed_mul 0x25
 #define swamp_opcode_fixed_div 0x26
 #define swamp_opcode_int_negate 0x27
+#define swamp_opcode_struct_split 0x28
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------

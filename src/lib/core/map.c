@@ -446,7 +446,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_list_unzip)
 
     const swamp_list* a_list = swamp_allocator_alloc_list_create_and_transfer(allocator, a_items, count);
     free(a_items);
-    const swamp_list* b_list = swamp_allocator_alloc_list_create_and_transfer(allocator, a_items, count);
+    const swamp_list* b_list = swamp_allocator_alloc_list_create_and_transfer(allocator, b_items, count);
     free(b_items);
 
     const swamp_value* tuple_values[2] = {a_list, b_list};

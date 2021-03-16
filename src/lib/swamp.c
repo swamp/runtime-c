@@ -102,8 +102,11 @@ static int swamp_value_equal(const swamp_value* a, const swamp_value* b)
             return a == b;
         case swamp_type_external_function:
             return a == b;
-        case swamp_type_enum:
-            return a == b;
+        case swamp_type_enum: {
+            const swamp_enum* enum_a = (const swamp_enum*) a;
+            const swamp_enum* enum_b = (const swamp_enum*) b;
+            return enum_a->enum_type == enum_b->enum_type;
+        }
         case swamp_type_boolean:
             return a == b;
         case swamp_type_blob:

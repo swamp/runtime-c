@@ -187,11 +187,6 @@ const swamp_list* swamp_allocator_alloc_list_create_and_transfer(swamp_allocator
 
 const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const swamp_list* a, const swamp_list* b)
 {
-    swamp_list* mutable_last = 0;
-    const swamp_list* next_list = 0;
-    const swamp_list* created_list = 0;
-    const swamp_list* first_item_in_list = 0;
-
     if (a->count == 0) {
         INC_REF(b);
         return b;
@@ -202,21 +197,27 @@ const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const
         return a;
     }
 
-
+    const swamp_value** tempA = malloc(sizeof(const swamp_value*) * a->count);
+    int index = 0;
     SWAMP_LIST_FOR_LOOP(a)
-    created_list = swamp_allocator_alloc_list_conj(self, next_list, value);
-    if (!first_item_in_list) {
-        first_item_in_list = created_list;
-    }
-    next_list = created_list;
+    tempA[index++] = value;
     SWAMP_LIST_FOR_LOOP_END()
 
-    ((swamp_list*) first_item_in_list)->next = b;
+    swamp_list* created_list = swamp_allocator_alloc_list_create(self, tempA, a->count);
+
+    free(tempA);
+
+    swamp_list* last_in_list = created_list;
+    while (last_in_list->next != 0) {
+        last_in_list = last_in_list->next;
+    }
+
+    last_in_list->next = b;
     INC_REF(b);
 
-    ((swamp_list*)next_list)->count += b->count;
+    created_list->count += b->count;
 
-    return next_list;
+    return created_list;
 }
 
 const swamp_value* swamp_allocator_alloc_enum(swamp_allocator* self, uint8_t enum_type, size_t field_count)

@@ -119,6 +119,7 @@ SWAMP_VALUE_END(swamp_blob)
 
 SWAMP_VALUE(swamp_unmanaged)
 const void* ptr;
+int (*to_string)(const void* ptr, int flags, char* target, size_t maxCount);
 SWAMP_VALUE_END(swamp_unmanaged)
 
 SWAMP_VALUE(swamp_list)

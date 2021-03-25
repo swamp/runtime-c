@@ -68,8 +68,11 @@ static int toString(const swamp_value* v, char* buf, size_t maxCount)
         } break;
         case swamp_type_unmanaged: {
             const swamp_unmanaged* unmanaged = (const swamp_unmanaged*) v;
-            snprintf(buf, maxCount, "unmanaged %p", unmanaged->ptr);
-
+            if (unmanaged->to_string != 0) {
+                unmanaged->to_string(unmanaged, 0, buf, maxCount);
+            } else {
+                snprintf(buf, maxCount, "unmanaged %p", unmanaged->ptr);
+            }
         } break;
         case swamp_type_blob: {
             const swamp_blob* blob = (const swamp_blob*) v;

@@ -33,7 +33,11 @@ void swamp_allocator_free(const swamp_value* v);
 
 #define DEC_REF_CHECK_NULL(v)                                                                                          \
     if (v != 0) {                                                                                                      \
-        DEC_REF(v);                                                                                                    \
+        if SWAMP_VALUE_IS_ALIVE(v) {                                                                                   \
+            DEC_REF(v);                                                                                                \
+        } else {                                                                                                       \
+            SWAMP_ERROR("could not dec ref. value is already deleted");                                                    \
+        }                                                                                                                  \
     }
 
 #endif

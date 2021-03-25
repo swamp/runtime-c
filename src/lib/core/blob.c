@@ -7,6 +7,7 @@
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/print.h>
 #include <swamp-runtime/swamp.h>
+#include <string.h>
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_is_empty)
 {

@@ -44,6 +44,7 @@ const swamp_value* swamp_allocator_alloc_struct_create(swamp_allocator* self, co
     swamp_struct* s = (swamp_struct*) struct_value;
     for (size_t i = 0; i < field_count; ++i) {
         s->fields[i] = items[i];
+        INC_REF(s->fields[i]);
     }
 
     return struct_value;

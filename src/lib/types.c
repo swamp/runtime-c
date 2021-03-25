@@ -89,6 +89,25 @@ swamp_int32 swamp_value_int(const swamp_value* v)
     return INT32_MIN;
 }
 
+const swamp_value* swamp_value_any(const swamp_value* v, swamp_int32* typeIndex)
+{
+    if (v->internal.type != swamp_type_struct) {
+        SWAMP_ERROR("any type is not encoded as a struct");
+        return 0;
+    }
+
+    const swamp_struct* any_struct = (const swamp_struct*) v;
+
+    if (any_struct->info.field_count != 2) {
+        SWAMP_ERROR("Any type values must be encoded as a two item struct");
+        return 0;
+    }
+    const swamp_int32 typeIndexInt = swamp_value_int(any_struct->fields[0]);
+    *typeIndex = typeIndexInt;
+
+    return any_struct->fields[1];
+}
+
 swamp_int* swamp_value_int_value(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_integer) {

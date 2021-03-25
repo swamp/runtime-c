@@ -61,6 +61,10 @@ void swamp_allocator_free(const swamp_value* v)
         DEC_REF_CHECK_NULL(((swamp_list*)v)->next);
     }
 
+    if (v->internal.type == swamp_type_unmanaged) {
+        //TODO:
+    }
+
     free((void*) v);
 }
 // -------------------------------------------------------------

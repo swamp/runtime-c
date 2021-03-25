@@ -190,7 +190,7 @@ const swamp_enum* swamp_value_enum(const swamp_value* v);
 swamp_bool swamp_value_is_blob(const swamp_value* v);
 const swamp_blob* swamp_value_blob(const swamp_value* v);
 const swamp_string* swamp_value_string(const swamp_value* v);
-
+const swamp_value* swamp_value_any(const swamp_value* v, swamp_int32* typeIndex);
 swamp_bool swamp_boolean_truth(const swamp_boolean* v);
 swamp_bool swamp_blob_is_empty(const swamp_blob* v);
 const swamp_value* swamp_value_just(const swamp_value* v);

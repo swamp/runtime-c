@@ -11,8 +11,10 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_debug_log)
 {
     const swamp_string* output = swamp_value_string(arguments[0]);
 
-    printf("log: %s\n", output->characters);
-    fflush(stdout);
+    fprintf(stderr, "log: ");
+    fputs(output->characters, stderr);
+    fputs("\n", stderr);
+    fflush(stderr);
 
     INC_REF(arguments[0]);
     return (const swamp_value*) output;
@@ -83,13 +85,14 @@ static int toString(const swamp_value* v, char* buf, size_t maxCount)
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_debug_to_string)
 {
-    char buf[256];
+#define tempBufSize (32 * 1024)
+    char buf[tempBufSize];
 
     buf[0] = 0;
 
     const swamp_value* v = arguments[0];
 
-    toString(v, buf, 256);
+    toString(v, buf, tempBufSize);
 
     // printf("debug to string %s (%d)\n", buf, v->internal.type);
 

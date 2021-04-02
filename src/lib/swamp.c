@@ -162,7 +162,7 @@ static const char* swamp_opcode_name(uint8_t opcode)
 #define GET_REGISTER(context, register) context->registers[register];
 
 #if SWAMP_CONFIG_DEBUG
-    #define GET_REGISTER_INT(context, register) ((const swamp_int*) swamp_value_int(context->registers[register]))
+    #define GET_REGISTER_INT(context, register) swamp_value_int(context->registers[register])
 #else
     #define GET_REGISTER_INT(context, register) ((const swamp_int*) context->registers[register])->value
 #endif

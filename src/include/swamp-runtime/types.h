@@ -53,8 +53,6 @@ typedef struct swamp_value {
 
 /// BASIC INTERNALS
 
-struct swamp_allocator;
-
 // -------------------------------------------------------------
 // Define Values
 // -------------------------------------------------------------
@@ -152,7 +150,9 @@ const char* debug_name;
 uint16_t typeIndex;
 SWAMP_VALUE_END(swamp_func)
 
-typedef const swamp_value* (*swamp_external_fn)(struct swamp_allocator* allocator, const swamp_value** arguments,
+struct swamp_context;
+
+typedef const swamp_value* (*swamp_external_fn)(struct swamp_context* context, const swamp_value** arguments,
                                                 int argument_count);
 
 SWAMP_VALUE(swamp_external_func)

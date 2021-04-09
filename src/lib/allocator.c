@@ -50,7 +50,7 @@ const swamp_value* swamp_allocator_alloc_struct_create(swamp_allocator* self, co
     return struct_value;
 }
 
-const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, const swamp_func* func,
+const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, uint16_t typeInfoIndex, const swamp_func* func,
                                                const swamp_value** constant_parameters, size_t constant_parameter_count)
 {
     const swamp_value* temp_resources[32];
@@ -66,11 +66,13 @@ const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, const swam
         SWAMP_ERROR("parameter count is less");
     }
     size_t new_parameter_count = func->parameter_count - constant_parameter_count;
-    const swamp_value* curry_func_value = swamp_allocator_alloc_function(
+    swamp_func* curry_func_value = (swamp_func*) swamp_allocator_alloc_function(
         self, func->opcodes, func->opcode_count, constant_parameter_count, new_parameter_count,
         func->total_register_count_used, temp_resources, new_constant_count, func->debug_name);
 
-    return curry_func_value;
+    curry_func_value->typeIndex = typeInfoIndex;
+
+    return (const swamp_value*) curry_func_value;
 }
 
 const swamp_value* swamp_allocator_alloc_integer(swamp_allocator* self, swamp_int32 v)

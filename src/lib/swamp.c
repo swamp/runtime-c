@@ -230,7 +230,7 @@ static void swamp_func_print(const swamp_func* f, const char* debug)
                    f->parameter_count);
 }
 
-const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, const swamp_value** run_parameters,
+const swamp_value* swamp_run(swamp_machine_context* allocator, const swamp_func* f, const swamp_value** run_parameters,
                              size_t run_parameter_count, swamp_bool verbose_flag)
 {
     const uint8_t* pc = f->opcodes;
@@ -488,6 +488,8 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
 
             case swamp_opcode_curry: {
                 uint8_t target_register = *pc++;
+                uint16_t typeIdIndex = *pc++ << 8;
+                typeIdIndex |= *pc++;
                 uint8_t function_from_register = *pc++;
                 uint8_t arg_count = *pc++;
                 const swamp_value* curry_args[32];
@@ -500,7 +502,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
 
                 const swamp_value* swamp_func_value = GET_REGISTER(context, function_from_register);
                 const swamp_func* func = (swamp_func*) swamp_func_value;
-                const swamp_value* instance = swamp_allocator_alloc_curry(allocator, func, curry_args, arg_count);
+                const swamp_value* instance = swamp_allocator_alloc_curry(allocator, typeIdIndex, func, curry_args, arg_count);
                 SET_REGISTER(context, target_register, instance);
             } break;
 
@@ -908,7 +910,7 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
     }
 }
 
-const swamp_value* swamp_execute(swamp_allocator* allocator, const swamp_func* f, const swamp_value** arguments,
+const swamp_value* swamp_execute(swamp_machine_context * allocator, const swamp_func* f, const swamp_value** arguments,
                                  size_t argument_count, int verbose_flag)
 {
     return swamp_run(allocator, f, arguments, argument_count, verbose_flag);

@@ -17,7 +17,7 @@ const swamp_value* swamp_allocator_alloc_struct(swamp_allocator* self, size_t fi
 const swamp_value* swamp_allocator_alloc_struct_create(swamp_allocator* self, const swamp_value** registers,
                                                        size_t field_count);
 
-const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, const swamp_func* func,
+const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, uint16_t typeInfoIndex, const swamp_func* func,
                                                const swamp_value** registers, size_t field_count);
 const swamp_value* swamp_allocator_alloc_integer(swamp_allocator* self, int32_t v);
 const swamp_value* swamp_allocator_alloc_fixed(swamp_allocator* self, swamp_fixed32 v);

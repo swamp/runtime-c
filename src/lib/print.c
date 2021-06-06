@@ -46,8 +46,8 @@ static void swamp_value_print_ex(FILE* output, const swamp_value* v, size_t tab_
 
         case swamp_type_function: {
             swamp_func* func = (swamp_func*) v;
-            SWAMP_LOG_FILE_NL(output, "function '%s' parameter_count:%zu constant:%zu (totalreg:%zu, everything:%zu)",
-                              func->debug_name, func->parameter_count, func->constant_count,
+            SWAMP_LOG_FILE_NL(output, "function '%s' typeIndex:%d parameter_count:%zu constant:%zu (totalreg:%zu, everything:%zu)",
+                              func->debug_name, func->typeIndex, func->parameter_count, func->constant_count,
                               func->total_register_count_used, func->total_register_and_constant_count_used);
             for (size_t i = 0; i < func->constant_count; ++i) {
                 swamp_value_print_ex(output, func->constants[i], tab_count + 1);

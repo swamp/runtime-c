@@ -693,9 +693,9 @@ const swamp_value* swamp_run(swamp_allocator* allocator, const swamp_func* f, co
                     return 0;
                 }
 #endif
-                static char buf[512];
-                strncpy(buf, ((const swamp_string*) swamp_string_value)->characters, 512);
-                strncat(buf, ((const swamp_string*) string_to_append_value)->characters, 512);
+                static char buf[2048];
+                strncpy(buf, ((const swamp_string*) swamp_string_value)->characters, 2048);
+                strncat(buf, ((const swamp_string*) string_to_append_value)->characters, 2048);
                 const swamp_value* swamp_new_string = swamp_allocator_alloc_string(allocator, buf);
                 SET_REGISTER(context, target_register, swamp_new_string);
             } break;

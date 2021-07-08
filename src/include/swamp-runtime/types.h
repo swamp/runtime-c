@@ -173,6 +173,7 @@ typedef struct swamp_function {
 } swamp_function;
 
 swamp_function swamp_value_function(const swamp_value* v);
+const swamp_unmanaged* swamp_value_unmanaged(const swamp_value* v);
 const swamp_func* swamp_value_func(const swamp_value* v);
 swamp_bool swamp_value_is_list(const swamp_value* v);
 const swamp_list* swamp_value_list(const swamp_value* v);
@@ -199,7 +200,9 @@ swamp_bool swamp_list_validate(const swamp_list* list);
 
 int swamp_values_equal(const swamp_value* a, const swamp_value* b);
 
-#define SWAMP_VALUE_IS_ALIVE(v) ((v)->internal.erase_code == 0xc0de)
+#define SWAMP_VALUE_IS_ALIVE(v) ((v != 0) && (v)->internal.erase_code == 0xc0de)
+
+#define SWAMP_VALUE_IS_ALIVE_OR_NULL(v) ((v == 0) || (v)->internal.erase_code == 0xc0de)
 
 #define SWAMP_LIST_FOR_LOOP(LIST)                                                                                      \
     for (const swamp_list* __list = swamp_list_first(LIST); __list; __list = __list->next) {                           \

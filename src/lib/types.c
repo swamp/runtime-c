@@ -26,6 +26,19 @@ swamp_function swamp_value_function(const swamp_value* v)
     SWAMP_ERROR("Illegal function");
 }
 
+const swamp_unmanaged* swamp_value_unmanaged(const swamp_value* v)
+{
+    if (!SWAMP_VALUE_IS_ALIVE(v)) {
+        SWAMP_ERROR("unmanaged is dead");
+    }
+
+    if (v->internal.type != swamp_type_unmanaged) {
+        SWAMP_ERROR("was not unmanaged");
+    }
+
+    return (const swamp_unmanaged*) v;
+}
+
 const swamp_func* swamp_value_func(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_function) {

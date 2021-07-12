@@ -41,6 +41,7 @@ const swamp_value* swamp_allocator_alloc_enum_single_value(swamp_allocator* self
 const swamp_value* swamp_allocator_alloc_enum_no_value(swamp_allocator* self, uint8_t enum_type);
 const swamp_value* swamp_allocator_alloc_nothing(swamp_allocator* self);
 const swamp_value* swamp_allocator_alloc_just(swamp_allocator* self, const swamp_value* v);
+const swamp_value* swamp_allocator_alloc_just_or_nothing(swamp_allocator* self, const swamp_value* v);
 const swamp_value* swamp_allocator_alloc_boolean(swamp_allocator* self, int truth);
 const swamp_boolean* swamp_allocator_alloc_boolean_ex(swamp_allocator* self, int truth);
 const swamp_list* swamp_allocator_alloc_list_conj(swamp_allocator* self, const struct swamp_list* list_value,

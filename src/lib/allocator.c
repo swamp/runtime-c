@@ -260,6 +260,15 @@ const swamp_value* swamp_allocator_alloc_just(swamp_allocator* self, const swamp
     return swamp_allocator_alloc_enum_single_value(self, 1, v);
 }
 
+const swamp_value* swamp_allocator_alloc_just_or_nothing(swamp_allocator* self, const swamp_value* v)
+{
+    if (v == 0) {
+        return swamp_allocator_alloc_nothing(self);
+    }
+
+    return swamp_allocator_alloc_just(self, v);
+}
+
 const swamp_value* swamp_allocator_alloc_boolean(swamp_allocator* self, int truth)
 {
     swamp_value* t;

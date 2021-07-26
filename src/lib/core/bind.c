@@ -77,6 +77,7 @@ swamp_external_fn swamp_core_find_function(const char* function_name)
 
         {"coreBlobIsEmpty", swamp_core_blob_is_empty},
         {"coreBlobFromList", swamp_core_blob_from_list},
+        {"coreBlobToList", swamp_core_blob_to_list},
         {"coreBlobMap", swamp_core_blob_map},
         {"coreBlobIndexedMap", swamp_core_blob_indexed_map},
         {"coreBlobLength", swamp_core_blob_length},

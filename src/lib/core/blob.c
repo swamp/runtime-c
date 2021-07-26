@@ -24,6 +24,22 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_from_list)
     return swamp_allocator_alloc_blob(allocator, 0, 0, 0);
 }
 
+SWAMP_FUNCTION_EXPOSE(swamp_core_blob_to_list)
+{
+    const swamp_blob* blob = swamp_value_blob(arguments[0]);
+    const swamp_value** octetInts = malloc(sizeof(const swamp_value*)*blob->octet_count);
+
+    for (size_t i=0; i<blob->octet_count;++i) {
+        octetInts[i] = swamp_allocator_alloc_integer(&allocator->allocator, blob->octets[i]);
+    }
+
+    swamp_list* list = swamp_allocator_alloc_list_create_and_transfer(&allocator->allocator, octetInts, blob->octet_count);
+
+    free(octetInts);
+
+    return list;
+}
+
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_map)
 {
     const swamp_func* fn = swamp_value_func(arguments[0]);

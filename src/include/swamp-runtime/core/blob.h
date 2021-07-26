@@ -20,6 +20,7 @@ SWAMP_STRUCT_END(sz2)
 
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_is_empty);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_from_list);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_to_list);
 
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_map);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_indexed_map);

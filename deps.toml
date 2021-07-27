@@ -3,3 +3,6 @@ depsversion = "0.0.0"
 name = "swamp/runtime-c"
 version = "0.0.0"
 
+[[dependencies]]
+name = 'swamp/dump-c'
+version = "*"

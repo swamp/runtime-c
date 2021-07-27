@@ -24,6 +24,8 @@ SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_to_list);
 
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_map);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_indexed_map);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_filter_map);
+SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_filter_indexed_map);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_length);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_get);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_blob_set);

@@ -2,13 +2,14 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+#include <stdlib.h>
+#include <string.h>
 #include <swamp-runtime/allocator.h>
 #include <swamp-runtime/core/blob.h>
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/print.h>
+#include <swamp-runtime/ref_count.h>
 #include <swamp-runtime/swamp.h>
-#include <string.h>
-#include <stdlib.h>
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_is_empty)
 {
@@ -82,6 +83,34 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_indexed_map)
     free(copy);
 
     return (const swamp_value*) blobCopy;
+}
+
+SWAMP_FUNCTION_EXPOSE(swamp_core_blob_filter_indexed_map)
+{
+    const swamp_func* fn = swamp_value_func(arguments[0]);
+    const swamp_blob* blob = swamp_value_blob(arguments[1]);
+
+    const swamp_value** results = malloc(sizeof(swamp_value*) * blob->octet_count);
+    size_t result_count = 0;
+
+    for (size_t i = 0; i < blob->octet_count; ++i) {
+        const uint8_t* v = blob->octets[i];
+        const swamp_int* indexValue = swamp_allocator_alloc_integer_ex(&allocator->allocator, i);
+        const swamp_int* intValue = swamp_allocator_alloc_integer_ex(&allocator->allocator, v);
+        const swamp_value* arguments[] = {indexValue, intValue};
+        const swamp_value* maybeResult = swamp_execute(allocator, fn, arguments, 2, 0);
+        if (swamp_value_is_just(maybeResult)) {
+            const swamp_value* result = swamp_value_just(maybeResult);
+            results[result_count++] = result;
+            INC_REF(result);
+        }
+    }
+
+    const swamp_blob* list = swamp_allocator_alloc_list_create_and_transfer(allocator, results, result_count);
+
+    free(results);
+
+    return (const swamp_value*) list;
 }
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_length)

@@ -80,6 +80,9 @@ swamp_external_fn swamp_core_find_function(const char* function_name)
         {"coreBlobToList", swamp_core_blob_to_list},
         {"coreBlobMap", swamp_core_blob_map},
         {"coreBlobIndexedMap", swamp_core_blob_indexed_map},
+        {"coreBlobFilterIndexedMap", swamp_core_blob_filter_indexed_map},
+
+
         {"coreBlobLength", swamp_core_blob_length},
         {"coreBlobGet", swamp_core_blob_get},
         {"coreBlobSet", swamp_core_blob_set},

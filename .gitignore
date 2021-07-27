@@ -4,3 +4,5 @@ CMakeCache.txt
 Makefile
 bin/
 *.a
+deps/
+

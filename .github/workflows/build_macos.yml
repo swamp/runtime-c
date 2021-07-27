@@ -16,6 +16,12 @@ jobs:
       - name: Use cmake
         run: cmake --version
 
+      - name: install deps
+        run: go get github.com/piot/deps/src/deps
+
+      - name: deps fetch
+        run: $HOME/go/bin/deps fetch -m clone
+
       - name: build
         run: cmake .
         working-directory: src/

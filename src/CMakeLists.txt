@@ -35,14 +35,24 @@ if (isDebug)
         set(CONFIGURATION_DEBUG 1)
 endif()
 
+set(deps ../deps/)
+
 add_compile_definitions(_POSIX_C_SOURCE=200112L)
 add_compile_options(-Wall -Wextra -Wshadow -Weffc++ -Wstrict-aliasing -ansi -pedantic -Wno-unused-function -Wno-unused-parameter)
 
 include_directories(include)
 
+
 file(GLOB_RECURSE lib_src FOLLOW_SYMLINKS
         "lib/*.c"
         )
+
+message("deps ${deps}")
+
+file(GLOB_RECURSE deps_src FOLLOW_SYMLINKS
+        "${deps}*/src/lib/*.c"
+        )
+
 
 function(unixlike)
         message("unixlike")
@@ -60,7 +70,14 @@ endif()
 
 add_library(swamp-runtime
         ${lib_src}
+        ${deps_src}
 )
+
+target_include_directories(swamp-runtime PUBLIC ${deps}swamp/dump-c/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}swamp/typeinfo-c/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}clog/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}tiny-libc/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}flood-c/src/include)
 
 set_target_properties(swamp-runtime
     PROPERTIES

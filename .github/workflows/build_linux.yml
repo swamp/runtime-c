@@ -16,6 +16,12 @@ jobs:
       - name: Force clang for cmake
         run: export CC=/usr/bin/clang
 
+      - name: install deps
+        run: go get github.com/piot/deps/src/deps
+
+      - name: deps fetch
+        run: $HOME/go/bin/deps fetch -m clone
+
       - name: Use cmake
         run: cmake --version
 

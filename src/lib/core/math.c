@@ -9,8 +9,8 @@
 #include <swamp-runtime/swamp.h>
 
 #define FIXED_MULTIPLIER (1000)
-const int MAX_FIXED_RADIAN = 6280;
-const int MAX_DEGREE = 360;
+#define MAX_FIXED_RADIAN (6280)
+#define MAX_DEGREE (360)
 
 static int fast_atan2(signed int x, signed int y)
 {

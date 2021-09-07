@@ -8,29 +8,55 @@
 
 #include <string.h>
 
-static void setup_internal(swamp_internal* internal, swamp_type type)
+typedef struct alloc_info {
+    size_t totalSize;
+} alloc_info;
+
+static void* swamp_calloc(swamp_allocator* self, size_t count, size_t itemSize)
+{
+    size_t totalSize = count * itemSize;
+    size_t totalWithOverhead = sizeof(alloc_info) + totalSize;
+    self->allocatedSize += count * itemSize;
+    void* alloc = calloc(1, totalWithOverhead);
+    alloc_info* info = (alloc_info*) alloc;
+    info->totalSize = totalSize;
+
+    return ((uint8_t*) alloc + sizeof(alloc_info));
+}
+
+static void swamp_free(swamp_allocator* self, swamp_value* v)
+{
+    void* alloc = (void*) v;
+    alloc_info* info = (alloc_info*) ((uint8_t*) alloc - sizeof(alloc_info));
+    self->allocatedSize -= info->totalSize;
+    free((void*) info);
+}
+
+static void setup_internal(swamp_allocator* self, swamp_internal* internal, swamp_type type)
 {
     internal->ref_count = 1;
     internal->erase_code = 0xc0de;
     internal->type = type;
+    internal->allocator = self;
 }
 
 void swamp_allocator_init(swamp_allocator* self)
 {
-    setup_internal(&self->s_true.internal, swamp_type_boolean);
+    setup_internal(self, &self->s_true.internal, swamp_type_boolean);
     self->s_true.truth = 1;
     INC_REF(&self->s_true);
-    setup_internal(&self->s_false.internal, swamp_type_boolean);
+    setup_internal(self, &self->s_false.internal, swamp_type_boolean);
     self->s_false.truth = 0;
     INC_REF(&self->s_false);
+    self->allocatedSize = 0;
 }
 
 const swamp_value* swamp_allocator_alloc_struct(swamp_allocator* self, size_t field_count)
 {
     // TODO: Use P99_FCALLOC
     size_t octet_size = sizeof(swamp_struct) + field_count * sizeof(swamp_value*);
-    swamp_struct* mutable = (swamp_struct*) calloc(1, octet_size);
-    setup_internal(&mutable->internal, swamp_type_struct);
+    swamp_struct* mutable = (swamp_struct*) swamp_calloc(self, 1, octet_size);
+    setup_internal(self, &mutable->internal, swamp_type_struct);
     mutable->info.octet_count = octet_size;
     mutable->info.field_count = field_count;
 
@@ -77,9 +103,9 @@ const swamp_value* swamp_allocator_alloc_curry(swamp_allocator* self, uint16_t t
 
 const swamp_value* swamp_allocator_alloc_integer(swamp_allocator* self, swamp_int32 v)
 {
-    swamp_int* t = calloc(1, sizeof(swamp_int));
+    swamp_int* t = swamp_calloc(self, 1, sizeof(swamp_int));
     t->value = v;
-    setup_internal(&t->internal, swamp_type_integer);
+    setup_internal(self, &t->internal, swamp_type_integer);
 
     return (const swamp_value*) t;
 }
@@ -96,34 +122,34 @@ const swamp_int* swamp_allocator_alloc_integer_ex(swamp_allocator* self, swamp_i
 
 const swamp_value* swamp_allocator_alloc_string(swamp_allocator* self, const char* str)
 {
-    swamp_string* t = calloc(1, sizeof(swamp_string));
+    swamp_string* t = swamp_calloc(self, 1, sizeof(swamp_string));
     size_t strbuf_size = sizeof(const char) * strlen(str) + 1;
-    char* strbuf = malloc(strbuf_size);
+    char* strbuf = swamp_calloc(self, 1, strbuf_size);
     memcpy(strbuf, str, strbuf_size);
     t->characters = strbuf;
-    setup_internal(&t->internal, swamp_type_string);
+    setup_internal(self, &t->internal, swamp_type_string);
 
     return (const swamp_value*) t;
 }
 
 const swamp_value* swamp_allocator_alloc_unmanaged(swamp_allocator* self, const void* something)
 {
-    swamp_unmanaged* t = calloc(1, sizeof(swamp_unmanaged));
+    swamp_unmanaged* t = swamp_calloc(self, 1, sizeof(swamp_unmanaged));
     t->ptr = something;
-    setup_internal(&t->internal, swamp_type_unmanaged);
+    setup_internal(self, &t->internal, swamp_type_unmanaged);
     return (const swamp_value*) t;
 }
 
 const swamp_value* swamp_allocator_alloc_blob(swamp_allocator* self, const uint8_t* str, size_t octet_count,
                                               uint32_t hash)
 {
-    swamp_blob* t = calloc(1, sizeof(swamp_blob));
+    swamp_blob* t = swamp_calloc(self, 1, sizeof(swamp_blob));
     if (octet_count > 0) {
         if (!str) {
             SWAMP_ERROR("can not pass null pointer for blob");
             return 0;
         }
-        uint8_t* octets_copy = malloc(octet_count);
+        uint8_t* octets_copy = swamp_calloc(self, 1, octet_count);
         memcpy(octets_copy, str, octet_count);
         t->octets = octets_copy;
     } else {
@@ -134,7 +160,7 @@ const swamp_value* swamp_allocator_alloc_blob(swamp_allocator* self, const uint8
 
     t->hash = hash;
     t->octet_count = octet_count;
-    setup_internal(&t->internal, swamp_type_blob);
+    setup_internal(self, &t->internal, swamp_type_blob);
 
     return (const swamp_value*) t;
 }
@@ -147,11 +173,11 @@ const swamp_blob* swamp_allocator_alloc_blob_ex(swamp_allocator* self, const uin
 
 const swamp_list* swamp_allocator_alloc_list_empty(swamp_allocator* self)
 {
-    swamp_list* t = calloc(1, sizeof(swamp_list));
+    swamp_list* t = swamp_calloc(self, 1, sizeof(swamp_list));
     t->value = 0;
     t->next = 0;
     t->count = 0;
-    setup_internal(&t->internal, swamp_type_list);
+    setup_internal(self, &t->internal, swamp_type_list);
 
     return t;
 }
@@ -171,8 +197,9 @@ const swamp_list* swamp_allocator_alloc_list_create(swamp_allocator* self, const
     return head;
 }
 
-const swamp_list* swamp_allocator_alloc_list_create_and_transfer(swamp_allocator* self, const swamp_value** constant_parameters,
-    size_t constant_parameter_count)
+const swamp_list* swamp_allocator_alloc_list_create_and_transfer(swamp_allocator* self,
+                                                                 const swamp_value** constant_parameters,
+                                                                 size_t constant_parameter_count)
 {
     const swamp_list* head = 0;
     if (constant_parameter_count == 0) {
@@ -226,8 +253,8 @@ const swamp_list* swamp_allocator_alloc_list_append(swamp_allocator* self, const
 const swamp_value* swamp_allocator_alloc_enum(swamp_allocator* self, uint8_t enum_type, size_t field_count)
 {
     size_t octet_size = sizeof(swamp_enum) + field_count * sizeof(swamp_value*);
-    swamp_enum* mutable = (swamp_enum*) calloc(1, octet_size);
-    setup_internal(&mutable->internal, swamp_type_enum);
+    swamp_enum* mutable = (swamp_enum*) swamp_calloc(self, 1, octet_size);
+    setup_internal(self, &mutable->internal, swamp_type_enum);
     mutable->enum_type = enum_type;
     mutable->info.octet_count = octet_size;
     mutable->info.field_count = field_count;
@@ -299,7 +326,7 @@ const swamp_list* swamp_allocator_alloc_list_conj(swamp_allocator* self, const s
     }
 #endif
 
-    swamp_list* t = calloc(1, sizeof(swamp_list));
+    swamp_list* t = swamp_calloc(self, 1, sizeof(swamp_list));
     t->value = item;
     INC_REF(item);
     if (next_list && next_list->count > 0) {
@@ -310,21 +337,21 @@ const swamp_list* swamp_allocator_alloc_list_conj(swamp_allocator* self, const s
         t->next = 0;
         t->count = 1;
     }
-    setup_internal(&t->internal, swamp_type_list);
+    setup_internal(self, &t->internal, swamp_type_list);
 #if CONFIGURATION_DEBUG
     SWAMP_ASSERT(swamp_list_validate(t), "next_list is broken")
 #endif
     return t;
 }
 
-static char* duplicate_string(const char* source)
+static char* duplicate_string(swamp_allocator* self, const char* source)
 {
     int source_size;
     char* target;
     char* target_ptr;
 
     source_size = strlen(source);
-    target = (char*) malloc(sizeof(char) * source_size + 1);
+    target = (char*) swamp_calloc(self, 1, sizeof(char) * source_size + 1);
     if (target == 0) {
         return 0;
     }
@@ -338,19 +365,19 @@ static char* duplicate_string(const char* source)
     return target;
 }
 
-void swamp_allocator_set_function(swamp_func* t, const uint8_t* opcodes, size_t opcode_count,
+void swamp_allocator_set_function(swamp_allocator* self, swamp_func* t, const uint8_t* opcodes, size_t opcode_count,
                                   size_t constant_parameters, size_t parameter_count, size_t register_count,
                                   const swamp_value** constants, size_t constant_count, const char* debug_name)
 {
-    setup_internal(&t->internal, swamp_type_function);
-    t->opcodes = malloc(opcode_count);
+    setup_internal(self, &t->internal, swamp_type_function);
+    t->opcodes = swamp_calloc(self, 1, opcode_count);
     memcpy((uint8_t*) t->opcodes, opcodes, opcode_count);
     t->opcode_count = opcode_count;
 
     t->constant_parameter_count = constant_parameters;
     t->parameter_count = parameter_count;
     size_t constant_octet_size = sizeof(swamp_value*) * constant_count;
-    t->constants = malloc(constant_octet_size);
+    t->constants = swamp_calloc(self, 1, constant_octet_size);
     t->constant_count = constant_count;
     memcpy(t->constants, constants, constant_octet_size);
     for (size_t i = 0; i < constant_count; ++i) {
@@ -358,7 +385,7 @@ void swamp_allocator_set_function(swamp_func* t, const uint8_t* opcodes, size_t 
     }
     t->total_register_count_used = register_count; // Always allocate for return variable
     t->total_register_and_constant_count_used = t->total_register_count_used + constant_count;
-    const char* name_copy = duplicate_string(debug_name);
+    const char* name_copy = duplicate_string(self, debug_name);
     t->debug_name = name_copy;
 }
 
@@ -367,8 +394,8 @@ const swamp_value* swamp_allocator_alloc_function(swamp_allocator* self, const u
                                                   size_t register_count, const swamp_value** constants,
                                                   size_t constant_count, const char* debug_name)
 {
-    swamp_func* t = calloc(1, sizeof(swamp_func));
-    swamp_allocator_set_function(t, opcodes, opcode_count, constant_parameters, parameter_count, register_count,
+    swamp_func* t = swamp_calloc(self, 1, sizeof(swamp_func));
+    swamp_allocator_set_function(self, t, opcodes, opcode_count, constant_parameters, parameter_count, register_count,
                                  constants, constant_count, debug_name);
     return (const swamp_value*) t;
 }
@@ -376,11 +403,11 @@ const swamp_value* swamp_allocator_alloc_function(swamp_allocator* self, const u
 const swamp_value* swamp_allocator_alloc_external_function(swamp_allocator* self, swamp_external_fn fn,
                                                            size_t parameter_count, const char* debug_name)
 {
-    swamp_external_func* t = calloc(1, sizeof(swamp_external_func));
-    setup_internal(&t->internal, swamp_type_external_function);
+    swamp_external_func* t = swamp_calloc(self, 1, sizeof(swamp_external_func));
+    setup_internal(self, &t->internal, swamp_type_external_function);
     t->fn = fn;
     t->parameter_count = parameter_count;
-    const char* name_copy = duplicate_string(debug_name);
+    const char* name_copy = duplicate_string(self, debug_name);
     t->debug_name = name_copy;
 
     return (const swamp_value*) t;
@@ -403,4 +430,57 @@ const swamp_value* swamp_allocator_copy_struct(swamp_allocator* self, const swam
     void* target_pointer = (swamp_value**) &struct_copy->fields;
     memcpy(target_pointer, &source_struct->fields, octet_size_to_copy);
     return (const swamp_value*) copy;
+}
+
+static inline void swamp_release_function(swamp_func* f)
+{
+    for (size_t i = 0; i < f->constant_count; ++i) {
+        DEC_REF(f->constants[i]);
+    }
+}
+
+void swamp_allocator_free(const swamp_value* v)
+{
+    // swamp_value_print(v, "destroying");
+    switch (v->internal.type) {
+        case swamp_type_function:
+            swamp_release_function((swamp_func*) v);
+            break;
+        case swamp_type_blob:
+            swamp_free(v->internal.allocator, (void*) (((swamp_blob*) v)->octets));
+            break;
+        case swamp_type_list:
+            DEC_REF_CHECK_NULL(((swamp_list*) v)->next);
+            break;
+        case swamp_type_struct: {
+            const swamp_struct* s = swamp_value_struct(v);
+            for (size_t i = 0; i < s->info.field_count; ++i) {
+                DEC_REF(s->fields[i]);
+            }
+            break;
+        }
+        case swamp_type_unmanaged: {
+            swamp_unmanaged* unmanaged = swamp_value_unmanaged(v);
+            unmanaged->destroy(unmanaged->ptr);
+            break;
+        }
+        case swamp_type_enum: {
+            swamp_enum* enumValue = swamp_value_enum(v);
+            for (size_t i = 0; i < enumValue->info.field_count; ++i) {
+                DEC_REF(enumValue->fields[i]);
+            }
+            break;
+        }
+        case swamp_type_string: {
+            const swamp_string* stringValue = swamp_value_string(v);
+            swamp_free(v->internal.allocator, stringValue->characters);
+            break;
+        }
+
+        default:
+            v = v;
+            break;
+    }
+
+    swamp_free(v->internal.allocator, (void*) v);
 }

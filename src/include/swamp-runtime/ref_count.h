@@ -8,6 +8,7 @@
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/print.h>
 #include <swamp-runtime/types.h>
+#include <swamp-runtime/allocator.h>
 
 // -------------------------------------------------------------
 // Reference counting
@@ -19,7 +20,6 @@
         ((swamp_value*) (v))->internal.ref_count++;                                                                    \
     }
 
-void swamp_allocator_free(const swamp_value* v);
 
 #define DEC_REF(v)                                                                                                     \
     ((swamp_value*) (v))->internal.ref_count--;                                                                        \

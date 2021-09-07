@@ -2,7 +2,11 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+#if TORNADO_OS_WINDOWS
+#include <WinSock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <swamp-runtime/log.h>

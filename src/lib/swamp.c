@@ -39,34 +39,9 @@ static void swamp_registers_print(const swamp_value** values, size_t count, cons
     }
 }
 
-static inline void swamp_release_function(swamp_func* f)
-{
-    for (size_t i = 0; i < f->constant_count; ++i) {
-        DEC_REF(f->constants[i]);
-    }
-}
 
-void swamp_allocator_free(const swamp_value* v)
-{
-    //swamp_value_print(v, "destroying");
-    if (v->internal.type == swamp_type_function) {
-        swamp_release_function((swamp_func*) v);
-    }
 
-    if (v->internal.type == swamp_type_blob) {
-        free((void*) (((swamp_blob*) v)->octets));
-    }
 
-    if (v->internal.type == swamp_type_list) {
-        DEC_REF_CHECK_NULL(((swamp_list*)v)->next);
-    }
-
-    if (v->internal.type == swamp_type_unmanaged) {
-        //TODO:
-    }
-
-    free((void*) v);
-}
 // -------------------------------------------------------------
 
 void swamp_registers_release(const swamp_value** values, size_t count)
@@ -121,6 +96,8 @@ static int swamp_value_equal(const swamp_value* a, const swamp_value* b)
             return managed_a->ptr == managed_b->ptr;
         }
     }
+
+    return 0;
 }
 
 static const char* g_swamp_opcode_names[] = {

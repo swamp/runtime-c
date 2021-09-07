@@ -159,6 +159,11 @@ swamp_bool swamp_value_is_struct(const swamp_value* v)
     return v->internal.type == swamp_type_struct;
 }
 
+swamp_bool swamp_value_is_unmanaged(const swamp_value* v)
+{
+    return v->internal.type == swamp_type_unmanaged;
+}
+
 const swamp_struct* swamp_value_struct(const swamp_value* v)
 {
     if (v->internal.type == swamp_type_struct) {

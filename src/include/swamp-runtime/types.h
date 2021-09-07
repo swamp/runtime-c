@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+struct FldOutStream;
+struct FldInStream;
+
 typedef int swamp_bool;
 
 #define swamp_true (1)
@@ -41,10 +44,14 @@ typedef enum swamp_type {
     swamp_type_unmanaged,
 } swamp_type;
 
+struct swamp_allocator;
+
+
 typedef struct swamp_internal {
     size_t ref_count;
     uint16_t erase_code;
     swamp_type type;
+    struct swamp_allocator* allocator;
 } swamp_internal;
 
 typedef struct swamp_value {
@@ -117,7 +124,12 @@ SWAMP_VALUE_END(swamp_blob)
 
 SWAMP_VALUE(swamp_unmanaged)
 const void* ptr;
+uint8_t userTypeId;
 int (*to_string)(const void* ptr, int flags, char* target, size_t maxCount);
+int (*serialize)(const void* ptr, struct FldOutStream* stream);
+int (*deserialize)(const void* ptr, struct FldInStream* stream, struct swamp_allocator* allocator);
+const struct swamp_unmanaged* (*clone)(const void* ptr,  struct swamp_allocator* allocator);
+void (*destroy)(const void* ptr);
 SWAMP_VALUE_END(swamp_unmanaged)
 
 SWAMP_VALUE(swamp_list)
@@ -152,7 +164,7 @@ SWAMP_VALUE_END(swamp_func)
 
 struct swamp_context;
 
-typedef const swamp_value* (*swamp_external_fn)(struct swamp_context* context, const swamp_value** arguments,
+typedef const swamp_value* (*swamp_external_fn)(struct swamp_machine_context* context, const swamp_value** arguments,
                                                 int argument_count);
 
 SWAMP_VALUE(swamp_external_func)
@@ -187,6 +199,7 @@ swamp_bool swamp_value_is_func(const swamp_value* v);
 swamp_bool swamp_value_is_nothing(const swamp_value* v);
 swamp_bool swamp_value_is_just(const swamp_value* v);
 swamp_bool swamp_value_is_struct(const swamp_value* v);
+swamp_bool swamp_value_is_unmanaged(const swamp_value* v);
 const swamp_struct* swamp_value_struct(const swamp_value* v);
 const swamp_enum* swamp_value_enum(const swamp_value* v);
 swamp_bool swamp_value_is_blob(const swamp_value* v);

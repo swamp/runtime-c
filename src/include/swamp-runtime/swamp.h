@@ -10,7 +10,7 @@
 
 struct SwtiChunk;
 typedef struct swamp_machine_context {
-    swamp_allocator allocator;
+    swamp_allocator allocator; // Must be first. Do not change.
     const struct SwtiChunk* typeInfo;
 } swamp_machine_context;
 

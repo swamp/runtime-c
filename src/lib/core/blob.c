@@ -38,7 +38,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_to_list)
 
     free(octetInts);
 
-    return list;
+    return (const swamp_value*) list;
 }
 
 SWAMP_FUNCTION_EXPOSE(swamp_core_blob_map)
@@ -47,11 +47,15 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_blob_map)
     const swamp_blob* blob = swamp_value_blob(arguments[1]);
 
     uint8_t* copy = malloc(blob->octet_count);
+    if (copy == 0) {
+        return 0;
+    }
 
     for (size_t i = 0; i < blob->octet_count; ++i) {
-        const uint8_t* v = blob->octets[i];
+        const uint8_t v = blob->octets[i];
         const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, v);
         const swamp_int* result = swamp_execute(allocator, fn, &intValue, 1, 0);
+
         copy[i] = (uint8_t) result->value;
     }
 

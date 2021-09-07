@@ -10,6 +10,7 @@
 typedef struct swamp_allocator {
     swamp_boolean s_true;
     swamp_boolean s_false;
+    size_t allocatedSize;
 } swamp_allocator;
 
 void swamp_allocator_init(swamp_allocator* self);
@@ -59,5 +60,7 @@ const swamp_value* swamp_allocator_alloc_external_function(swamp_allocator* self
                                                            size_t argument_count, const char* debug_name);
 
 const swamp_value* swamp_allocator_copy_struct(swamp_allocator* self, const swamp_value* source);
+
+void swamp_allocator_free(const swamp_value* source);
 
 #endif

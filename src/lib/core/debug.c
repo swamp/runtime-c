@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 #include <string.h>
 #include <swamp-dump/dump_ascii.h>
+#include <swamp-dump/dump_ascii_no_color.h>
 #include <swamp-dump/types.h>
 #include <swamp-runtime/allocator.h>
 #include <swamp-runtime/ref_count.h>
@@ -38,7 +39,7 @@ SWAMP_FUNCTION_EXPOSE(swamp_core_debug_to_string)
 
     const SwtiType* foundType = swtiChunkTypeFromIndex(allocator->typeInfo, typeIndex);
 
-    swampDumpToAsciiString(v, foundType, swampDumpFlagAliasOnce, buf, tempBufSize);
+    swampDumpToAsciiStringNoColor(v, foundType, swampDumpFlagAliasOnce, buf, tempBufSize);
 
     return swamp_allocator_alloc_string(allocator, buf);
 }

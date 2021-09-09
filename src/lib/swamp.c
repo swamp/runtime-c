@@ -179,7 +179,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             } break;
             case swamp_opcode_list_conj: {
                 SwampListReference* target = (SwampListReference*) readTargetStackPointerPos(&pc, bp);
-                const SwampListReference* sourceList = (const SwampListReference*) readSourceStackPointerPos(&pc, bp);
+                const SwampListReference sourceList = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
                 void* sourceItem = readSourceStackPointerPos(&pc, bp);
                 size_t range = readShortRange(&pc);
 
@@ -187,10 +187,24 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 void* dynamicItemMemory = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, range);
                 swampMemoryCopy(dynamicItemMemory, sourceItem, range);
                 newList->value = dynamicItemMemory;
-                newList->count = sourceList->dynamicList->count+1;
-                newList->next = sourceList->dynamicList;
+                newList->count = sourceList->count+1;
+                newList->next = sourceList;
 
-                target->dynamicList = newList;
+                *target = newList;
+            } break;
+
+            case swamp_opcode_string_append: {
+                SwampStringReference* target = (SwampStringReference*) readTargetStackPointerPos(&pc, bp);
+                const SwampStringReference sourceStringA = *((const SwampStringReference*) readSourceStackPointerPos(&pc, bp));
+                const SwampStringReference sourceStringB = *((const SwampStringReference*) readSourceStackPointerPos(&pc, bp));
+                size_t totalCharacterCount = sourceStringA->characterCount + sourceStringB->characterCount;
+                char* newCharacters = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, totalCharacterCount + 1);
+                memcpy(newCharacters, sourceStringA->characters, sourceStringA->characterCount);
+                memcpy(newCharacters + sourceStringA->characterCount, sourceStringB->characters, sourceStringB->characterCount);
+                SwampString* newString = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, sizeof(SwampString));
+                newString->characterCount = totalCharacterCount;
+                newString->characters = newCharacters;
+                *target = newString;
             } break;
 
             case swamp_opcode_mem_cpy: {
@@ -199,6 +213,28 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 size_t range = readShortRange(&pc);
                 swampMemoryCopy(target, constantSource, range);
             } break;
+
+
+            case swamp_opcode_jump: {
+                uint8_t jump = *pc++;
+                pc += jump;
+            } break;
+
+            case swamp_opcode_branch_false: {
+                SwampBool truthy = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
+                uint8_t jump = *pc++;
+                if (!truthy) {
+                    pc += jump;
+                }
+            }
+
+            case swamp_opcode_branch_true: {
+                SwampBool truthy = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
+                uint8_t jump = *pc++;
+                if (truthy) {
+                    pc += jump;
+                }
+            }
 
             case swamp_opcode_int_add: {
                 GET_OPERATOR_INT();

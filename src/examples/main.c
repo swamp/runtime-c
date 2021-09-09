@@ -6,6 +6,7 @@
 #include <swamp-runtime/swamp.h>
 #include <clog/clog.h>
 #include <clog/console.h>
+#include <swamp-runtime/swamp_allocate.h>
 
 clog_config g_clog;
 
@@ -16,27 +17,17 @@ int main(int argc, char* argv[])
     uint8_t opcodes[] = {
         swamp_opcode_mem_cpy_zero_page,
         8,0,0,0, // target
-        0,0,0,0, // source
-        4,0,
-        swamp_opcode_int_add,
-        12,0,0,0,
-        4,0,0,0,
-        8,0,0,0,
-        swamp_opcode_mem_cpy_zero_page, // Copy empty list
+        12,0,0,0, // source
+        sizeof(SwampStringReference),0,
+        swamp_opcode_mem_cpy_zero_page,
         16,0,0,0, // target
-        4,0,0,0, // source
-        sizeof(SwampListReference),0,
-        swamp_opcode_list_conj,
-        0,0,0,0, //16+sizeof(SwampListReference),0,0,0,
-        16,0,0,0, // Source list
-        12,0,0,0, // Item to conj (previous sum)
-        4,0,
-        swamp_opcode_return,
-        swamp_opcode_mem_cpy,
+        20,0,0,0, // source
+        8,0,
+        swamp_opcode_string_append,
         0,0,0,0,
-        16+sizeof(SwampListReference),0,0,0,
-        sizeof(SwampListReference),0,
-        swamp_opcode_return
+        sizeof(SwampStringReference),0,0,0,
+        16,0,0,0,
+        swamp_opcode_return,
     };
 
     SwampFunc func;
@@ -47,7 +38,7 @@ int main(int argc, char* argv[])
     func.parametersOctetSize = 8;
     func.totalStackUsed = 128;
     func.typeIndex = 0;
-    func.returnOctetSize =  sizeof(SwampListReference);
+    func.returnOctetSize =  sizeof(SwampStringReference);
 
 
     SwampMachineContext context;
@@ -60,6 +51,9 @@ int main(int argc, char* argv[])
     emptyList->count = 0;
     emptyList->value = 0;
 
+    SwampString* helloString = swampStringAllocate(&context.dynamicMemory, "Hello, ");
+    SwampString* worldString = swampStringAllocate(&context.dynamicMemory, "World!");
+
 #define STACK_MEMORY_SIZE (128)
     uint8_t* stackMemory = calloc(1, STACK_MEMORY_SIZE);
     uint8_t* sp = stackMemory;
@@ -67,8 +61,14 @@ int main(int argc, char* argv[])
     *((SwampInt32*)sp)  = -49;
     sp += 4;
 
-    ((SwampListReference *)sp)->dynamicList = emptyList;
+    *((SwampListReference*)sp) = emptyList;
     sp += sizeof(SwampListReference);
+
+    *((SwampStringReference*)sp) = helloString;
+    sp += sizeof(SwampStringReference);
+
+    *((SwampStringReference*)sp) = worldString;
+    sp += sizeof(SwampStringReference);
 
     swampStackMemoryInit(&context.stackMemory, stackMemory, STACK_MEMORY_SIZE);
     context.bp = sp;
@@ -91,12 +91,17 @@ int main(int argc, char* argv[])
     parameters.source = parameterOctets;
 
     SwampResult result;
-    result.expectedOctetSize = sizeof(SwampListReference);
+    result.expectedOctetSize = sizeof(SwampStringReference);
 
     int worked = swampRun(&context, &func, parameters, &result, 0);
-    const SwampListReference* resultList = (SwampListReference*) result.target;
-    const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->dynamicList->value;
+#if 0
+    const SwampListReference resultList = (SwampListReference) result.target;
+    const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
     CLOG_INFO("result in list: %d", *resultIntegerInList);
+#else
+    const SwampStringReference stringReference = *((SwampStringReference*) result.target);
+    CLOG_INFO("result string is: '%s'", stringReference->characters);
+#endif
 
     free(context.stackMemory.memory);
     free(context.dynamicMemory.memory);

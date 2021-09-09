@@ -55,10 +55,14 @@ typedef struct SwampList {
     const void* value;
 } SwampList;
 
-typedef struct SwampListReference {
-    SwampList* dynamicList;
-} SwampListReference;
+typedef SwampList* SwampListReference;
 
+typedef struct SwampString {
+    const char* characters;
+    size_t characterCount;
+} SwampString;
+
+typedef SwampString* SwampStringReference;
 
 typedef struct SwampFunc {
     size_t parameterCount;

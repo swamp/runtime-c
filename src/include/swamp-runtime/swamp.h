@@ -6,31 +6,14 @@
 #define swamp_h
 
 #include <swamp-runtime/types.h>
-#include <swamp-runtime/allocator.h>
 
-struct SwtiChunk;
-typedef struct swamp_machine_context {
-    swamp_allocator allocator; // Must be first. Do not change.
-    const struct SwtiChunk* typeInfo;
-} swamp_machine_context;
+typedef struct SwampMachineContext {
+    uint8_t* stackMemory;
+    size_t maximumStackMemory;
+} SwampMachineContext;
 
-swamp_external_fn swamp_core_find_function(const char* function_name);
+int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
+             SwampResult* result, SwampBool verbose_flag);
 
-#define SWAMP_FUNCTION(NAME)                                                                                           \
-    static const swamp_value* NAME(struct swamp_machine_context* allocator, const swamp_value** arguments, int argument_count)
-#define SWAMP_FUNCTION_EXPOSE(NAME)                                                                                    \
-    const swamp_value* NAME(struct swamp_machine_context* allocator, const swamp_value** arguments, int argument_count)
-#define SWAMP_FUNCTION_EXPOSE_DECLARE(NAME)                                                                            \
-    const swamp_value* NAME(struct swamp_machine_context* machine_context, const swamp_value** arguments, int argument_count)
-
-const swamp_value* swamp_run(struct swamp_machine_context* machine_context, const swamp_func* f, const swamp_value** registers,
-                             size_t register_count, int verbose_flag);
-
-const swamp_value* swamp_execute(struct swamp_machine_context* machine_context, const swamp_func* f, const swamp_value** registers,
-                                 size_t register_count, int verbose_flag);
-
-#define swamp_execute_external(allocator, func, args, arg_count, verbose_flag) (func)->fn(allocator, args, arg_count)
-
-void swamp_registers_release(const swamp_value** values, size_t count);
 
 #endif

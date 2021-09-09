@@ -10,9 +10,8 @@
 // -------------------------------------------------------------
 // Opcodes
 // -------------------------------------------------------------
-#define swamp_opcode_create_struct 0x01
+
 #define swamp_opcode_update_struct 0x02
-#define swamp_opcode_struct_get 0x03
 #define swamp_opcode_reg_to_reg 0x04
 #define swamp_opcode_list_conj 0x05
 // -------------------------------------------------------------

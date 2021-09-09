@@ -48,11 +48,17 @@ typedef struct SwampResult {
 #define SWAMP_FIXED32_TO_FLOAT(v) (v / (float) SWAMP_FIXED_FACTOR)
 #define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v)->value);
 
+
 typedef struct SwampList {
-    const void* value;
     const struct SwampList* next;
     size_t count;
+    const void* value;
 } SwampList;
+
+typedef struct SwampListReference {
+    SwampList* dynamicList;
+} SwampListReference;
+
 
 typedef struct SwampFunc {
     size_t parameterCount;

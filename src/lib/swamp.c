@@ -177,6 +177,21 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 size_t range = readShortRange(&pc);
                 swampMemoryCopy(target, constantSource, range);
             } break;
+            case swamp_opcode_list_conj: {
+                SwampListReference* target = (SwampListReference*) readTargetStackPointerPos(&pc, bp);
+                const SwampListReference* sourceList = (const SwampListReference*) readSourceStackPointerPos(&pc, bp);
+                void* sourceItem = readSourceStackPointerPos(&pc, bp);
+                size_t range = readShortRange(&pc);
+
+                SwampList* newList = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, sizeof(SwampList));
+                void* dynamicItemMemory = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, range);
+                swampMemoryCopy(dynamicItemMemory, sourceItem, range);
+                newList->value = dynamicItemMemory;
+                newList->count = sourceList->dynamicList->count+1;
+                newList->next = sourceList->dynamicList;
+
+                target->dynamicList = newList;
+            } break;
 
             case swamp_opcode_mem_cpy: {
                 void* target = readTargetStackPointerPos(&pc, bp);

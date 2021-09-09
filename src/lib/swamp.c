@@ -50,13 +50,31 @@ static uint32_t readU32(const uint8_t **pc) {
 
     *pc += 4;
 
-    CLOG_INFO("read uint32 %d", *p);
+    SWAMP_LOG_DEBUG("read uint32 %d", *p);
     return *p;
+}
+
+static uint16_t readU16(const uint8_t **pc) {
+    const uint16_t* p = (const uint16_t*) *pc;
+
+    *pc += 2;
+
+    SWAMP_LOG_DEBUG("read uint16 %d", *p);
+    return *p;
+}
+
+static size_t readShortRange(const uint8_t **pc) {
+    return readU16(pc);
 }
 
 static void* readStackPointerPos(const uint8_t **pc, const uint8_t* bp)
 {
     return (void*)(bp + readU32(pc));
+}
+
+static void* readStackPointerZeroPagePos(const uint8_t **pc, const uint8_t* stackMemory)
+{
+    return (void*)(stackMemory + readU32(pc));
 }
 
 static void* readTargetStackPointerPos(const uint8_t **pc, const uint8_t* bp)
@@ -118,6 +136,11 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
         return 0;
     }
 
+    if (result->expectedOctetSize != f->returnOctetSize) {
+        SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize, f->returnOctetSize);
+        return -2;
+    }
+
     pushOnStackPointer(&sp, runParameters.source, runParameters.octetSize);
 
     while (1) {
@@ -133,6 +156,12 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             case swamp_opcode_return: {
                 uint8_t register_to_return = 0;
                 if (stack->count == 0) {
+                    if (result->expectedOctetSize != f->returnOctetSize) {
+                        SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize, f->returnOctetSize);
+                        return -3;
+                    }
+
+                    result->target = (void*) bp;
                     return 0;
                 }
 
@@ -140,6 +169,20 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 pc = call_stack_entry->pc;
                 bp = call_stack_entry->bp;
                 //context = &call_stack_entry->context;
+            } break;
+
+            case swamp_opcode_mem_cpy_zero_page: {
+                void* target = readTargetStackPointerPos(&pc, bp);
+                void* constantSource = readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
+                size_t range = readShortRange(&pc);
+                swampMemoryCopy(target, constantSource, range);
+            } break;
+
+            case swamp_opcode_mem_cpy: {
+                void* target = readTargetStackPointerPos(&pc, bp);
+                void* constantSource = readSourceStackPointerPos(&pc, bp);
+                size_t range = readShortRange(&pc);
+                swampMemoryCopy(target, constantSource, range);
             } break;
 
             case swamp_opcode_int_add: {

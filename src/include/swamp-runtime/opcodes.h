@@ -64,6 +64,9 @@
 #define swamp_opcode_int_shl 0xf8
 #define swamp_opcode_int_shr 0xf9
 #define swamp_opcode_int_mod 0xfA
+
+#define swamp_opcode_mem_cpy 0xfb
+#define swamp_opcode_mem_cpy_zero_page 0xfc
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 

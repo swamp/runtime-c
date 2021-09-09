@@ -42,7 +42,7 @@ typedef struct SwampParameters {
 
 typedef struct SwampResult {
     void* target;
-    size_t octetSize;
+    size_t expectedOctetSize;
 } SwampResult;
 
 #define SWAMP_FIXED32_TO_FLOAT(v) (v / (float) SWAMP_FIXED_FACTOR)
@@ -61,6 +61,7 @@ typedef struct SwampFunc {
     size_t opcodeCount;
 
     size_t totalStackUsed;
+    size_t returnOctetSize;
 
 //    const swamp_value** constants; // or frozen variables in closure
   //  size_t constant_count;

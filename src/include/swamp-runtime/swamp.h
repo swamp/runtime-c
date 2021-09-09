@@ -6,12 +6,14 @@
 #define swamp_h
 
 #include <swamp-runtime/types.h>
+#include <swamp-runtime/dynamic_memory.h>
+#include <swamp-runtime/stack_memory.h>
 
 typedef struct SwampMachineContext {
-    uint8_t* stackMemory;
-    size_t maximumStackMemory;
+    SwampStackMemory stackMemory;
     uint8_t* sp;
     uint8_t* bp;
+    SwampDynamicMemory dynamicMemory;
 } SwampMachineContext;
 
 int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,

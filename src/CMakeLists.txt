@@ -33,6 +33,7 @@ endif()
 if (isDebug)
         message("Debug build detected")
         set(CONFIGURATION_DEBUG 1)
+        add_compile_definitions(CONFIGURATION_DEBUG)
 endif()
 
 set(deps ../deps/)
@@ -40,7 +41,7 @@ set(deps ../deps/)
 add_compile_definitions(_POSIX_C_SOURCE=200112L)
 add_compile_options(-Wall -Wextra -Wshadow -Weffc++ -Wstrict-aliasing -ansi -pedantic -Wno-unused-function -Wno-unused-parameter)
 
-include_directories(include)
+
 
 
 file(GLOB_RECURSE lib_src FOLLOW_SYMLINKS
@@ -72,7 +73,7 @@ add_library(swamp-runtime
         ${lib_src}
         ${deps_src}
 )
-
+target_include_directories(swamp-runtime PUBLIC include)
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/dump-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/typeinfo-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}clog/src/include)

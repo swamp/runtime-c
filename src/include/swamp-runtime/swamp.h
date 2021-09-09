@@ -10,6 +10,8 @@
 typedef struct SwampMachineContext {
     uint8_t* stackMemory;
     size_t maximumStackMemory;
+    uint8_t* sp;
+    uint8_t* bp;
 } SwampMachineContext;
 
 int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,

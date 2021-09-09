@@ -4,12 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/opcodes.h>
-#include <swamp-runtime/print.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/types.h>
 
+#include <clog/clog.h>
 #include <string.h> // memset
-
 
 static const char* g_swamp_opcode_names[] = {
     "nop",       "crs",     "upd",   "get",  "lr",  "conj", "case",         "brfa",  "jump", "call",
@@ -40,18 +39,6 @@ typedef struct SwampCallStack {
     SwampCallStackEntry entries[MAX_CALL_STACK_COUNT];
     size_t count;
 } SwampCallStack;
-/*
-
-static void swamp_call_stack_entry_print(const swamp_call_stack_entry* entry)
-{
-    size_t relative_pc = entry->pc - entry->func->opcodes;
-    SWAMP_LOG_INFO("stack pc:%zu", relative_pc);
-}
-
-*/
-
-// -------------------------------------------------------------
-
 
 #define READ_U32(variable) \
     variable = *((uint32_t*) pc); \
@@ -63,6 +50,7 @@ static uint32_t readU32(const uint8_t **pc) {
 
     *pc += 4;
 
+    CLOG_INFO("read uint32 %d", *p);
     return *p;
 }
 
@@ -76,11 +64,15 @@ static void* readTargetStackPointerPos(const uint8_t **pc, const uint8_t* bp)
     return readStackPointerPos(pc, bp);
 }
 
+static SwampInt32* readTargetStackIntPointerPos(const uint8_t **pc, const uint8_t* bp)
+{
+    return (SwampInt32*) readTargetStackPointerPos(pc, bp);
+}
+
 static const void* readSourceStackPointerPos(const uint8_t **pc, const uint8_t* bp)
 {
     return readStackPointerPos(pc, bp);
 }
-
 
 static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t* bp)
 {
@@ -88,11 +80,11 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t
 }
 
 #define GET_OPERATOR_INT()                                                                                             \
-    void* targetRegister = readTargetStackPointerPos(&pc, bp);                                                                                   \
+    SwampInt32* targetRegister = readTargetStackIntPointerPos(&pc, bp);                                                                                   \
     SwampInt32 a = readSourceIntStackPointerPos(&pc, bp);                                                                                            \
     SwampInt32 b = readSourceIntStackPointerPos(&pc, bp);
 
-#define SET_OPERATOR_RESULT_INT(intValue) *((SwampInt32*) targetRegister) = intValue;
+#define SET_OPERATOR_RESULT_INT(intValue) *targetRegister = intValue;
 #define SET_OPERATOR_RESULT_BOOL(boolValue) *((SwampBool*) targetRegister) = boolValue;
 
 #define swampMemoryCopy(target, source, size) memcpy((void*)target, source, size)
@@ -107,8 +99,8 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
              SwampResult* result, SwampBool verbose_flag)
 {
     const uint8_t* pc = f->opcodes;
-    const uint8_t* bp = context->stackMemory;
-    const uint8_t* sp = context->stackMemory;
+    const uint8_t* bp = context->bp;
+    const uint8_t* sp = context->sp;
 
     SwampCallStack temp_stack;
     temp_stack.count = 0;

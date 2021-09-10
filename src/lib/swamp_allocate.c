@@ -83,8 +83,26 @@ SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, s
     SwampFunc* func = (SwampFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampFunc));
     func->opcodes = swampAllocateOctets(self, opcodes, opcodeCount);
     func->opcodeCount = opcodeCount;
+    func->curryFunction = 0;
+    func->curryOctetSize = 0;
+    func->curryOctets = 0;
     func->returnOctetSize = returnOctetSize;
     func->parametersOctetSize = parametersOctetSize;
+
+    return func;
+}
+
+
+SwampFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const SwampFunc* sourceFunc, void* parameters, size_t parametersOctetSize)
+{
+    SwampFunc* func = (SwampFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampFunc));
+    func->opcodes = 0;
+    func->opcodeCount = 0;
+    func->curryFunction = sourceFunc;
+    func->curryOctetSize = parametersOctetSize;
+    func->curryOctets = swampAllocateOctets(self, parameters, parametersOctetSize);
+    func->returnOctetSize = func->returnOctetSize;
+    func->parametersOctetSize = 0;
 
     return func;
 }

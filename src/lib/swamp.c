@@ -125,6 +125,8 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t
 
 #define swampMemoryCopy(target, source, size) memcpy((void*)target, source, size)
 
+#define swampMemoryMove(target, source, size) memmove((void*)target, source, size)
+
 #define swampMemoryCompareEqual(target, source, size) (memcmp((void*)target, source, size) == 0)
 
 static void pushOnStackPointer(const uint8_t** sp, const void* x, size_t octetSize)
@@ -214,12 +216,18 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             } break;
 
             case swamp_opcode_list_append : {
-
+                
             } break;
 
             case swamp_opcode_call: {
                 const SwampFunc* func = (const SwampFunc*) readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
                 const void* basePointer = readSourceStackPointerPos(&pc, bp);
+
+                if (func->curryFunction) {
+                    swampMemoryMove(basePointer + func->curryOctetSize, basePointer, func->parametersOctetSize);
+                    swampMemoryCopy(basePointer, func->curryOctets, func->curryOctetSize);
+                    func = func->curryFunction;
+                }
 
                 // Store current state
                 call_stack_entry->pc = pc;
@@ -238,6 +246,14 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 
                 // Set variables
                 pc = call_stack_entry->pc;
+            } break;
+
+            case swamp_opcode_curry: {
+                SwampFunc** targetFunc = (SwampFunc**) readTargetStackPointerPos(&pc, bp);
+                const SwampFunc* sourceFunc = (const SwampFunc*) readStackPointerPos(&pc, bp);
+                const void* argumentsStartPointer = readSourceStackPointerPos(&pc, bp);
+                size_t argumentsRange = readShortRange(&pc);
+                *targetFunc = swampCurryFuncAllocate(&context->dynamicMemory, sourceFunc, argumentsStartPointer, argumentsRange);
             } break;
 
             case swamp_opcode_call_external: {

@@ -76,6 +76,10 @@ typedef SwampArray* SwampArrayReference;
 typedef SwampArray** SwampArrayReferenceData;
 
 typedef struct SwampFunc {
+    size_t curryOctetSize;
+    const uint8_t* curryOctets;
+    const struct SwampFunc* curryFunction;
+
     size_t parameterCount;
     size_t parametersOctetSize;
     const uint8_t* opcodes;

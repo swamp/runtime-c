@@ -10,9 +10,8 @@
 // -------------------------------------------------------------
 // Opcodes
 // -------------------------------------------------------------
-
+#define swamp_opcode_create_struct 0x01
 #define swamp_opcode_update_struct 0x02
-#define swamp_opcode_reg_to_reg 0x04
 #define swamp_opcode_list_conj 0x05
 // -------------------------------------------------------------
 #define swamp_opcode_enum_case 0x06
@@ -50,13 +49,11 @@
 #define swamp_opcode_curry 0x20
 #define swamp_opcode_create_list 0x21
 #define swamp_opcode_list_append 0x22
-#define swamp_opcode_create_enum 0x23
 #define swamp_opcode_string_append 0x24
 // -------------------------------------------------------------
 #define swamp_opcode_fixed_mul 0x25
 #define swamp_opcode_fixed_div 0x26
 #define swamp_opcode_int_negate 0x27
-#define swamp_opcode_struct_split 0x28
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------
@@ -67,6 +64,7 @@
 
 #define swamp_opcode_mem_cpy 0xfb
 #define swamp_opcode_mem_cpy_zero_page 0xfc
+#define swamp_opcode_create_array 0xfd
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 

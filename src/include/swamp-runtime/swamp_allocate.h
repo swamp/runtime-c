@@ -15,5 +15,6 @@ struct SwampFunc* swampFuncAllocate(struct SwampDynamicMemory* self, const uint8
 
 const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self);
 const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize);
+const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_SWAMP_ALLOCATE_H

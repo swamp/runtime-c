@@ -69,6 +69,7 @@ typedef const SwampString** SwampStringReferenceData;
 typedef struct SwampArray {
     const void* value;
     size_t count;
+    size_t itemSize;
 } SwampArray;
 
 typedef SwampArray* SwampArrayReference;
@@ -100,5 +101,14 @@ typedef struct SwampFunction {
 //    const swamp_external_func* external_function;
     SwampFunctionType type;
 } swampFunction;
+
+struct SwampMachineContext;
+
+typedef void (*SwampExternalFunction)(struct SwampMachineContext* context, const void* arguments,
+                                      void* result, size_t requiredResultSize);
+
+typedef struct SwampFunctionExternal {
+    const SwampExternalFunction externalFunction;
+} SwampFunctionExternal;
 
 #endif

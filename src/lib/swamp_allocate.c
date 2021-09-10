@@ -25,6 +25,8 @@ const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self)
     emptyList->next = 0;
     emptyList->count = 0;
     emptyList->value = 0;
+
+    return emptyList;
 }
 
 const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize)
@@ -46,6 +48,26 @@ const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, 
         previousNode = newNode;
     }
 
+    return previousNode;
+}
+
+const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize)
+{
+    SwampList* previousNode = 0;
+    for (size_t i = 0; i < itemCount; ++i) {
+        SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
+        if (previousNode) {
+            previousNode->next = newNode;
+        }
+        int index = itemCount - 1 - i;
+        newNode->value = (uint8_t*)itemMemory + index * itemSize;
+        newNode->count = i + 1;
+        newNode->next = 0;
+
+        previousNode = newNode;
+    }
+
+    return previousNode;
 }
 
 

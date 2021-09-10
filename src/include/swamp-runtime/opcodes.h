@@ -10,60 +10,59 @@
 // -------------------------------------------------------------
 // Opcodes
 // -------------------------------------------------------------
-#define swamp_opcode_create_struct 0x01
-#define swamp_opcode_update_struct 0x02
-#define swamp_opcode_list_conj 0x05
+#define SwampOpcodeStructCreate 0x01
+#define SwampOpcodeStructUpdate 0x02
+#define SwampOpcodeListConj 0x05
 // -------------------------------------------------------------
-#define swamp_opcode_enum_case 0x06
-#define swamp_opcode_branch_false 0x07
-#define swamp_opcode_jump 0x08
+#define SwampOpcodeEnumCase 0x06
+#define SwampOpcodeBranchFalse 0x07
+#define SwampOpcodeJump 0x08
 // -------------------------------------------------------------
-#define swamp_opcode_call 0x09
-#define swamp_opcode_return 0x0a
-#define swamp_opcode_call_external 0x0b
-#define swamp_opcode_tail_call 0x0c
+#define SwampOpcodeCall 0x09
+#define SwampOpcodeReturn 0x0a
+#define SwampOpcodeCallExternal 0x0b
+#define SwampOpcodeTailCall 0x0c
 // -------------------------------------------------------------
-#define swamp_opcode_int_add 0x0d
-#define swamp_opcode_int_sub 0x0e
-#define swamp_opcode_int_mul 0x0f
-#define swamp_opcode_int_div 0x10
+#define SwampOpcodeIntAdd 0x0d
+#define SwampOpcodeIntSub 0x0e
+#define SwampOpcodeIntMul 0x0f
+#define SwampOpcodeIntDiv 0x10
+#define SwampOpcodeIntNegate 0x27
 // -------------------------------------------------------------
-#define swamp_opcode_int_eql 0x11
-#define swamp_opcode_int_neql 0x12
-#define swamp_opcode_int_less 0x13
-#define swamp_opcode_int_lessequal 0x14
-#define swamp_opcode_int_greater 0x15
-#define swamp_opcode_int_gte 0x16
+#define SwampOpcodeIntEqual 0x11
+#define SwampOpcodeIntNotEqual 0x12
+#define SwampOpcodeIntLess 0x13
+#define SwampOpcodeIntLessEqual 0x14
+#define SwampOpcodeIntGreater 0x15
+#define SwampOpcodeIntGreaterOrEqual 0x16
 // -------------------------------------------------------------
-#define swamp_opcode_int_and 0x17
-#define swamp_opcode_int_or 0x18
-#define swamp_opcode_int_xor 0x19
-#define swamp_opcode_int_not 0x1a
+#define SwampOpcodeIntAnd 0x17
+#define SwampOpcodeIntOr 0x18
+#define SwampOpcodeIntXor 0x19
+#define SwampOpcodeIntNot 0x1a
 // -------------------------------------------------------------
-#define swamp_opcode_bool_not 0x1b
-#define swamp_opcode_branch_true 0x1c
-#define swamp_opcode_case_pattern_matching 0x1d
-#define swamp_opcode_cmp_equal 0x1e
-#define swamp_opcode_cmp_not_equal 0x1f
-#define swamp_opcode_curry 0x20
-#define swamp_opcode_create_list 0x21
-#define swamp_opcode_list_append 0x22
-#define swamp_opcode_string_append 0x24
+#define SwampOpcodeBoolNot 0x1b
+#define SwampOpcodeBranchTrue 0x1c
+#define SwampOpcodeCasePatternMatching 0x1d
+#define SwampOpcodeCompareEqual 0x1e
+#define SwampOpcodeCompareNotEqual 0x1f
+#define SwampOpcodeCurry 0x20
+#define SwampOpcodeListCreate 0x21
+#define SwampOpcodeListAppend 0x22
+#define SwampOpcodeStringAppend 0x24
 // -------------------------------------------------------------
-#define swamp_opcode_fixed_mul 0x25
-#define swamp_opcode_fixed_div 0x26
-#define swamp_opcode_int_negate 0x27
+#define SwampOpcodeFixedMul 0x25
+#define SwampOpcodeFixedDiv 0x26
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------
 // -------------------------------------------------------------
-#define swamp_opcode_int_shl 0xf8
-#define swamp_opcode_int_shr 0xf9
-#define swamp_opcode_int_mod 0xfA
+#define SwampOpcodeIntShiftLeft 0xf8
+#define SwampOpcodeIntShiftRight 0xf9
+#define SwampOpcodeIntMod 0xfA
 
-#define swamp_opcode_mem_cpy 0xfb
-#define swamp_opcode_mem_cpy_zero_page 0xfc
-#define swamp_opcode_create_array 0xfd
+#define SwampOpcodeCopyFromZeroMemory 0xfc
+#define SwampOpcodeArrayCreate 0xfd
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 

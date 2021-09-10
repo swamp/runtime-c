@@ -15,19 +15,19 @@ int main(int argc, char* argv[])
     g_clog.log = clog_console;
 
     uint8_t opcodes[] = {
-        swamp_opcode_mem_cpy_zero_page,
+        SwampOpcodeCopyFromZeroMemory,
         8,0,0,0, // target
         12,0,0,0, // source
         sizeof(SwampStringReference),0,
-        swamp_opcode_mem_cpy_zero_page,
+        SwampOpcodeCopyFromZeroMemory,
         16,0,0,0, // target
         20,0,0,0, // source
         8,0,
-        swamp_opcode_string_append,
+        SwampOpcodeStringAppend,
         0,0,0,0,
         sizeof(SwampStringReference),0,0,0,
         16,0,0,0,
-        swamp_opcode_return,
+        SwampOpcodeReturn,
     };
 
     SwampFunc func;

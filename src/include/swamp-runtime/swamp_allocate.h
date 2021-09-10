@@ -12,10 +12,11 @@ struct SwampFunc;
 const struct SwampString* swampStringAllocate(struct SwampDynamicMemory* self, const char* s);
 struct SwampFunc* swampFuncAllocate(struct SwampDynamicMemory* self, const uint8_t* opcodes, size_t opcodeCount,
                                     size_t parametersOctetSize, size_t returnOctetSize);
-struct SwampFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const struct SwampFunc* sourceFunc, void* parameters, size_t parametersOctetSize);
+struct SwampFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const struct SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize);
 
 const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self);
 const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize);
 const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize);
+const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const SwampList* a, const SwampList* b);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_SWAMP_ALLOCATE_H

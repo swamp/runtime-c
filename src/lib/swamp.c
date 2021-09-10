@@ -6,6 +6,7 @@
 #include <swamp-runtime/opcodes.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/types.h>
+#include <swamp-runtime/swamp_allocate.h>
 
 #include <clog/clog.h>
 #include <string.h> // memset
@@ -29,7 +30,7 @@ static const char* swamp_opcode_name(uint8_t opcode)
 
 typedef struct SwampCallStackEntry {
     const uint8_t* pc;
-    const uint8_t* bp;
+    const uint8_t* basePointer;
     const SwampFunc* func;
 } SwampCallStackEntry;
 
@@ -64,6 +65,14 @@ static uint16_t readU16(const uint8_t **pc) {
 }
 
 static size_t readShortRange(const uint8_t **pc) {
+    return readU16(pc);
+}
+
+static size_t readCount(const uint8_t **pc) {
+    return readU16(pc);
+}
+
+static size_t readSize(const uint8_t **pc) {
     return readU16(pc);
 }
 
@@ -106,6 +115,8 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t
 #define SET_OPERATOR_RESULT_BOOL(boolValue) *((SwampBool*) targetRegister) = boolValue;
 
 #define swampMemoryCopy(target, source, size) memcpy((void*)target, source, size)
+
+#define swampMemoryCompareEqual(target, source, size) memcmp((void*)target, source, size) == 0
 
 static void pushOnStackPointer(const uint8_t** sp, const void* x, size_t octetSize)
 {
@@ -167,7 +178,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 
                 call_stack_entry = &stack->entries[--stack->count];
                 pc = call_stack_entry->pc;
-                bp = call_stack_entry->bp;
+                bp = call_stack_entry->basePointer;
                 //context = &call_stack_entry->context;
             } break;
 
@@ -180,7 +191,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             case swamp_opcode_list_conj: {
                 SwampListReference* target = (SwampListReference*) readTargetStackPointerPos(&pc, bp);
                 const SwampListReference sourceList = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
-                void* sourceItem = readSourceStackPointerPos(&pc, bp);
+                const void* sourceItem = readSourceStackPointerPos(&pc, bp);
                 size_t range = readShortRange(&pc);
 
                 SwampList* newList = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, sizeof(SwampList));
@@ -193,10 +204,103 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *target = newList;
             } break;
 
+            case swamp_opcode_call: {
+                const SwampFunc* func = (const SwampFunc*) readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
+                const void* basePointer = readSourceStackPointerPos(&pc, bp);
+
+                // Store current state
+                call_stack_entry->pc = pc;
+
+#if SWAMP_CONFIG_DEBUG
+                if (stack->count >= 31) {
+                    SWAMP_LOG_ERROR("stack push overrun %zu", stack->count);
+                }
+#endif
+
+                // Set new stack entry
+                call_stack_entry = &stack->entries[++stack->count];
+                call_stack_entry->func = func;
+                call_stack_entry->pc = func->opcodes;
+                call_stack_entry->basePointer = basePointer;
+
+                // Set variables
+                pc = call_stack_entry->pc;
+            } break;
+
+            case swamp_opcode_enum_case: {
+                const void* source = readSourceStackPointerPos(&pc, bp);
+                uint8_t case_count = *pc++;
+                const uint8_t* jump_to_use = 0;
+                int found = 0;
+                uint8_t sourceUnionType = *((const uint8_t*)source);
+                const uint8_t* previous_jump_target_pc = 0;
+                for (uint8_t case_index = 0; case_index < case_count; ++case_index) {
+                    uint8_t enum_type = *pc++;
+                    uint8_t rel_jump_case = *pc++;
+                    if (!previous_jump_target_pc) {
+                        previous_jump_target_pc = pc;
+                    }
+                    previous_jump_target_pc += rel_jump_case;
+                    //uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+
+                    if (!found) {
+                        if (enum_type == sourceUnionType || enum_type == 0xff) {
+                            jump_to_use = previous_jump_target_pc;
+                            found = 1;
+                        }
+                    }
+                }
+                pc = jump_to_use;
+            } break;
+
+            case swamp_opcode_case_pattern_matching: {
+                const void* source = readSourceStackPointerPos(&pc, bp);
+                size_t range = readShortRange(&pc);
+                uint8_t case_count = *pc++;
+                int found = 0;
+                const uint8_t* jump_to_use = 0;
+                const uint8_t* previous_jump_target_pc = 0;
+                for (uint8_t case_index = 0; case_index < case_count; ++case_index) {
+                    const void* caseSource = readSourceStackPointerPos(&pc, bp);
+                    uint8_t rel_jump_case = *pc++;
+
+                    if (!previous_jump_target_pc) {
+                        previous_jump_target_pc = pc;
+                    }
+                    previous_jump_target_pc += rel_jump_case;
+                    // uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+
+                    if (swampMemoryCompareEqual(source, caseSource, range)) {
+                        jump_to_use = previous_jump_target_pc;
+                        uint8_t rest = case_count - case_index - 1;
+                        pc += rest * 2;
+                        found = 1;
+                        break;
+                    }
+                }
+#if SWAMP_CONFIG_DEBUG
+                if (!found) {
+                    // ERROR
+                    SWAMP_LOG_INFO("enum error! No case matching 0x%p. This should "
+                                   "not be "
+                                   "possible.", source);
+                    return 0;
+                }
+#endif
+                pc = jump_to_use;
+            } break;
+            case swamp_opcode_create_list: {
+                SwampListReferenceData listReferenceTarget = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
+                const void* itemsStart = readSourceStackPointerPos(&pc, bp);
+                size_t itemCount = readCount(&pc);
+                size_t itemSize = readSize(&pc);
+                const SwampList* list = swampListAllocate(&context->dynamicMemory, itemsStart, itemCount, itemSize);
+                *listReferenceTarget = list;
+            } break;
             case swamp_opcode_string_append: {
-                SwampStringReference* target = (SwampStringReference*) readTargetStackPointerPos(&pc, bp);
-                const SwampStringReference sourceStringA = *((const SwampStringReference*) readSourceStackPointerPos(&pc, bp));
-                const SwampStringReference sourceStringB = *((const SwampStringReference*) readSourceStackPointerPos(&pc, bp));
+                const SwampStringReferenceData target = (SwampStringReferenceData) readTargetStackPointerPos(&pc, bp);
+                const SwampStringReference sourceStringA = *((const SwampStringReferenceData) readSourceStackPointerPos(&pc, bp));
+                const SwampStringReference sourceStringB = *((const SwampStringReferenceData) readSourceStackPointerPos(&pc, bp));
                 size_t totalCharacterCount = sourceStringA->characterCount + sourceStringB->characterCount;
                 char* newCharacters = swampDynamicMemoryAlloc(&context->dynamicMemory, 1, totalCharacterCount + 1);
                 memcpy(newCharacters, sourceStringA->characters, sourceStringA->characterCount);
@@ -209,11 +313,10 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 
             case swamp_opcode_mem_cpy: {
                 void* target = readTargetStackPointerPos(&pc, bp);
-                void* constantSource = readSourceStackPointerPos(&pc, bp);
+                const void* constantSource = readSourceStackPointerPos(&pc, bp);
                 size_t range = readShortRange(&pc);
                 swampMemoryCopy(target, constantSource, range);
             } break;
-
 
             case swamp_opcode_jump: {
                 uint8_t jump = *pc++;

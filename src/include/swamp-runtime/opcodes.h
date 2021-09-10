@@ -44,7 +44,7 @@
 // -------------------------------------------------------------
 #define swamp_opcode_bool_not 0x1b
 #define swamp_opcode_branch_true 0x1c
-#define swamp_opcode_enum_case_pattern_matching 0x1d
+#define swamp_opcode_case_pattern_matching 0x1d
 #define swamp_opcode_cmp_equal 0x1e
 #define swamp_opcode_cmp_not_equal 0x1f
 #define swamp_opcode_curry 0x20

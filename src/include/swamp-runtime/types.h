@@ -55,14 +55,24 @@ typedef struct SwampList {
     const void* value;
 } SwampList;
 
-typedef SwampList* SwampListReference;
+typedef const SwampList* SwampListReference;
+typedef const SwampList** SwampListReferenceData;
 
 typedef struct SwampString {
     const char* characters;
     size_t characterCount;
 } SwampString;
 
-typedef SwampString* SwampStringReference;
+typedef const SwampString* SwampStringReference;
+typedef const SwampString** SwampStringReferenceData;
+
+typedef struct SwampArray {
+    const void* value;
+    size_t count;
+} SwampArray;
+
+typedef SwampArray* SwampArrayReference;
+typedef SwampArray** SwampArrayReferenceData;
 
 typedef struct SwampFunc {
     size_t parameterCount;
@@ -79,7 +89,6 @@ typedef struct SwampFunc {
     uint16_t typeIndex;
 } SwampFunc;
 
-struct swamp_context;
 
 typedef enum SwampFunctionType {
     SwampFunctionTypeInternal,

@@ -15,7 +15,7 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
 void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize)
 {
     size_t total = itemCount *itemSize;
-    if (self->p + total - self->memory > self->maxAllocatedSize) {
+    if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
         SWAMP_LOG_ERROR("overrrun");
         return 0;
     }

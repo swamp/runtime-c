@@ -46,13 +46,10 @@ int main(int argc, char* argv[])
 #define DYNAMIC_MEMORY_SIZE (32*1024)
     uint8_t* dynamicMemory = calloc(1, DYNAMIC_MEMORY_SIZE);
     swampDynamicMemoryInit(&context.dynamicMemory, dynamicMemory, DYNAMIC_MEMORY_SIZE);
-    SwampList* emptyList = (SwampList*) swampDynamicMemoryAlloc(&context.dynamicMemory, 1, sizeof(SwampList));
-    emptyList->next = 0;
-    emptyList->count = 0;
-    emptyList->value = 0;
+    const SwampList* emptyList = swampListEmptyAllocate(&context.dynamicMemory);
 
-    SwampString* helloString = swampStringAllocate(&context.dynamicMemory, "Hello, ");
-    SwampString* worldString = swampStringAllocate(&context.dynamicMemory, "World!");
+    const SwampString* helloString = swampStringAllocate(&context.dynamicMemory, "Hello, ");
+    const SwampString* worldString = swampStringAllocate(&context.dynamicMemory, "World!");
 
 #define STACK_MEMORY_SIZE (128)
     uint8_t* stackMemory = calloc(1, STACK_MEMORY_SIZE);
@@ -61,13 +58,13 @@ int main(int argc, char* argv[])
     *((SwampInt32*)sp)  = -49;
     sp += 4;
 
-    *((SwampListReference*)sp) = emptyList;
+    *((SwampListReferenceData)sp) = emptyList;
     sp += sizeof(SwampListReference);
 
-    *((SwampStringReference*)sp) = helloString;
+    *((SwampStringReferenceData)sp) = helloString;
     sp += sizeof(SwampStringReference);
 
-    *((SwampStringReference*)sp) = worldString;
+    *((SwampStringReferenceData)sp) = worldString;
     sp += sizeof(SwampStringReference);
 
     swampStackMemoryInit(&context.stackMemory, stackMemory, STACK_MEMORY_SIZE);
@@ -99,8 +96,8 @@ int main(int argc, char* argv[])
     const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
     CLOG_INFO("result in list: %d", *resultIntegerInList);
 #else
-    const SwampStringReference stringReference = *((SwampStringReference*) result.target);
-    CLOG_INFO("result string is: '%s'", stringReference->characters);
+    const SwampStringReference stringReference = *((SwampStringReferenceData) result.target);
+    CLOG_INFO("result string is: '%s' %zu", stringReference->characters, stringReference->characterCount);
 #endif
 
     free(context.stackMemory.memory);

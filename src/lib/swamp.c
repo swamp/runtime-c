@@ -176,7 +176,6 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
         switch (*pc++) {
 
             case swamp_opcode_return: {
-                uint8_t register_to_return = 0;
                 if (stack->count == 0) {
                     if (result->expectedOctetSize != f->returnOctetSize) {
                         SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize, f->returnOctetSize);
@@ -199,6 +198,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 size_t range = readShortRange(&pc);
                 swampMemoryCopy(target, constantSource, range);
             } break;
+
             case swamp_opcode_list_conj: {
                 SwampListReference* target = (SwampListReference*) readTargetStackPointerPos(&pc, bp);
                 const SwampListReference sourceList = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
@@ -215,12 +215,8 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *target = newList;
             } break;
 
-            case swamp_opcode_list_append : {
-                
-            } break;
-
             case swamp_opcode_call: {
-                const SwampFunc* func = (const SwampFunc*) readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
+                const SwampFunc* func = (const SwampFunc*) readStackPointerPos(&pc, bp);
                 const void* basePointer = readSourceStackPointerPos(&pc, bp);
 
                 if (func->curryFunction) {
@@ -326,6 +322,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 #endif
                 pc = jump_to_use;
             } break;
+
             case swamp_opcode_create_list: {
                 SwampListReferenceData listReferenceTarget = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
                 size_t itemCount = readCount(&pc);
@@ -340,6 +337,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 const SwampList* list = swampListAllocateNoCopy(&context->dynamicMemory, targetItems, itemCount, itemSize);
                 *listReferenceTarget = list;
             } break;
+
             case swamp_opcode_create_array: {
                 SwampArrayReferenceData arrayTarget = (SwampArrayReferenceData) readTargetStackPointerPos(&pc, bp);
                 size_t itemCount = readCount(&pc);
@@ -357,6 +355,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 newArray->itemSize = itemSize;
                 *arrayTarget = newArray;
             } break;
+
             case swamp_opcode_create_struct: {
                 void* structTarget = readTargetStackPointerPos(&pc, bp);
                 size_t itemCount = readCount(&pc);
@@ -369,7 +368,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 }
             } break;
 
-            case swamp_opcode_update_struct : {
+            case swamp_opcode_update_struct: {
                 uint8_t* structTarget = (uint8_t*) readTargetStackPointerPos(&pc, bp);
                 const void* structSource = readSourceStackPointerPos(&pc, bp);
                 size_t structSize = readShortRange(&pc);
@@ -410,17 +409,17 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             } break;
 
             case swamp_opcode_branch_false: {
-                SwampBool truthy = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
+                SwampBool truth = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
                 uint8_t jump = *pc++;
-                if (!truthy) {
+                if (!truth) {
                     pc += jump;
                 }
             }
 
             case swamp_opcode_branch_true: {
-                SwampBool truthy = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
+                SwampBool truth = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
                 uint8_t jump = *pc++;
-                if (truthy) {
+                if (truth) {
                     pc += jump;
                 }
             }

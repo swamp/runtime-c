@@ -21,7 +21,6 @@
 #define swamp_opcode_call 0x09
 #define swamp_opcode_return 0x0a
 #define swamp_opcode_call_external 0x0b
-#define swamp_opcode_call_external_with_id 0x25
 #define swamp_opcode_tail_call 0x0c
 // -------------------------------------------------------------
 #define swamp_opcode_int_add 0x0d

@@ -17,6 +17,7 @@ typedef struct SwampConstantLedgerEntry {
 } SwampConstantLedgerEntry;
 
 #define LedgerTypeFunc (3)
+#define LedgerTypeString (1)
 
 void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;
@@ -29,26 +30,31 @@ void logMemory(const uint8_t* octets, size_t count) {
 
 
 const SwampFunc* checkLedger(const uint8_t* const dynamicMemoryOctets, const SwampConstantLedgerEntry* entries) {
-    CLOG_INFO("swampFunc %zu %zu", sizeof(SwampFunc), offsetof(SwampFunc, opcodes))
-
+    const SwampFunc* entryFunc = 0;
     const SwampConstantLedgerEntry* entry = entries;
     while (entry->constantType != 0) {
         CLOG_INFO("ledger: %d %d", entry->constantType, entry->offset);
+        const uint8_t* p = (dynamicMemoryOctets + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
-                const uint8_t* p = (dynamicMemoryOctets + entry->offset);
                 SwampFunc* func = (const SwampFunc*)p;
                 CLOG_INFO("func: opcode count %d", func->opcodeCount)
                 CLOG_INFO("func: opcode offset %d", func->opcodes)
                 func->opcodes = (dynamicMemoryOctets + (uintptr_t)func->opcodes);
                 CLOG_INFO("func: first opcode: %02X", *func->opcodes);
-                return func;
-            }
+                entryFunc = func;
+            } break;
+            case LedgerTypeString: {
+                SwampString* str = (const SwampString *)p;
+                CLOG_INFO("str: character count %d", str->characterCount)
+                str->characters = (dynamicMemoryOctets + (uintptr_t)str->characters);
+                CLOG_INFO("str: characters: %s", str->characters);
+            } break;
         }
         entry++;
     }
 
-    return 0;
+    return entryFunc;
 }
 
 
@@ -92,14 +98,16 @@ int main(int argc, char* argv[])
     parameters.octetSize = 0;
     parameters.parameterCount = 0;
 
-    int worked = swampRun(&context, func, parameters, &result, 0);
+    int worked = swampRun(&context, func, parameters, &result, 1);
 #if 0
     const SwampListReference resultList = (SwampListReference) result.target;
     const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
     CLOG_INFO("result in list: %d", *resultIntegerInList);
 #else
-    SwampInt32 v = *((SwampInt32*) context.stackMemory.memory);
-    CLOG_INFO("result int is: %d", v);
+    SwampBool *v = ((SwampBool *) context.stackMemory.memory);
+    CLOG_INFO("result is: %d", *v);
+    //SwampString* v = *((SwampString **) context.stackMemory.memory);
+    //CLOG_INFO("result is: %s", v->characters);
 #endif
 
     swampUnpackFree(&unpack);

@@ -30,6 +30,7 @@ typedef int SwampBool;
 
 /// BASIC INTERNALS
 typedef int32_t SwampInt32;
+typedef SwampInt32 SwampCharacter;
 typedef int32_t SwampFixed32;
 typedef uint32_t SwampResourceNameId;
 
@@ -62,6 +63,8 @@ typedef struct SwampString {
     const char* characters;
     size_t characterCount;
 } SwampString;
+
+int swampStringEqual(const SwampString* a, const SwampString* b);
 
 typedef const SwampString* SwampStringReference;
 typedef const SwampString** SwampStringReferenceData;

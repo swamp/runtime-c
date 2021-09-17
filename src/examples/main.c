@@ -6,102 +6,103 @@
 #include <swamp-runtime/swamp.h>
 #include <clog/clog.h>
 #include <clog/console.h>
-#include <swamp-runtime/swamp_allocate.h>
-
+#include <swamp-runtime/swamp_unpack.h>
+#include <swamp-runtime/log.h>
+#include <unistd.h>
 clog_config g_clog;
+
+typedef struct SwampConstantLedgerEntry {
+    uint32_t constantType;
+    uint32_t offset;
+} SwampConstantLedgerEntry;
+
+#define LedgerTypeFunc (3)
+
+void logMemory(const uint8_t* octets, size_t count) {
+    const uint8_t* p = octets;
+    for (size_t i=0; i<count; ++i) {
+        uint8_t data = *p;
+        CLOG_INFO("%d %02X", i, data);
+        p++;
+    }
+}
+
+
+const SwampFunc* checkLedger(const uint8_t* const dynamicMemoryOctets, const SwampConstantLedgerEntry* entries) {
+    CLOG_INFO("swampFunc %zu %zu", sizeof(SwampFunc), offsetof(SwampFunc, opcodes))
+
+    const SwampConstantLedgerEntry* entry = entries;
+    while (entry->constantType != 0) {
+        CLOG_INFO("ledger: %d %d", entry->constantType, entry->offset);
+        switch (entry->constantType) {
+            case LedgerTypeFunc: {
+                const uint8_t* p = (dynamicMemoryOctets + entry->offset);
+                SwampFunc* func = (const SwampFunc*)p;
+                CLOG_INFO("func: opcode count %d", func->opcodeCount)
+                CLOG_INFO("func: opcode offset %d", func->opcodes)
+                func->opcodes = (dynamicMemoryOctets + (uintptr_t)func->opcodes);
+                CLOG_INFO("func: first opcode: %02X", *func->opcodes);
+                return func;
+            }
+        }
+        entry++;
+    }
+
+    return 0;
+}
+
+
 
 int main(int argc, char* argv[])
 {
     g_clog.log = clog_console;
 
-    uint8_t opcodes[] = {
-        SwampOpcodeCopyFromZeroMemory,
-        8,0,0,0, // target
-        12,0,0,0, // source
-        sizeof(SwampStringReference),0,
-        SwampOpcodeCopyFromZeroMemory,
-        16,0,0,0, // target
-        20,0,0,0, // source
-        8,0,
-        SwampOpcodeStringAppend,
-        0,0,0,0,
-        sizeof(SwampStringReference),0,0,0,
-        16,0,0,0,
-        SwampOpcodeReturn,
-    };
 
-    SwampFunc func;
-    func.debugName = "something";
-    func.opcodeCount = 14;
-    func.opcodes = opcodes;
-    func.parameterCount = 2;
-    func.parametersOctetSize = 8;
-    func.totalStackUsed = 128;
-    func.typeIndex = 0;
-    func.returnOctetSize =  sizeof(SwampStringReference);
+    SwampUnpack unpack;
+    swampUnpackInit(&unpack, 1);
 
+    char buf[1024];
+    if (getcwd(buf, 1024) == NULL) {
+        perror("getcwd");
+        exit(EXIT_FAILURE);
+    } else {
+       SWAMP_LOG_INFO("pwd: %s", buf);
+        }
+    int unpackErr = swampUnpackFilename(&unpack, "out.swamp-pack", 1);
+    if (unpackErr < 0) {
+        SWAMP_ERROR("couldn't unpack %d", unpackErr)
+        return unpackErr;
+    }
+
+    const SwampFunc* func = checkLedger( unpack.dynamicMemoryOctets, (SwampConstantLedgerEntry*) unpack.ledgerOctets);
 
     SwampMachineContext context;
-
-#define DYNAMIC_MEMORY_SIZE (32*1024)
-    uint8_t* dynamicMemory = calloc(1, DYNAMIC_MEMORY_SIZE);
-    swampDynamicMemoryInit(&context.dynamicMemory, dynamicMemory, DYNAMIC_MEMORY_SIZE);
-    const SwampList* emptyList = swampListEmptyAllocate(&context.dynamicMemory);
-
-    const SwampString* helloString = swampStringAllocate(&context.dynamicMemory, "Hello, ");
-    const SwampString* worldString = swampStringAllocate(&context.dynamicMemory, "World!");
-
-#define STACK_MEMORY_SIZE (128)
-    uint8_t* stackMemory = calloc(1, STACK_MEMORY_SIZE);
-    uint8_t* sp = stackMemory;
-
-    *((SwampInt32*)sp)  = -49;
-    sp += 4;
-
-    *((SwampListReferenceData)sp) = emptyList;
-    sp += sizeof(SwampListReference);
-
-    *((SwampStringReferenceData)sp) = helloString;
-    sp += sizeof(SwampStringReference);
-
-    *((SwampStringReferenceData)sp) = worldString;
-    sp += sizeof(SwampStringReference);
-
-    swampStackMemoryInit(&context.stackMemory, stackMemory, STACK_MEMORY_SIZE);
-    context.bp = sp;
-    context.sp = sp;
-
-    CLOG_INFO("sizeof (SwampList) %zu swampListReference* %zu SwampListReference %zu", sizeof(SwampList), sizeof(SwampListReference *), sizeof(SwampListReference));
-
-    uint8_t parameterOctets[4+4];
-    uint8_t* parameterPointer = parameterOctets;
-
-    *((SwampInt32*) parameterPointer) = -4;
-    parameterPointer += sizeof(SwampInt32);
-
-    *((SwampInt32*) parameterPointer) = 18;
-    //parameterPointer += sizeof(SwampInt32);
-
-    SwampParameters parameters;
-    parameters.parameterCount = 2;
-    parameters.octetSize = 8;
-    parameters.source = parameterOctets;
+    context.dynamicMemory.memory = unpack.dynamicMemoryOctets;
+    context.dynamicMemory.maxAllocatedSize = unpack.dynamicMemoryMaxSize;
+    context.stackMemory.memory = malloc(32 * 1024);
+    context.stackMemory.maximumStackMemory = 32* 1024;
+    context.bp = context.stackMemory.memory;
+    context.sp = context.stackMemory.memory;
 
     SwampResult result;
-    result.expectedOctetSize = sizeof(SwampStringReference);
+    result.expectedOctetSize = 0; // sizeof(SwampStringReference);
+    result.target = 0;
 
-    int worked = swampRun(&context, &func, parameters, &result, 0);
+    SwampParameters parameters;
+    parameters.octetSize = 0;
+    parameters.parameterCount = 0;
+
+    int worked = swampRun(&context, func, parameters, &result, 0);
 #if 0
     const SwampListReference resultList = (SwampListReference) result.target;
     const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
     CLOG_INFO("result in list: %d", *resultIntegerInList);
 #else
-    const SwampStringReference stringReference = *((SwampStringReferenceData) result.target);
-    CLOG_INFO("result string is: '%s' %zu", stringReference->characters, stringReference->characterCount);
+    SwampInt32 v = *((SwampInt32*) context.stackMemory.memory);
+    CLOG_INFO("result int is: %d", v);
 #endif
 
-    free(context.stackMemory.memory);
-    free(context.dynamicMemory.memory);
+    swampUnpackFree(&unpack);
 
-    return worked;
+    return 0;
 }

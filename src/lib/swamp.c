@@ -76,6 +76,10 @@ static size_t readCount(const uint8_t **pc) {
     return readU16(pc);
 }
 
+static SwampInt32 readInt32(const uint8_t **pc) {
+    return (SwampInt32) readU32(pc);
+}
+
 static size_t readSize(const uint8_t **pc) {
     return readU16(pc);
 }
@@ -173,6 +177,8 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
             //swamp_registers_print(context->registers, 14, "opcode");
         }
 #endif
+        uint16_t addr = pc - call_stack_entry->pc;
+        SWAMP_LOG_INFO("--- %04X  0x%02x", addr, *pc);
         switch (*pc++) {
 
             case SwampOpcodeReturn: {
@@ -192,11 +198,17 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 //context = &call_stack_entry->context;
             } break;
 
-            case SwampOpcodeCopyFromZeroMemory: {
+            case SwampOpcodeLoadZeroMemory: {
                 void* target = readTargetStackPointerPos(&pc, bp);
                 void* constantSource = readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
                 size_t range = readShortRange(&pc);
                 swampMemoryCopy(target, constantSource, range);
+            } break;
+
+            case SwampOpcodeLoadInteger: {
+                SwampInt32* target = ((SwampInt32*) readTargetStackPointerPos(&pc, context->stackMemory.memory));
+                SwampInt32 v = readInt32(&pc);
+                *target = v;
             } break;
 
             case SwampOpcodeListConj: {
@@ -293,6 +305,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 pc = jump_to_use;
             } break;
 
+                /*
             case SwampOpcodeCasePatternMatching: {
                 const void* source = readSourceStackPointerPos(&pc, bp);
                 size_t range = readShortRange(&pc);
@@ -329,7 +342,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 #endif
                 pc = jump_to_use;
             } break;
-
+*/
             case SwampOpcodeListCreate: {
                 SwampListReferenceData listReferenceTarget = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
                 size_t itemCount = readCount(&pc);
@@ -363,31 +376,6 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *arrayTarget = newArray;
             } break;
 
-            case SwampOpcodeStructCreate: {
-                void* structTarget = readTargetStackPointerPos(&pc, bp);
-                size_t itemCount = readCount(&pc);
-                uint8_t* p = (uint8_t*) structTarget;
-                for (size_t i = 0; i < itemCount; ++i) {
-                    const void* item = readSourceStackPointerPos(&pc, bp);
-                    size_t itemSize = readShortRange(&pc);
-                    swampMemoryCopy(p, item, itemSize);
-                    p += itemSize;
-                }
-            } break;
-
-            case SwampOpcodeStructUpdate: {
-                uint8_t* structTarget = (uint8_t*) readTargetStackPointerPos(&pc, bp);
-                const void* structSource = readSourceStackPointerPos(&pc, bp);
-                size_t structSize = readShortRange(&pc);
-                swampMemoryCopy(structTarget, structSource, structSize);
-                size_t fieldCount = readCount(&pc);
-                for (size_t i = 0; i < fieldCount; ++i) {
-                    const void* fieldSource = readSourceStackPointerPos(&pc, bp);
-                    size_t fieldSize = readShortRange(&pc);
-                    size_t targetStructOffset = readStructOffset(&pc);
-                    swampMemoryCopy((structTarget + targetStructOffset), fieldSource, fieldSize);
-                }
-            } break;
 
             case SwampOpcodeStringAppend: {
                 const SwampStringReferenceData target = (SwampStringReferenceData) readTargetStackPointerPos(&pc, bp);
@@ -415,7 +403,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 if (!truth) {
                     pc += jump;
                 }
-            }
+            } break;
 
             case SwampOpcodeBranchTrue: {
                 SwampBool truth = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
@@ -423,8 +411,9 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 if (truth) {
                     pc += jump;
                 }
-            }
+            } break;
 
+                /*
             case SwampOpcodeCompareEqual: {
                 SwampBool* target = (SwampBool*)readTargetStackPointerPos(&pc, bp);
                 const void* a = readSourceStackPointerPos(&pc, bp);
@@ -440,6 +429,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 size_t range = readShortRange(&pc);
                 *target = !swampMemoryCompareEqual(a, b, range);
             } break;
+*/
 
             case SwampOpcodeTailCall: {
                 // Arguments are not altered during the function execution

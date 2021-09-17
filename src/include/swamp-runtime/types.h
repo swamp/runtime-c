@@ -66,6 +66,12 @@ typedef struct SwampString {
 typedef const SwampString* SwampStringReference;
 typedef const SwampString** SwampStringReferenceData;
 
+
+typedef struct SwampBlob {
+    const uint8_t * characters;
+    size_t characterCount;
+} SwampBlob;
+
 typedef struct SwampArray {
     const void* value;
     size_t count;

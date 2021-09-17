@@ -52,9 +52,10 @@ message("deps ${deps}")
 
 file(GLOB_RECURSE deps_src FOLLOW_SYMLINKS
         "${deps}*/src/lib/*.c"
+        "${deps}swamp/*/src/lib/*.c"
         )
 
-
+message("deps_src ${deps_src}")
 function(unixlike)
         message("unixlike")
 endfunction()
@@ -79,6 +80,7 @@ target_include_directories(swamp-runtime PUBLIC ${deps}swamp/typeinfo-c/src/incl
 target_include_directories(swamp-runtime PUBLIC ${deps}clog/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}tiny-libc/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}flood-c/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}raff-c/src/include)
 
 set_target_properties(swamp-runtime
     PROPERTIES

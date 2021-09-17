@@ -3,106 +3,16 @@
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/log.h>
-#include <swamp-runtime/print.h>
 #include <swamp-runtime/types.h>
 #include <swamp-typeinfo/deserialize.h>
 #include <swamp-typeinfo/typeinfo.h>
 
 #include <clog/clog.h>
-#include <flood/out_stream.h>
 #include <raff/raff.h>
 #include <raff/tag.h>
 
 #include <string.h> // strcmp
 #include <swamp-runtime/swamp_unpack.h>
-
-void swampOctetStreamInit(SwampOctetStream* self, const uint8_t* octets, size_t octet_count)
-{
-    self->octets = octets;
-    self->octetCount = octet_count;
-    self->position = 0;
-}
-
-static inline uint8_t read_uint8(SwampOctetStream* s)
-{
-    if (s->position >= s->octetCount) {
-        char* p = 0;
-        *p = -1;
-    }
-
-    return s->octets[s->position++];
-}
-
-static inline int32_t read_int32(SwampOctetStream* s)
-{
-    if (s->position + 4 >= s->octetCount) {
-        char* p = 0;
-        *p = -1;
-    }
-    uint32_t h0 = read_uint8(s);
-    uint32_t h1 = read_uint8(s);
-    uint32_t h2 = read_uint8(s);
-    uint32_t h3 = read_uint8(s);
-    uint32_t t = (h0 << 24) | (h1 << 16) | (h2 << 8) | h3;
-    return t;
-}
-
-static inline int32_t read_uint32(SwampOctetStream* s)
-{
-    if (s->position + 4 >= s->octetCount) {
-        char* p = 0;
-        *p = -1;
-    }
-    uint32_t h0 = read_uint8(s);
-    uint32_t h1 = read_uint8(s);
-    uint32_t h2 = read_uint8(s);
-    uint32_t h3 = read_uint8(s);
-    uint32_t t = (h0 << 24) | (h1 << 16) | (h2 << 8) | h3;
-    return t;
-}
-
-static inline int32_t read_uint16(SwampOctetStream* s)
-{
-    if (s->position + 4 >= s->octetCount) {
-        char* p = 0;
-        *p = -1;
-    }
-    uint8_t h2 = read_uint8(s);
-    uint8_t h3 = read_uint8(s);
-    uint32_t t = (h2 << 8) | h3;
-    return t;
-}
-
-static inline void read_string(SwampOctetStream* s, char* buf)
-{
-    uint8_t len = read_uint8(s);
-    if (s->position + len >= s->octetCount) {
-        char* p = 0;
-        *p = -1;
-    }
-
-    const char* raw = (const char*) &s->octets[s->position];
-    for (int i = 0; i < len; i++) {
-        buf[i] = raw[i];
-    }
-    s->position += len;
-    buf[len] = 0;
-}
-
-static inline uint8_t read_count(SwampOctetStream* s)
-{
-    return read_uint8(s);
-}
-
-static inline uint32_t read_dword_count(SwampOctetStream* s)
-{
-    return read_uint32(s);
-}
-
-static void read_type_ref(SwampOctetStream* s, uint16_t* typeRef)
-{
-    *typeRef = read_uint16(s);
-}
 
 
 int readAndVerifyRaffHeader(SwampOctetStream* s)

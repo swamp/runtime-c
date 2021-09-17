@@ -77,11 +77,6 @@ static uint8_t readU8(const uint8_t **pc) {
 static size_t readShortRange(const uint8_t **pc) {
     return readU16(pc);
 }
-
-static size_t readStructOffset(const uint8_t **pc) {
-    return readU16(pc);
-}
-
 static size_t readCount(const uint8_t **pc) {
     return readU16(pc);
 }
@@ -92,10 +87,6 @@ static SwampInt32 readInt32(const uint8_t **pc) {
 
 static SwampBool readBool(const uint8_t **pc) {
     return (SwampBool) readU8(pc);
-}
-
-static size_t readSize(const uint8_t **pc) {
-    return readU16(pc);
 }
 
 static void* readStackPointerPos(const uint8_t **pc, const uint8_t* bp)
@@ -154,8 +145,6 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t
 #define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*)target, source, size)
 
 #define swampMemoryMove(target, source, size) tc_memmove_octets((void*)target, source, size)
-
-#define swampMemoryCompareEqual(target, source, size) (tc_memcmp((void*)target, source, size) == 0)
 
 static void pushOnStackPointer(const uint8_t** sp, const void* x, size_t octetSize)
 {

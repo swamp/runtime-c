@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+struct SwampMachineContext;
+
 typedef int SwampBool;
 
 #define SwampTrue (1)
@@ -84,44 +86,55 @@ typedef struct SwampArray {
 typedef SwampArray* SwampArrayReference;
 typedef SwampArray** SwampArrayReferenceData;
 
-typedef struct SwampFunc {
-    size_t curryOctetSize;
-    const uint8_t* curryOctets;
-    const struct SwampFunc* curryFunction;
+typedef enum SwampFunctionType {
+    SwampFunctionTypeInternal,
+    SwampFunctionTypeExternal,
+    SwampFunctionTypeCurry
+} SwampFunctionType;
 
+typedef struct SwampFunction {
+    SwampFunctionType type;
+} SwampFunction;
+
+typedef struct SwampFunc {
+    SwampFunction func;
     size_t parameterCount;
     size_t parametersOctetSize;
     const uint8_t* opcodes;
     size_t opcodeCount;
-
-    size_t totalStackUsed;
     size_t returnOctetSize;
-
-//    const swamp_value** constants; // or frozen variables in closure
-  //  size_t constant_count;
     const char* debugName;
     uint16_t typeIndex;
 } SwampFunc;
 
+typedef struct SwampCurryFunc {
+    SwampFunction func;
+    size_t curryOctetSize;
+    const uint8_t* curryOctets;
+    const struct SwampFunc* curryFunction;
+} SwampCurryFunc;
 
-typedef enum SwampFunctionType {
-    SwampFunctionTypeInternal,
-    SwampFunctionTypeExternal,
-} SwampFunctionType;
+typedef void (*SwampExternalFunction1)(void* result, struct SwampMachineContext* context, const void* argument1);
+typedef void (*SwampExternalFunction2)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2);
+typedef void (*SwampExternalFunction3)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3);
+typedef void (*SwampExternalFunction4)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3, const void* argument4);
 
-typedef struct SwampFunction {
-    const SwampFunc* internal_function;
-//    const swamp_external_func* external_function;
-    SwampFunctionType type;
-} swampFunction;
-
-struct SwampMachineContext;
-
-typedef void (*SwampExternalFunction)(struct SwampMachineContext* context, const void* arguments,
-                                      void* result, size_t requiredResultSize);
+typedef struct SwampFunctionExternalPosRange {
+    uint32_t pos;
+    uint32_t range;
+} SwampFunctionExternalPosRange;
 
 typedef struct SwampFunctionExternal {
-    const SwampExternalFunction externalFunction;
+    SwampFunction func;
+    size_t parameterCount;
+    SwampFunctionExternalPosRange returnValue;
+    SwampFunctionExternalPosRange parameters[8];
+    SwampExternalFunction1 function1;
+    SwampExternalFunction2 function2;
+    SwampExternalFunction3 function3;
+    SwampExternalFunction4 function4;
 } SwampFunctionExternal;
+
+struct SwampMachineContext;
 
 #endif

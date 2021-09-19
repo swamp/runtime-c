@@ -12,8 +12,8 @@
 #include <raff/tag.h>
 
 #include <string.h> // strcmp
+#include <swamp-runtime/fixup.h>
 #include <swamp-runtime/swamp_unpack.h>
-
 
 int readAndVerifyRaffHeader(SwampOctetStream* s)
 {
@@ -195,6 +195,8 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, int verb
         SWAMP_LOG_SOFT_ERROR("problem with code chunk");
         return errorCode;
     }
+
+    self->entry = swampFixupLedger(self->dynamicMemoryOctets, (SwampConstantLedgerEntry*) self->ledgerOctets);
 
     return 0;
 }

@@ -269,41 +269,63 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *target = swampAllocateListAppendNoCopy(&context->dynamicMemory, sourceListA, sourceListB);
             } break;
 
-            case SwampOpcodeCall: {
+            case SwampOpcodeCall:
+            case SwampOpcodeCallExternal: {
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunc* func = *((const SwampFunc**) readStackPointerPos(&pc, bp));
 
-                if (func->curryFunction) {
-                    swampMemoryMove((basePointer + func->curryOctetSize), basePointer, func->parametersOctetSize);
-                    swampMemoryCopy(basePointer, func->curryOctets, func->curryOctetSize);
-                    func = func->curryFunction;
-                } else {
+                if (func->func.type == SwampFunctionTypeCurry) {
+                    const SwampCurryFunc* curry = (const SwampCurryFunc*) func;
+                    swampMemoryMove((basePointer + curry->curryOctetSize), basePointer, func->parametersOctetSize);
+                    swampMemoryCopy(basePointer, curry->curryOctets, curry->curryOctetSize);
+                    func = curry->curryFunction;
                 }
 
-                // Store current state
-                call_stack_entry->pc = pc;
+                if (func->func.type == SwampFunctionTypeExternal) {
+                    CLOG_VERBOSE("Callexternal pc:%p bp:%p", pc, bp)
+                    const SwampFunctionExternal* externalFunction = (const SwampFunctionExternal*) func;
+                    switch (func->parameterCount) {
+                        case 1:
+                            externalFunction->function1(basePointer, context, basePointer + externalFunction->parameters[0].pos);
+                            break;
+                        case 2:
+                            externalFunction->function2(basePointer, context, basePointer + externalFunction->parameters[0].pos, basePointer + externalFunction->parameters[1].pos);
+                            break;
+                        case 3:
+                            externalFunction->function3(basePointer, context, basePointer + externalFunction->parameters[0].pos, basePointer + externalFunction->parameters[1].pos, basePointer + externalFunction->parameters[2].pos);
+                            break;
+                        case 4:
+                            externalFunction->function4(basePointer, context, basePointer + externalFunction->parameters[0].pos, basePointer + externalFunction->parameters[1].pos, basePointer + externalFunction->parameters[2].pos, basePointer + externalFunction->parameters[3].pos);
+                            break;
+                        default:
+                            SWAMP_LOG_ERROR("strange parameter count in external");
+                    }
+                } else {
+                    // Store current state
+                    call_stack_entry->pc = pc;
 
 #if SWAMP_CONFIG_DEBUG
-                if (stack->count >= 31) {
-                    SWAMP_LOG_ERROR("stack push overrun %zu", stack->count);
-                }
+                    if (stack->count >= 31) {
+                        SWAMP_LOG_ERROR("stack push overrun %zu", stack->count);
+                    }
 #endif
 
-                // Save current state
-                call_stack_entry->pc = pc;
-                call_stack_entry->basePointer = bp;
+                    // Save current state
+                    call_stack_entry->pc = pc;
+                    call_stack_entry->basePointer = bp;
 
-                // Set new stack entry
-                call_stack_entry = &stack->entries[++stack->count];
-                call_stack_entry->func = func;
-                call_stack_entry->pc = func->opcodes;
-                call_stack_entry->basePointer = basePointer;
-                CLOG_VERBOSE("SAVE pc:%p bp:%p", pc, bp)
+                    // Set new stack entry
+                    call_stack_entry = &stack->entries[++stack->count];
+                    call_stack_entry->func = func;
+                    call_stack_entry->pc = func->opcodes;
+                    call_stack_entry->basePointer = basePointer;
+                    CLOG_VERBOSE("SAVE pc:%p bp:%p", pc, bp)
 
-                // Set variables
-                bp = basePointer;
-                pc = func->opcodes;
-                CLOG_VERBOSE("Call pc:%p bp:%p", pc, bp)
+                    // Set variables
+                    bp = basePointer;
+                    pc = func->opcodes;
+                    CLOG_VERBOSE("Call pc:%p bp:%p", pc, bp)
+                }
             } break;
 
             case SwampOpcodeCurry: {
@@ -314,13 +336,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *targetFunc = swampCurryFuncAllocate(&context->dynamicMemory, sourceFunc, argumentsStartPointer, argumentsRange);
             } break;
 
-            case SwampOpcodeCallExternal: {
-                void* target = readTargetStackPointerPos(&pc, bp);
-                size_t debugRequiredTargetRange = readShortRange(&pc);
-                const SwampFunctionExternal* func = (const SwampFunctionExternal*) readStackPointerZeroPagePos(&pc, context->stackMemory.memory);
-                const void* argumentStart = readSourceStackPointerPos(&pc, bp);
-                func->externalFunction(context, argumentStart, target, debugRequiredTargetRange);
-            } break;
+
 
             case SwampOpcodeEnumCase: {
                 const void* source = readSourceStackPointerPos(&pc, bp);

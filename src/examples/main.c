@@ -9,55 +9,8 @@
 #include <swamp-runtime/swamp_unpack.h>
 #include <swamp-runtime/log.h>
 #include <unistd.h>
+
 clog_config g_clog;
-
-typedef struct SwampConstantLedgerEntry {
-    uint32_t constantType;
-    uint32_t offset;
-} SwampConstantLedgerEntry;
-
-#define LedgerTypeFunc (3)
-#define LedgerTypeString (1)
-
-void logMemory(const uint8_t* octets, size_t count) {
-    const uint8_t* p = octets;
-    for (size_t i=0; i<count; ++i) {
-        uint8_t data = *p;
-        CLOG_INFO("%d %02X", i, data);
-        p++;
-    }
-}
-
-
-const SwampFunc* checkLedger(const uint8_t* const dynamicMemoryOctets, const SwampConstantLedgerEntry* entries) {
-    const SwampFunc* entryFunc = 0;
-    const SwampConstantLedgerEntry* entry = entries;
-    while (entry->constantType != 0) {
-        CLOG_INFO("ledger: %d %d", entry->constantType, entry->offset);
-        const uint8_t* p = (dynamicMemoryOctets + entry->offset);
-        switch (entry->constantType) {
-            case LedgerTypeFunc: {
-                SwampFunc* func = (const SwampFunc*)p;
-                CLOG_INFO("func: opcode count %d", func->opcodeCount)
-                CLOG_INFO("func: opcode offset %d", func->opcodes)
-                func->opcodes = (dynamicMemoryOctets + (uintptr_t)func->opcodes);
-                CLOG_INFO("func: first opcode: %02X", *func->opcodes);
-                entryFunc = func;
-            } break;
-            case LedgerTypeString: {
-                SwampString* str = (const SwampString *)p;
-                CLOG_INFO("str: character count %d", str->characterCount)
-                str->characters = (dynamicMemoryOctets + (uintptr_t)str->characters);
-                CLOG_INFO("str: characters: %s", str->characters);
-            } break;
-        }
-        entry++;
-    }
-
-    return entryFunc;
-}
-
-
 
 int main(int argc, char* argv[])
 {
@@ -74,16 +27,31 @@ int main(int argc, char* argv[])
     } else {
        SWAMP_LOG_INFO("pwd: %s", buf);
         }
-    int unpackErr = swampUnpackFilename(&unpack, "out.swamp-pack", 1);
+    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", 1);
     if (unpackErr < 0) {
         SWAMP_ERROR("couldn't unpack %d", unpackErr)
         return unpackErr;
     }
 
-    const SwampFunc* func = checkLedger( unpack.dynamicMemoryOctets, (SwampConstantLedgerEntry*) unpack.ledgerOctets);
+    typedef struct SwampFunctionExternal {
+        SwampFunction func;
+        size_t parameterCount;
+        SwampFunctionExternalPosRange returnValue;
+        SwampFunctionExternalPosRange parameters[8];
+        SwampExternalFunction1 function1;
+        SwampExternalFunction2 function2;
+        SwampExternalFunction3 function3;
+        SwampExternalFunction4 function4;
+    } SwampFunctionExternal;
+
+    SWAMP_LOG_INFO("Swampfunction:%d SwampFunc:%d offset opcodes:%d parametersOctetSize: %d size_t:%d  enum:%d", sizeof(SwampFunction), sizeof(SwampFunc), offsetof(SwampFunc, opcodes),  offsetof(SwampFunc, parameterCount), sizeof (size_t), sizeof(SwampFunction));
+    SWAMP_LOG_INFO("Swampexternalfunction: SwampFunctionExternal %d parameterCount:%d return:%d params0:%d params7:%d", sizeof(SwampFunctionExternal), offsetof(SwampFunctionExternal, parameterCount), offsetof(SwampFunctionExternal, returnValue), offsetof(SwampFunctionExternal, parameters[0]), offsetof(SwampFunctionExternal, parameters[7]));
+
+
+    const SwampFunc* func = unpack.entry;
 
     SwampMachineContext context;
-    context.dynamicMemory.memory = unpack.dynamicMemoryOctets;
+    context.dynamicMemory.memory = (uint8_t*) unpack.dynamicMemoryOctets;
     context.dynamicMemory.maxAllocatedSize = unpack.dynamicMemoryMaxSize;
     context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;

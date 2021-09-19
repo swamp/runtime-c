@@ -7,6 +7,7 @@
 
 #include <swamp-runtime/swamp.h>
 
+/*
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_remainder_by);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_sin);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_cos);
@@ -20,5 +21,8 @@ SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_lerp);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_metronome);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_drunk);
 SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_math_mod);
+ */
+
+void swampCoreMathRemainderBy(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value);
 
 #endif

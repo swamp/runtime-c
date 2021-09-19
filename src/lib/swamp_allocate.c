@@ -125,11 +125,9 @@ const uint8_t* swampAllocateOctets(SwampDynamicMemory* self, const uint8_t* octe
 SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, size_t opcodeCount, size_t parametersOctetSize, size_t returnOctetSize)
 {
     SwampFunc* func = (SwampFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampFunc));
+    func->func.type = SwampFunctionTypeInternal;
     func->opcodes = swampAllocateOctets(self, opcodes, opcodeCount);
     func->opcodeCount = opcodeCount;
-    func->curryFunction = 0;
-    func->curryOctetSize = 0;
-    func->curryOctets = 0;
     func->returnOctetSize = returnOctetSize;
     func->parametersOctetSize = parametersOctetSize;
 
@@ -139,14 +137,11 @@ SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, s
 
 SwampFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
 {
-    SwampFunc* func = (SwampFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampFunc));
-    func->opcodes = 0;
-    func->opcodeCount = 0;
+    SwampCurryFunc * func = (SwampCurryFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampCurryFunc));
+    func->func.type = SwampFunctionTypeCurry;
     func->curryFunction = sourceFunc;
     func->curryOctetSize = parametersOctetSize;
     func->curryOctets = swampAllocateOctets(self, parameters, parametersOctetSize);
-    func->returnOctetSize = func->returnOctetSize;
-    func->parametersOctetSize = 0;
 
     return func;
 }

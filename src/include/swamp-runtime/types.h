@@ -73,8 +73,8 @@ typedef const SwampString** SwampStringReferenceData;
 
 
 typedef struct SwampBlob {
-    const uint8_t * characters;
-    size_t characterCount;
+    const uint8_t* octets;
+    size_t octetCount;
 } SwampBlob;
 
 typedef struct SwampArray {

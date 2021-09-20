@@ -9,8 +9,18 @@
 #include <swamp-runtime/swamp_unpack.h>
 #include <swamp-runtime/log.h>
 #include <unistd.h>
-
+#include <swamp-runtime/core/math.h>
 clog_config g_clog;
+
+
+void* bindFn(const char* fullyQualifiedName) {
+    if (tc_str_equal(fullyQualifiedName, "Math.remainderBy")) {
+        return swampCoreMathRemainderBy;
+    }
+
+    return 0;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -27,25 +37,14 @@ int main(int argc, char* argv[])
     } else {
        SWAMP_LOG_INFO("pwd: %s", buf);
         }
-    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", 1);
+    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", bindFn, 1);
     if (unpackErr < 0) {
         SWAMP_ERROR("couldn't unpack %d", unpackErr)
         return unpackErr;
     }
 
-    typedef struct SwampFunctionExternal {
-        SwampFunction func;
-        size_t parameterCount;
-        SwampFunctionExternalPosRange returnValue;
-        SwampFunctionExternalPosRange parameters[8];
-        SwampExternalFunction1 function1;
-        SwampExternalFunction2 function2;
-        SwampExternalFunction3 function3;
-        SwampExternalFunction4 function4;
-    } SwampFunctionExternal;
-
     SWAMP_LOG_INFO("Swampfunction:%d SwampFunc:%d offset opcodes:%d parametersOctetSize: %d size_t:%d  enum:%d", sizeof(SwampFunction), sizeof(SwampFunc), offsetof(SwampFunc, opcodes),  offsetof(SwampFunc, parameterCount), sizeof (size_t), sizeof(SwampFunction));
-    SWAMP_LOG_INFO("Swampexternalfunction: SwampFunctionExternal %d parameterCount:%d return:%d params0:%d params7:%d", sizeof(SwampFunctionExternal), offsetof(SwampFunctionExternal, parameterCount), offsetof(SwampFunctionExternal, returnValue), offsetof(SwampFunctionExternal, parameters[0]), offsetof(SwampFunctionExternal, parameters[7]));
+    SWAMP_LOG_INFO("Swampexternalfunction: SwampFunctionExternal %d parameterCount:%d return:%d params0:%d params7:%d", sizeof(SwampFunctionExternal), offsetof(SwampFunctionExternal, fullyQualifiedName), offsetof(SwampFunctionExternal, returnValue), offsetof(SwampFunctionExternal, parameters[0]), offsetof(SwampFunctionExternal, parameters[7]));
 
 
     const SwampFunc* func = unpack.entry;

@@ -5,6 +5,8 @@
 #ifndef SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_FIXUP_H
 #define SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_FIXUP_H
 
+#include <swamp-runtime/swamp_unpack.h>
+
 struct SwampConstantLedgerEntry;
 struct SwampFunc;
 
@@ -20,6 +22,6 @@ typedef struct SwampConstantLedgerEntry {
 #define LedgerTypeString (1)
 
 
-const struct SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, const struct SwampConstantLedgerEntry* entries);
+const struct SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, SwampResolveExternalFunction fn, const struct SwampConstantLedgerEntry* entries);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_FIXUP_H

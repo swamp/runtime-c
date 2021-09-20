@@ -119,6 +119,8 @@ typedef void (*SwampExternalFunction2)(void* result, struct SwampMachineContext*
 typedef void (*SwampExternalFunction3)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3);
 typedef void (*SwampExternalFunction4)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3, const void* argument4);
 
+
+
 typedef struct SwampFunctionExternalPosRange {
     uint32_t pos;
     uint32_t range;
@@ -133,6 +135,7 @@ typedef struct SwampFunctionExternal {
     SwampExternalFunction2 function2;
     SwampExternalFunction3 function3;
     SwampExternalFunction4 function4;
+    const char* fullyQualifiedName;
 } SwampFunctionExternal;
 
 struct SwampMachineContext;

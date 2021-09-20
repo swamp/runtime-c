@@ -8,6 +8,7 @@
 #include <swamp-runtime/types.h>
 
 #include <swamp-runtime/core/math.h>
+#include <swamp-runtime/swamp_unpack.h>
 
 void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;
@@ -18,38 +19,53 @@ void logMemory(const uint8_t* octets, size_t count) {
     }
 }
 
+#define FIXUP_DYNAMIC_POINTER(field, type) field = (type) (dynamicMemoryOctets + (uintptr_t)field)
+#define FIXUP_DYNAMIC_STRING(field) FIXUP_DYNAMIC_POINTER(field, const char*)
 
-const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, const SwampConstantLedgerEntry* entries) {
+const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, SwampResolveExternalFunction bindFn, const SwampConstantLedgerEntry* entries) {
     const SwampFunc* entryFunc = 0;
     const SwampConstantLedgerEntry* entry = entries;
     while (entry->constantType != 0) {
-        CLOG_INFO("ledger: %d %d", entry->constantType, entry->offset);
+        CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
         const uint8_t* p = (dynamicMemoryOctets + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
                 SwampFunc* func = (const SwampFunc*)p;
-                CLOG_INFO("func: opcode count %d", func->opcodeCount)
-                CLOG_INFO("func: opcode offset %d", func->opcodes)
-                func->opcodes =  (const uint8_t *) (dynamicMemoryOctets + (uintptr_t)func->opcodes);
-                CLOG_INFO("func: first opcode: %02X", *func->opcodes);
+                FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
+                FIXUP_DYNAMIC_STRING(func->debugName);
+                CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 entryFunc = func;
             } break;
             case LedgerTypeExternalFunc: {
                 SwampFunctionExternal* func = (const SwampFunctionExternal *)p;
-                CLOG_INFO("func external: parameter count %d", func->parameterCount)
-                func->function2 = swampCoreMathRemainderBy;
-                func->returnValue.pos = 0;
-                func->returnValue.range = 4;
-                func->parameters[0].pos = 4;
-                func->parameters[0].range = 4;
-                func->parameters[1].pos = 8;
-                func->parameters[1].range = 4;
+                FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
+                void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
+                switch (func->parameterCount) {
+                    case 1:
+                        func->function1 = resolvedFunctionPointer;
+                        break;
+                    case 2:
+                        func->function2 = resolvedFunctionPointer;
+                        break;
+                    case 3:
+                        func->function3 = resolvedFunctionPointer;
+                        break;
+                    case 4:
+                        func->function4 = resolvedFunctionPointer;
+                        break;
+                }
+                CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)
+                CLOG_INFO("  externalFunction external: return pos %d range %d", func->returnValue.pos, func->returnValue.range);
+                for (size_t i=0; i<func->parameterCount;++i) {
+                    CLOG_INFO("  externalFunction: param %d pos %d range %d", i, func->parameters[i].pos, func->parameters[i].range);
+                }
+
+
             } break;
             case LedgerTypeString: {
                 SwampString* str = (const SwampString *)p;
-                CLOG_INFO("str: character count %d", str->characterCount)
-                str->characters = (const char*) (dynamicMemoryOctets + (uintptr_t)str->characters);
-                CLOG_INFO("str: characters: %s", str->characters);
+                FIXUP_DYNAMIC_STRING(str->characters);
+                CLOG_INFO("  str: characters: %s (%d)", str->characters, str->characterCount);
             } break;
             default: {
                 CLOG_ERROR("Unknown ledger fixup")

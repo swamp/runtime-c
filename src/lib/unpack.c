@@ -140,7 +140,7 @@ int readDynamicMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
     return 0;
 }
 
-int readLedger(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
 {
     int errorCode;
 
@@ -166,7 +166,7 @@ int readLedger(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
     return 0;
 }
 
-int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
 {
     int errorCode = readAndVerifyRaffHeader(s);
     if (errorCode != 0) {
@@ -191,12 +191,12 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, int verb
         return errorCode;
     }
 
-    if ((errorCode = readLedger(self, s, verboseFlag)) != 0) {
+    if ((errorCode = readLedger(self, s, bindFn, verboseFlag)) != 0) {
         SWAMP_LOG_SOFT_ERROR("problem with code chunk");
         return errorCode;
     }
 
-    self->entry = swampFixupLedger(self->dynamicMemoryOctets, (SwampConstantLedgerEntry*) self->ledgerOctets);
+    self->entry = swampFixupLedger(self->dynamicMemoryOctets, bindFn, (SwampConstantLedgerEntry*) self->ledgerOctets);
 
     return 0;
 }
@@ -206,24 +206,24 @@ static void readWholeFile(const char* filename, SwampOctetStream* stream)
     uint8_t* source = 0;
     FILE* fp = fopen(filename, "rb");
     if (fp == 0) {
-        SWAMP_LOG_INFO("errror:%s\n", filename);
+        SWAMP_LOG_INFO("swampUnpack readWholeFile error:%s", filename);
         return;
     }
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        SWAMP_LOG_INFO("seek err:\n");
+        SWAMP_LOG_INFO("swampUnpack seek err:");
         return;
     }
 
     long bufsize = ftell(fp);
     if (bufsize == -1) {
-        SWAMP_LOG_INFO("bufsize error\n");
+        SWAMP_LOG_INFO("swampUnpack bufsize error");
         return;
     }
 
     source = malloc(sizeof(uint8_t) * (bufsize));
 
     if (fseek(fp, 0L, SEEK_SET) != 0) {
-        SWAMP_LOG_INFO("seek error\n");
+        SWAMP_LOG_INFO("swampUnpack seek error");
         return;
     }
 
@@ -248,12 +248,12 @@ void swampUnpackFree(SwampUnpack* self)
     swtiChunkDestroy(&self->typeInfoChunk);
 }
 
-int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, int verboseFlag)
+int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, SwampResolveExternalFunction bindFn, int verboseFlag)
 {
     SwampOctetStream stream;
     SwampOctetStream* s = &stream;
     readWholeFile(pack_filename, s);
-    int result = swampUnpackSwampOctetStream(self, s, verboseFlag);
+    int result = swampUnpackSwampOctetStream(self, s, bindFn, verboseFlag);
     free((void*) s->octets);
     return result;
 }

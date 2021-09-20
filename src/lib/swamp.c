@@ -13,10 +13,10 @@
 
 
 static const char* g_swamp_opcode_names[] = {
-    "nop",       "ecase",     "brfa",   "brt",  "jump",  "call", "return",         "callext",
-    "tail", "curry", "iadd",       "isub",   "imul",  "idiv",  "ineg", "fxmul",  "fxdiv",          "ieql",   "ineq",   "iless",
-    "icple", "icpgr", "icpgte",   "inot", "scpeq", "scpneq", "iand", "ior", "ixor", "inot",
-    "crli",   "crar",   "lconj", "lappend", "strappend","ild", "bld", "rld", "zmld", "memcpy", "eset"};
+    "nop",       "cse",     "brfa",   "brt",  "jmp",  "call", "ret",         "ecall",
+    "tail", "curry", "addi",       "subi",   "muli",  "divi",  "negi", "mulfx",  "divfx",          "cpeli",   "cpnei",   "cpli",
+    "cplei", "cpgi", "cpgei",   "noti", "cpes", "cpnes", "andi", "ori", "xori", "noti",
+    "crlst",   "crarr",   "conjl", "addlst", "appendstr", "ldi", "ldb", "ldr", "ldz", "cpy", "lde"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {

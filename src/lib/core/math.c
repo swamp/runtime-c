@@ -264,10 +264,23 @@ void* swampCoreMathFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
         {"Math.remainderBy", swampCoreMathRemainderBy},
+        {"Math.abs", swampCoreMathAbs},
+        {"Math.atan", swampCoreMathATan},
+        {"Math.atan2", swampCoreMathATan},
+        {"Math.clamp", swampCoreMathClamp},
+        {"Math.cos", swampCoreMathCos},
+        {"Math.sin", swampCoreMathSin},
+        {"Math.sign", swampCoreMathSign},
+        {"Math.drunk", swampCoreMathRandomDelta},
+        {"Math.lerp", swampCoreMathLerp},
+        {"Math.metronome", swampCoreMathMetronome},
+        {"Math.mid", swampCoreMathMid},
+        {"Math.mod", swampCoreMathMod},
+        {"Math.rnd", swampCoreMathRnd},
     };
 
-    for (size_t i = 0; i < sizeof(info) / sizeof(info); ++i) {
-        if (tc_str_equal(info[i].name, fullyQualifiedName) == 0) {
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
             return info[i].fn;
         }
     }

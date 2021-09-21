@@ -193,14 +193,15 @@ void swampCoreListFoldlStop()
 void* swampCoreListFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
+        {"List.head", swampCoreListHead},
         {"List.tail", swampCoreListTail},
         {"List.isEmpty", swampCoreListIsEmpty},
         {"List.length", swampCoreListLength},
         {"List.map", swampCoreListMap},
     };
 
-    for (size_t i = 0; i < sizeof(info) / sizeof(info); ++i) {
-        if (tc_str_equal(info[i].name, fullyQualifiedName) == 0) {
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
             return info[i].fn;
         }
     }

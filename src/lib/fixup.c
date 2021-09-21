@@ -42,6 +42,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 SwampFunctionExternal* func = (const SwampFunctionExternal *)p;
                 FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
                 void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
+                if (resolvedFunctionPointer == 0) {
+                    CLOG_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
+                }
                 switch (func->parameterCount) {
                     case 1:
                         func->function1 = resolvedFunctionPointer;

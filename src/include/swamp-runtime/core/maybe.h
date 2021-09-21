@@ -7,6 +7,6 @@
 
 #include <swamp-runtime/swamp.h>
 
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_maybe_with_default);
+void* swampCoreMaybeFindFunction(const char* fullyQualifiedName);
 
 #endif

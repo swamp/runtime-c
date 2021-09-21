@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/core/list.h>
+#include <swamp-runtime/core/maybe.h>
 
 void* swampCoreFindFunction(const char* fullyQualifiedName)
 {
@@ -13,6 +14,12 @@ void* swampCoreFindFunction(const char* fullyQualifiedName)
     }
 
     foundFn = swampCoreListFindFunction(fullyQualifiedName);
+    if (foundFn) {
+        return foundFn;
+    }
+
+
+    foundFn = swampCoreMaybeFindFunction(fullyQualifiedName);
     if (foundFn) {
         return foundFn;
     }

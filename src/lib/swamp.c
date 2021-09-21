@@ -198,6 +198,10 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 #if SWAMP_CONFIG_DEBUG || 1
         if (verbose_flag) {
             uint16_t addr = pc - call_stack_entry->pc;
+            if (pc == 0) {
+                SWAMP_LOG_SOFT_ERROR("pc is null");
+            }
+            SWAMP_LOG_INFO("--- %04X  [0x%02x]", addr, *pc);
             SWAMP_LOG_INFO("--- %04X  %s [0x%02x]", addr, swamp_opcode_name(*pc), *pc);
         }
 #endif
@@ -395,6 +399,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                             found = 1;
                         }
                     }
+                }
+                if (jump_to_use == 0) {
+                    CLOG_ERROR("could not find matching enum")
                 }
                 pc = jump_to_use;
             } break;

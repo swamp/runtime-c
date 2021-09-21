@@ -16,7 +16,7 @@ static const char* g_swamp_opcode_names[] = {
     "nop",       "cse",     "brfa",   "brt",  "jmp",  "call", "ret",         "ecall",
     "tail", "curry", "addi",       "subi",   "muli",  "divi",  "negi", "mulfx",  "divfx",          "cpeli",   "cpnei",   "cpli",
     "cplei", "cpgi", "cpgei",   "noti", "cpes", "cpnes", "andi", "ori", "xori", "noti",
-    "crlst",   "crarr",   "conjl", "addlst", "appendstr", "ldi", "ldb", "ldr", "ldz", "cpy", "lde"};
+    "crlst",   "crarr",   "conjl", "addlst", "appendstr", "ldi", "ldb", "ldr", "ldz", "cpy", "lde", "callvar"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {
@@ -77,8 +77,17 @@ static uint8_t readU8(const uint8_t **pc) {
 static size_t readShortRange(const uint8_t **pc) {
     return readU16(pc);
 }
+
+static size_t readAlign(const uint8_t **pc) {
+    return readU8(pc);
+}
+
 static size_t readCount(const uint8_t **pc) {
     return readU16(pc);
+}
+
+static size_t readShortCount(const uint8_t **pc) {
+    return readU8(pc);
 }
 
 static SwampInt32 readInt32(const uint8_t **pc) {
@@ -152,8 +161,9 @@ static void pushOnStackPointer(const uint8_t** sp, const void* x, size_t octetSi
     *sp += octetSize;
 }
 
-int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters runParameters,
-             SwampResult* result, SwampBool verbose_flag)
+
+int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc* f, SwampParameters runParameters,
+             SwampBool verbose_flag)
 {
     const uint8_t* pc = f->opcodes;
     const uint8_t* bp = context->bp;
@@ -258,7 +268,6 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 swampMemoryCopy(dynamicItemMemory, sourceItem, range);
                 newList->value = dynamicItemMemory;
                 newList->count = sourceList->count+1;
-                newList->next = sourceList;
 
                 *target = newList;
             } break;
@@ -270,6 +279,33 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                 *target = swampAllocateListAppendNoCopy(&context->dynamicMemory, sourceListA, sourceListB);
             } break;
 
+            case SwampOpcodeCallExternalWithSizes: {
+                const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
+                const SwampFunctionExternal* externalFunction = *((const SwampFunctionExternal **) readStackPointerPos(&pc, bp));
+                uint8_t count = readShortCount(&pc);
+                const void* params[8];
+                for (uint8_t i=0; i<count;i++) {
+                    uint16_t offset = readU16(&pc);
+                    uint16_t size = readU16(&pc);
+                    params[i] = basePointer + offset;
+                }
+                switch (externalFunction->parameterCount) {
+                    case 1:
+                        externalFunction->function1(basePointer, context, params[1]);
+                        break;
+                    case 2:
+                        externalFunction->function2(basePointer, context, params[1], params[2]);
+                        break;
+                    case 3:
+                        externalFunction->function3(basePointer, context, params[1], params[2], params[3]);
+                        break;
+                    case 4:
+                        externalFunction->function4(basePointer, context, params[1], params[2], params[3], params[4]);
+                        break;
+                    default:
+                        SWAMP_LOG_ERROR("strange parameter count in external with sizes");
+                }
+            } break;
             case SwampOpcodeCall:
             case SwampOpcodeCallExternal: {
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
@@ -403,8 +439,9 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
 */
             case SwampOpcodeListCreate: {
                 SwampListReferenceData listReferenceTarget = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
-                size_t itemCount = readCount(&pc);
                 size_t itemSize = readShortRange(&pc);
+                size_t itemAlign = readAlign(&pc);
+                size_t itemCount = readShortCount(&pc);
                 void* targetItems = swampDynamicMemoryAlloc(&context->dynamicMemory, itemSize, itemCount);
                 uint8_t* pItems = targetItems;
                 for (size_t i = 0; i < itemCount; ++i) {
@@ -412,7 +449,7 @@ int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters r
                     swampMemoryCopy(pItems, item, itemSize);
                     pItems += itemSize;
                 }
-                const SwampList* list = swampListAllocateNoCopy(&context->dynamicMemory, targetItems, itemCount, itemSize);
+                const SwampList* list = swampListAllocateNoCopy(&context->dynamicMemory, targetItems, itemCount, itemSize, itemAlign);
                 *listReferenceTarget = list;
             } break;
 

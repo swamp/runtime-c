@@ -2,16 +2,15 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#ifndef swamp_core_bind_h
-#define swamp_core_bind_h
+#ifndef SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H
+#define SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H
 
 #include <swamp-runtime/types.h>
 
-typedef struct SwampBindingInfo {
-    const char* name;
-    void* fn;
-} SwampBindingInfo;
+void* swampCoreListFindFunction(const char* fullyQualifiedName);
 
-void* swampCoreFindFunction(const char* function_name);
+void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** list);
 
-#endif
+
+
+#endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H

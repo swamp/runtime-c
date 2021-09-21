@@ -11,13 +11,13 @@
 
 typedef struct SwampMachineContext {
     SwampStackMemory stackMemory;
-    uint8_t* sp;
     uint8_t* bp;
     SwampDynamicMemory dynamicMemory;
+    uint8_t* tempResult;
 } SwampMachineContext;
 
-int swampRun(SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
-             SwampResult* result, SwampBool verbose_flag);
+int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
+             SwampBool verbose_flag);
 
 
 #endif

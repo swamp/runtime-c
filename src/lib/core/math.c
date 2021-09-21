@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 #include <math.h>
 
+#include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/swamp.h>
+#include <tiny-libc/tiny_libc.h>
 
 #define FIXED_MULTIPLIER (1000)
 #define MAX_FIXED_RADIAN (6280)
@@ -136,8 +138,6 @@ static SwampFixed32 degreeToFixedAngle(SwampInt32 degreeAngle)
     return (degreeAngle * MAX_FIXED_RADIAN) / MAX_DEGREE;
 }
 
-
-
 void swampCoreMathSin(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* angle)
 {
     *result = sinHelper(*angle);
@@ -258,4 +258,19 @@ void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const Sw
     int remainder = mod(*value, *divider);
 
     *result = remainder;
+}
+
+void* swampCoreMathFindFunction(const char* fullyQualifiedName)
+{
+    SwampBindingInfo info[] = {
+        {"Math.remainderBy", swampCoreMathRemainderBy},
+    };
+
+    for (size_t i = 0; i < sizeof(info) / sizeof(info); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName) == 0) {
+            return info[i].fn;
+        }
+    }
+    // SWAMP_LOG_INFO("didn't find: %s", function_name);
+    return 0;
 }

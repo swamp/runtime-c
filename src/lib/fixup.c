@@ -34,7 +34,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
                 FIXUP_DYNAMIC_STRING(func->debugName);
                 CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
-                entryFunc = func;
+                if (tc_str_equal(func->debugName, "main")) {
+                    entryFunc = func;
+                }
             } break;
             case LedgerTypeExternalFunc: {
                 SwampFunctionExternal* func = (const SwampFunctionExternal *)p;

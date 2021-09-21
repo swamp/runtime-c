@@ -9,18 +9,9 @@
 #include <swamp-runtime/swamp_unpack.h>
 #include <swamp-runtime/log.h>
 #include <unistd.h>
-#include <swamp-runtime/core/math.h>
+#include <swamp-runtime/core/core.h>
+
 clog_config g_clog;
-
-
-void* bindFn(const char* fullyQualifiedName) {
-    if (tc_str_equal(fullyQualifiedName, "Math.remainderBy")) {
-        return swampCoreMathRemainderBy;
-    }
-
-    return 0;
-}
-
 
 int main(int argc, char* argv[])
 {
@@ -37,7 +28,7 @@ int main(int argc, char* argv[])
     } else {
        SWAMP_LOG_INFO("pwd: %s", buf);
         }
-    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", bindFn, 1);
+    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", swampCoreFindFunction, 1);
     if (unpackErr < 0) {
         SWAMP_ERROR("couldn't unpack %d", unpackErr)
         return unpackErr;
@@ -50,29 +41,37 @@ int main(int argc, char* argv[])
     const SwampFunc* func = unpack.entry;
 
     SwampMachineContext context;
-    context.dynamicMemory.memory = (uint8_t*) unpack.dynamicMemoryOctets;
-    context.dynamicMemory.maxAllocatedSize = unpack.dynamicMemoryMaxSize;
+    swampDynamicMemoryInit(&context.dynamicMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
     context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;
     context.bp = context.stackMemory.memory;
-    context.sp = context.stackMemory.memory;
+
+
+
+    typedef struct Position {
+        int32_t x;
+        int32_t y;
+    } Position;
 
     SwampResult result;
-    result.expectedOctetSize = 0; // sizeof(SwampStringReference);
+    result.expectedOctetSize = sizeof(Position);
     result.target = 0;
 
     SwampParameters parameters;
     parameters.octetSize = 0;
     parameters.parameterCount = 0;
 
-    int worked = swampRun(&context, func, parameters, &result, 1);
+    int worked = swampRun(&result, &context, func, parameters, 1);
 #if 0
     const SwampListReference resultList = (SwampListReference) result.target;
     const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
     CLOG_INFO("result in list: %d", *resultIntegerInList);
 #else
-    SwampBool *v = ((SwampBool *) context.stackMemory.memory);
-    CLOG_INFO("result is: %d", *v);
+
+
+
+    Position *v = ((Position *) context.stackMemory.memory);
+    CLOG_INFO("result is: %d %d", v->y, v->x);
     //SwampString* v = *((SwampString **) context.stackMemory.memory);
     //CLOG_INFO("result is: %s", v->characters);
 #endif

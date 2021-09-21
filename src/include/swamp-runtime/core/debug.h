@@ -7,7 +7,7 @@
 
 #include <swamp-runtime/swamp.h>
 
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_debug_log);
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_debug_to_string);
+void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const struct SwampString** value);
+void swampCoreDebugToString(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const struct SwampString** value);
 
 #endif

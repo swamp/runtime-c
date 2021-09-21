@@ -26,7 +26,7 @@ static void write_u32(uint8_t** p, uint32_t v)
    *((uint32_t*) *p) = htonl(v);
    *p += 4;
 }
-
+/*
 static int copyDynamicMemory(const void* v, const SwtiType* type, SwampDynamicMemory* dynamic)
 {
     switch (type->type) {
@@ -66,10 +66,11 @@ static int copyDynamicMemory(const void* v, const SwtiType* type, SwampDynamicMe
         } break;
     }
 }
-
+*/
 
 int swampSerialize(const void* v, const SwtiType* type, uint8_t* stackMemory, size_t maxStackMemorySize, SwampDynamicMemory* dynamic)
 {
+    /*
    uint8_t* p = *target;
    const uint8_t* endp = p + max_size;
 
@@ -174,4 +175,6 @@ int swampSerialize(const void* v, const SwtiType* type, uint8_t* stackMemory, si
 
    *target = p;
    return 0;
+     */
+    return 0;
 }

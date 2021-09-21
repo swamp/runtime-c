@@ -62,6 +62,7 @@
 #define SwampOpcodeLoadZeroMemory 0x26
 #define SwampOpcodeMemCopy 0x27
 #define SwampOpcodeSetEnum 0x28
+#define SwampOpcodeCallExternalWithSizes 0x29
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------

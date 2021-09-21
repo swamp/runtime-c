@@ -6,6 +6,7 @@
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/types.h>
 #include <swamp-runtime/swamp_allocate.h>
+#include <swamp-runtime/log.h>
 
 const SwampString* swampStringAllocate( SwampDynamicMemory* self, const char* s)
 {
@@ -22,96 +23,67 @@ const SwampString* swampStringAllocate( SwampDynamicMemory* self, const char* s)
 const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self)
 {
     SwampList* emptyList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
-    emptyList->next = 0;
     emptyList->count = 0;
     emptyList->value = 0;
+    emptyList->itemAlign = 0;
+    emptyList->itemSize = 0;
 
     return emptyList;
 }
 
-const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize)
+SwampList* swampListAllocatePrepare(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t itemAlign)
 {
+    SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
+
     uint8_t* itemMemory = swampDynamicMemoryAlloc(self, itemCount, itemSize);
-    memcpy(itemMemory, items, itemCount * itemSize);
+    newNode->value = itemMemory;
+    newNode->itemSize = itemSize;
+    newNode->itemAlign = itemAlign;
+    newNode->count = itemCount;
 
-    SwampList* tailNode = 0;
-    SwampList* headNode = 0;
-    for (size_t i = 0; i < itemCount; ++i) {
-        SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
-        if (tailNode) {
-            tailNode->next = newNode;
-        }
-        if (!headNode) {
-            headNode = newNode;
-        }
-        int index = itemCount - 1 - i;
-        newNode->value = itemMemory + index * itemSize;
-        newNode->count = i + 1;
-        newNode->next = 0;
-
-        tailNode = newNode;
-    }
-
-    return headNode;
+    return newNode;
 }
 
-const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize)
+const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize, size_t itemAlign)
 {
-    SwampList* tailNode = 0;
-    SwampList* headNode = 0;
-    for (size_t i = 0; i < itemCount; ++i) {
-        SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
-        if (tailNode) {
-            tailNode->next = newNode;
-        }
-        if (!headNode) {
-            headNode = newNode;
-        }
-        int index = itemCount - 1 - i;
-        newNode->value = (uint8_t*)itemMemory + index * itemSize;
-        newNode->count = i + 1;
-        newNode->next = 0;
+    SwampList* list = swampListAllocatePrepare(self, itemCount, itemSize, itemAlign);
 
-        tailNode = newNode;
-    }
+    tc_memcpy_octets(list->value, items, itemSize * itemCount);
 
-    return headNode;
+    return list;
 }
 
-SwampList* swampAllocateDuplicateList(SwampDynamicMemory* self, const SwampList* a, size_t countOffset, SwampList** tail)
+
+
+const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize, size_t itemAlign)
 {
-    SwampList* tailNode = 0;
-    const SwampList* oldNode = a;
-    SwampList* headNode = 0;
-    for (size_t i = 0; i < a->count; ++i) {
-        SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
-        *newNode = *oldNode;
-        if (!headNode) {
-            headNode = newNode;
-        }
-        newNode->count += countOffset;
-        newNode->next = 0;
+    SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
 
-        if (tailNode) {
-            tailNode->next = newNode;
-        }
+    newNode->value = itemMemory;
+    newNode->itemSize = itemSize;
+    newNode->itemAlign = itemAlign;
+    newNode->count = itemCount;
 
-        tailNode = newNode;
-        oldNode = oldNode->next;
-    }
-
-    *tail = tailNode;
-
-    return headNode;
+    return newNode;
 }
 
 const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const SwampList* a, const SwampList* b)
 {
-    SwampList* copyATail;
-    SwampList* copyA = swampAllocateDuplicateList(self, a, b->count, &copyATail);
-    copyATail->next = b;
+    if (a->itemSize != b->itemSize) {
+        SWAMP_ERROR("must have exactly same item size to be")
+        return 0;
+    }
+    SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList));
+    uint8_t* itemArray = swampDynamicMemoryAlloc(self, a->count + b->count, a->itemSize);
+    tc_memcpy_octets(itemArray, a->value, a->count * a->itemSize);
+    tc_memcpy_octets(itemArray + a->count*a->itemSize, b->value, b->count * b->itemSize);
 
-    return copyA;
+    newList->itemSize = a->itemSize;
+    newList->itemAlign = a->itemAlign;
+    newList->count = a->count + b->count;
+    newList->value = itemArray;
+
+    return newList;
 }
 
 
@@ -135,7 +107,7 @@ SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, s
 }
 
 
-SwampFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
+SwampCurryFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
 {
     SwampCurryFunc * func = (SwampCurryFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampCurryFunc));
     func->func.type = SwampFunctionTypeCurry;

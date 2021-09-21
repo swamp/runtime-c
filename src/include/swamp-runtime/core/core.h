@@ -2,12 +2,9 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#ifndef swamp_core_math_h
-#define swamp_core_math_h
+#ifndef SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_CORE_H
+#define SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_CORE_H
 
-#include <swamp-runtime/swamp.h>
+void* swampCoreFindFunction(const char* fullyQualifiedName);
 
-void swampCoreMathRemainderBy(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value);
-void* swampCoreMathFindFunction(const char* fullyQualifiedName);
-
-#endif
+#endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_CORE_H

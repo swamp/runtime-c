@@ -52,14 +52,9 @@ typedef struct SwampResult {
 #define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v)->value);
 
 
-typedef struct SwampList {
-    const struct SwampList* next;
-    size_t count;
-    const void* value;
-} SwampList;
 
-typedef const SwampList* SwampListReference;
-typedef const SwampList** SwampListReferenceData;
+
+typedef uint8_t SwampMaybe;
 
 typedef struct SwampString {
     const char* characters;
@@ -81,10 +76,17 @@ typedef struct SwampArray {
     const void* value;
     size_t count;
     size_t itemSize;
+    size_t itemAlign;
 } SwampArray;
 
 typedef SwampArray* SwampArrayReference;
 typedef SwampArray** SwampArrayReferenceData;
+
+
+typedef SwampArray SwampList;
+
+typedef const SwampList* SwampListReference;
+typedef const SwampList** SwampListReferenceData;
 
 typedef enum SwampFunctionType {
     SwampFunctionTypeInternal,
@@ -103,6 +105,7 @@ typedef struct SwampFunc {
     const uint8_t* opcodes;
     size_t opcodeCount;
     size_t returnOctetSize;
+    size_t returnAlign;
     const char* debugName;
     uint16_t typeIndex;
 } SwampFunc;

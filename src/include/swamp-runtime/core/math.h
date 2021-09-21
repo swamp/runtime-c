@@ -7,7 +7,9 @@
 
 #include <swamp-runtime/swamp.h>
 
-void swampCoreMathRemainderBy(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value);
+struct SwampMachineContext;
+
+void swampCoreMathRemainderBy(SwampInt32* result, struct SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value);
 void* swampCoreMathFindFunction(const char* fullyQualifiedName);
 
 #endif

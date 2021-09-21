@@ -7,7 +7,7 @@
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/log.h>
-#include <swamp-runtime/swamp.h>
+#include <swamp-runtime/context.h>
 #include <tiny-libc/tiny_libc.h>
 
 #define FIXED_MULTIPLIER (1000)

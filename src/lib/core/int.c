@@ -7,15 +7,21 @@
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/context.h>
 
-void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const void* divider, const void* value)
+void swampCoreIntRound(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* fixed)
 {
-
+    *result = *fixed / SWAMP_FIXED_FACTOR;
 }
 
-void* swampCoreMaybeFindFunction(const char* fullyQualifiedName)
+void swampCoreIntToFixed(SwampFixed32* result, SwampMachineContext* context, const SwampInt32 * intValue)
+{
+    *result = *intValue * SWAMP_FIXED_FACTOR;
+}
+
+void* swampCoreIntFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Maybe.withDefault", swampCoreMaybeWithDefault},
+        {"Int.round", swampCoreIntRound},
+        {"Int.toFixed", swampCoreIntToFixed},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

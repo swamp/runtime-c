@@ -7,9 +7,11 @@
 
 #include <swamp-runtime/types.h>
 
+struct SwampMachineContext;
+
 void* swampCoreListFindFunction(const char* fullyQualifiedName);
 
-void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** list);
+void swampCoreListHead(SwampMaybe* result, struct SwampMachineContext* context, const SwampList** list);
 
 
 

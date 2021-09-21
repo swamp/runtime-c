@@ -9,14 +9,9 @@
 #include <swamp-runtime/dynamic_memory.h>
 #include <swamp-runtime/stack_memory.h>
 
-typedef struct SwampMachineContext {
-    SwampStackMemory stackMemory;
-    uint8_t* bp;
-    SwampDynamicMemory dynamicMemory;
-    uint8_t* tempResult;
-} SwampMachineContext;
+struct SwampMachineContext;
 
-int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
+int swampRun(SwampResult* result, struct SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
              SwampBool verbose_flag);
 
 

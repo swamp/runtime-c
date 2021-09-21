@@ -10,6 +10,7 @@
 #include <swamp-runtime/log.h>
 #include <unistd.h>
 #include <swamp-runtime/core/core.h>
+#include <swamp-runtime/context.h>
 
 clog_config g_clog;
 
@@ -42,11 +43,11 @@ int main(int argc, char* argv[])
 
     SwampMachineContext context;
     swampDynamicMemoryInit(&context.dynamicMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
+    context.dynamicMemory.p = context.dynamicMemory.memory + unpack.dynamicMemorySize;
     context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;
     context.bp = context.stackMemory.memory;
-
-
+    context.tempResult = malloc(2 * 1024);
 
     typedef struct Position {
         int32_t x;
@@ -57,9 +58,11 @@ int main(int argc, char* argv[])
     result.expectedOctetSize = sizeof(Position);
     result.target = 0;
 
+    SwampBool temp;
     SwampParameters parameters;
-    parameters.octetSize = 0;
-    parameters.parameterCount = 0;
+    parameters.octetSize = sizeof(SwampBool);
+    parameters.parameterCount = 1;
+    parameters.source = &temp;
 
     int worked = swampRun(&result, &context, func, parameters, 1);
 #if 0

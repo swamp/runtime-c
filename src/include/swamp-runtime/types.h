@@ -12,7 +12,7 @@
 
 struct SwampMachineContext;
 
-typedef int SwampBool;
+typedef uint8_t SwampBool;
 
 #define SwampTrue (1)
 #define SwampFalse (0)

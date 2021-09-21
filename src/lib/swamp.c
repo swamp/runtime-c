@@ -7,6 +7,7 @@
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/types.h>
 #include <swamp-runtime/swamp_allocate.h>
+#include <swamp-runtime/context.h>
 
 #include <clog/clog.h>
 #include <string.h> // memset
@@ -293,7 +294,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     uint16_t size = readU16(&pc);
                     params[i] = basePointer + offset;
                 }
-                switch (externalFunction->parameterCount) {
+                switch (count-1) { // externalfunction->paramCOunt
                     case 1:
                         externalFunction->function1(basePointer, context, params[1]);
                         break;

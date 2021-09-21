@@ -7,6 +7,6 @@
 
 #include <swamp-runtime/swamp.h>
 
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_int_to_fixed);
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_fixed_to_int);
+void* swampCoreIntFindFunction(const char* fullyQualifiedName);
+
 #endif

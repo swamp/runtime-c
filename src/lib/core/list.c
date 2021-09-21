@@ -2,6 +2,8 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+#include <clog/clog.h>
+#include <swamp-runtime/context.h>
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
@@ -10,8 +12,6 @@
 
 #define SwampMaybeNothing(result) *result = 0
 #define SwampMaybeJust(result, align, value, octetSize) *result = 1;  tc_memcpy_octets(result+align, value, octetSize)
-
-
 
 void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
@@ -69,15 +69,22 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     parameters.parameterCount = 1;
     parameters.octetSize = list->itemSize;
 
+    SwampMachineContext ownContext;
+    swampContextInit(&ownContext, &context->dynamicMemory);
+
     SwampList* target = swampListAllocatePrepare(&context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
     uint8_t* targetItemPointer = target->value;
     for (size_t i = 0; i < list->count; ++i) {
         parameters.source = sourceItemPointer;
-        swampRun(&fnResult, context, fn, parameters, 1);
+        swampContextReset(&ownContext);
+        CLOG_INFO("calling for index %d", i);
+        swampRun(&fnResult, &ownContext, fn, parameters, 1);
         tc_memcpy_octets(targetItemPointer, fnResult.target, target->itemSize);
         sourceItemPointer += list->itemSize;
         targetItemPointer += target->itemSize;
     }
+
+    swampContextDestroy(&ownContext);
 
     *result = target;
 }

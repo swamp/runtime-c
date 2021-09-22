@@ -5,6 +5,7 @@
 #include <swamp-runtime/core/debug.h>
 #include <swamp-runtime/core/int.h>
 #include <swamp-runtime/core/list.h>
+#include <swamp-runtime/core/array.h>
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/core/maybe.h>
 
@@ -20,6 +21,10 @@ void* swampCoreFindFunction(const char* fullyQualifiedName)
         return foundFn;
     }
 
+    foundFn = swampCoreArrayFindFunction(fullyQualifiedName);
+    if (foundFn) {
+        return foundFn;
+    }
 
     foundFn = swampCoreMaybeFindFunction(fullyQualifiedName);
     if (foundFn) {

@@ -9,18 +9,17 @@
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/core/maybe.h>
 
-#define SwampMaybeNothing(result) *result = 0
-#define SwampMaybeJust(result, align, value, octetSize) *result = 1;  tc_memcpy_octets(result+align, value, octetSize)
 
 void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
     if (list->count == 0) {
-        SwampMaybeNothing(result);
+        swampMaybeNothing(result);
     } else {
-        SwampMaybeJust(result, list->itemAlign, list->value, list->itemSize);
+        swampMaybeJust(result, list->itemAlign, list->value, list->itemSize);
     }
 }
 
@@ -32,9 +31,9 @@ void swampCoreListTail(SwampMaybe* result, SwampMachineContext* context, const S
     const SwampList* list = *_list;
 
     if (list->count == 0) {
-        SwampMaybeNothing(result);
+        swampMaybeNothing(result);
     } else {
-        SwampMaybeJust(result, list->itemAlign, SwampCollectionIndex(list, list->count-1), list->itemSize);
+        swampMaybeJust(result, list->itemAlign, SwampCollectionIndex(list, list->count-1), list->itemSize);
     }
 }
 
@@ -61,7 +60,6 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     const uint8_t* sourceItemPointer = list->value;
 
     SwampResult fnResult;
-
     fnResult.target = context->tempResult;
     fnResult.expectedOctetSize = fn->returnOctetSize;
 

@@ -8,12 +8,12 @@
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/log.h>
 
-const SwampString* swampStringAllocate( SwampDynamicMemory* self, const char* s)
+const SwampString* swampStringAllocate(SwampDynamicMemory* self, const char* s)
 {
     SwampString* const string = (SwampString*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampString));
     size_t stringLength = tc_strlen(s);
     const char* characters = (char*) swampDynamicMemoryAlloc(self, 1, stringLength + 1);
-    memcpy((void*)characters, s, stringLength + 1);
+    tc_memcpy_octets((void*)characters, s, stringLength + 1);
     string->characters = characters;
     string->characterCount = stringLength;
 

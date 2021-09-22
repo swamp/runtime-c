@@ -8,6 +8,7 @@
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/debug.h>
 #include <swamp-typeinfo/chunk.h>
+#include <swamp-runtime/swamp_allocate.h>
 
 void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
@@ -27,7 +28,14 @@ void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, co
 
 void swampCoreDebugToString(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
+#define MaxBufSize (8*1024)
+    char buf[MaxBufSize];
+
+    swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize);
+
+    *result = swampStringAllocate(context->dynamicMemory, buf);
 }
 
 void* swampCoreDebugFindFunction(const char* fullyQualifiedName)

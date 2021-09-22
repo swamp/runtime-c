@@ -181,7 +181,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     call_stack_entry->func = f;
     call_stack_entry->pc = pc;
 
-    CLOG_VERBOSE("SAVE start pc:%p bp:%p", pc, bp)
+    CLOG_VERBOSE("SAVE start '%s' pc:%p bp:%p", f->debugName, pc, bp)
 
     if (runParameters.parameterCount != f->parameterCount) {
         // ERROR
@@ -200,14 +200,14 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
 
     while (1) {
-#if SWAMP_CONFIG_DEBUG || 1
+#if SWAMP_CONFIG_DEBUG
         if (verbose_flag) {
             uint16_t addr = pc - call_stack_entry->func->opcodes;
             if (pc == 0) {
                 SWAMP_LOG_SOFT_ERROR("pc is null");
             }
 //            SWAMP_LOG_INFO("--- %04X  [0x%02x]", addr, *pc);
-            SWAMP_LOG_INFO("--- %04X bp:%04X %s [0x%02x]", addr, bp - context->stackMemory.memory, swamp_opcode_name(*pc), *pc);
+//            SWAMP_LOG_INFO("--- %04X %s [0x%02x]", addr, swamp_opcode_name(*pc), *pc);
         }
 #endif
 
@@ -228,7 +228,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 call_stack_entry = &stack->entries[--stack->count];
                 pc = call_stack_entry->pc;
                 bp = call_stack_entry->basePointer;
-                CLOG_VERBOSE("POP back to '%s' pc: %p bp: %d", call_stack_entry->func->debugName, pc, bp - context->stackMemory.memory);
+                CLOG_VERBOSE("POP back to '%s' pc: %p bp: %04X", call_stack_entry->func->debugName, pc, bp - context->stackMemory.memory);
                 //context = &call_stack_entry->context;
             } break;
 
@@ -329,8 +329,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 }
 
                 if (func->func.type == SwampFunctionTypeExternal) {
-                    CLOG_VERBOSE("Callexternal pc:%p bp:%p", pc, bp)
                     const SwampFunctionExternal* externalFunction = (const SwampFunctionExternal*) func;
+                    CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%04X", externalFunction->fullyQualifiedName, pc, bp - context->stackMemory.memory)
                     switch (func->parameterCount) {
                         case 1:
                             externalFunction->function1(basePointer, context, basePointer + externalFunction->parameters[0].pos);
@@ -363,12 +363,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     call_stack_entry->func = func;
                     call_stack_entry->pc = func->opcodes;
                     call_stack_entry->basePointer = basePointer;
-                    CLOG_VERBOSE("PUSH pc:%p bp:%d", pc, bp - context->stackMemory.memory)
+                    //CLOG_VERBOSE("PUSH pc:%p bp:%04X", pc, bp - context->stackMemory.memory)
 
                     // Set variables
                     bp = basePointer;
                     pc = func->opcodes;
-                    CLOG_VERBOSE("Call '%s' pc:%p bp:%d", func->debugName, pc, bp - context->stackMemory.memory)
+                    CLOG_VERBOSE("Call '%s' pc:%p bp:%04X", func->debugName, pc, bp - context->stackMemory.memory)
                 }
             } break;
 
@@ -467,8 +467,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeArrayCreate: {
                 SwampArrayReferenceData arrayTarget = (SwampArrayReferenceData) readTargetStackPointerPos(&pc, bp);
-                size_t itemCount = readCount(&pc);
                 size_t itemSize = readShortRange(&pc);
+                size_t itemAlign = readAlign(&pc);
+                size_t itemCount = readShortCount(&pc);
                 void* targetItems = swampDynamicMemoryAlloc(context->dynamicMemory, itemSize, itemCount);
                 uint8_t* pItems = targetItems;
                 for (size_t i = 0; i < itemCount; ++i) {
@@ -480,6 +481,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 newArray->value = targetItems;
                 newArray->count = itemCount;
                 newArray->itemSize = itemSize;
+                newArray->itemAlign = itemAlign;
                 *arrayTarget = newArray;
             } break;
 

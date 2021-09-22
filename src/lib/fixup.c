@@ -41,6 +41,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
             case LedgerTypeExternalFunc: {
                 SwampFunctionExternal* func = (const SwampFunctionExternal *)p;
                 FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
+                CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
                 void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
                 if (resolvedFunctionPointer == 0) {
                     CLOG_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
@@ -58,7 +59,10 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     case 4:
                         func->function4 = resolvedFunctionPointer;
                         break;
+                    default:
+                        CLOG_ERROR("paramcount above 4 or below 1 is not supported (%d)", func->parameterCount)
                 }
+                CLOG_INFO("set now as parameter count %d", func->parameterCount);
                 CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)
                 CLOG_INFO("  externalFunction external: return pos %d range %d", func->returnValue.pos, func->returnValue.range);
                 for (size_t i=0; i<func->parameterCount;++i) {

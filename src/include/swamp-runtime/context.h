@@ -8,15 +8,17 @@
 #include <swamp-runtime/dynamic_memory.h>
 #include <swamp-runtime/stack_memory.h>
 
+struct SwtiChunk;
 
 typedef struct SwampMachineContext {
     SwampStackMemory stackMemory;
     uint8_t* bp;
-    SwampDynamicMemory dynamicMemory;
+    SwampDynamicMemory* dynamicMemory;
     uint8_t* tempResult;
+    const struct SwtiChunk* typeInfo;
 } SwampMachineContext;
 
-void swampContextInit(SwampMachineContext* self, const SwampDynamicMemory* memory);
+void swampContextInit(SwampMachineContext* self, const SwampDynamicMemory* memory, const struct SwtiChunk* typeInfo);
 void swampContextReset(SwampMachineContext* self);
 void swampContextDestroy(SwampMachineContext* self);
 

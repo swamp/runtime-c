@@ -7,6 +7,7 @@
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/debug.h>
+#include <swamp-typeinfo/chunk.h>
 
 void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
@@ -15,7 +16,12 @@ void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const
 
 void swampCoreDebugLogRecord(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
+#define MaxBufSize (8*1024)
+    char buf[MaxBufSize];
+
+    CLOG_INFO("log: %s", swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
 }
 
 

@@ -19,35 +19,33 @@ int main(int argc, char* argv[])
     g_clog.log = clog_console;
 
 
+    SWAMP_LOG_INFO("Swampfunction:%d SwampFunc:%d offset opcodes:%d parametersOctetSize: %d size_t:%d  enum:%d", sizeof(SwampFunction), sizeof(SwampFunc), offsetof(SwampFunc, opcodes),  offsetof(SwampFunc, parameterCount), sizeof (size_t), sizeof(SwampFunction));
+    SWAMP_LOG_INFO("Swampexternalfunction: SwampFunctionExternal %d fullyQualifiedName:%d return:%d paramsCount:%d params7:%d", sizeof(SwampFunctionExternal), offsetof(SwampFunctionExternal, fullyQualifiedName), offsetof(SwampFunctionExternal, returnValue), offsetof(SwampFunctionExternal, parameterCount), offsetof(SwampFunctionExternal, parameters[7]));
+
+
     SwampUnpack unpack;
     swampUnpackInit(&unpack, 1);
 
-    char buf[1024];
-    if (getcwd(buf, 1024) == NULL) {
-        perror("getcwd");
-        exit(EXIT_FAILURE);
-    } else {
-       SWAMP_LOG_INFO("pwd: %s", buf);
-        }
+
     int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", swampCoreFindFunction, 1);
     if (unpackErr < 0) {
         SWAMP_ERROR("couldn't unpack %d", unpackErr)
         return unpackErr;
     }
 
-    SWAMP_LOG_INFO("Swampfunction:%d SwampFunc:%d offset opcodes:%d parametersOctetSize: %d size_t:%d  enum:%d", sizeof(SwampFunction), sizeof(SwampFunc), offsetof(SwampFunc, opcodes),  offsetof(SwampFunc, parameterCount), sizeof (size_t), sizeof(SwampFunction));
-    SWAMP_LOG_INFO("Swampexternalfunction: SwampFunctionExternal %d parameterCount:%d return:%d params0:%d params7:%d", sizeof(SwampFunctionExternal), offsetof(SwampFunctionExternal, fullyQualifiedName), offsetof(SwampFunctionExternal, returnValue), offsetof(SwampFunctionExternal, parameters[0]), offsetof(SwampFunctionExternal, parameters[7]));
 
 
     const SwampFunc* func = unpack.entry;
 
     SwampMachineContext context;
-    swampDynamicMemoryInit(&context.dynamicMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
-    context.dynamicMemory.p = context.dynamicMemory.memory + unpack.dynamicMemorySize;
+    context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
+    swampDynamicMemoryInit(context.dynamicMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
+    context.dynamicMemory->p = context.dynamicMemory->memory + unpack.dynamicMemorySize;
     context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;
     context.bp = context.stackMemory.memory;
     context.tempResult = malloc(2 * 1024);
+    context.typeInfo = &unpack.typeInfoChunk;
 
     typedef struct Position {
         int32_t x;
@@ -71,10 +69,8 @@ int main(int argc, char* argv[])
     CLOG_INFO("result in list: %d", *resultIntegerInList);
 #else
 
-
-
     Position *v = ((Position *) context.stackMemory.memory);
-    CLOG_INFO("result is: %d %d", v->y, v->x);
+    CLOG_INFO("result is: %d %d", v->x, v->y);
     //SwampString* v = *((SwampString **) context.stackMemory.memory);
     //CLOG_INFO("result is: %s", v->characters);
 #endif

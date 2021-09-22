@@ -75,7 +75,9 @@ int main(int argc, char* argv[])
     //CLOG_INFO("result is: %s", v->characters);
 #endif
 
+    swampContextDestroy(&context);
     swampUnpackFree(&unpack);
+    free(context.dynamicMemory);
 
     return 0;
 }

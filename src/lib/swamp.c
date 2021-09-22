@@ -43,11 +43,6 @@ typedef struct SwampCallStack {
     size_t count;
 } SwampCallStack;
 
-#define READ_U32(variable) \
-    variable = *((uint32_t*) pc); \
-    pc += 4;
-
-
 #define DEBUGLOG_PARAMS 0
 
 static uint32_t readU32(const uint8_t **pc) {
@@ -109,11 +104,6 @@ static void* readStackPointerPos(const uint8_t **pc, const uint8_t* bp)
     return (void*)(bp + readU32(pc));
 }
 
-static void* readStackPointerZeroPagePos(const uint8_t **pc, const uint8_t* stackMemory)
-{
-    return (void*)(stackMemory + readU32(pc));
-}
-
 static void* readTargetStackPointerPos(const uint8_t **pc, const uint8_t* bp)
 {
     return readStackPointerPos(pc, bp);
@@ -160,13 +150,6 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t **pc, const uint8_t
 #define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*)target, source, size)
 
 #define swampMemoryMove(target, source, size) tc_memmove_octets((void*)target, source, size)
-
-static void pushOnStackPointer(const uint8_t** sp, const void* x, size_t octetSize)
-{
-    swampMemoryCopy(*sp, x, octetSize);
-    *sp += octetSize;
-}
-
 
 int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc* f, SwampParameters runParameters,
              SwampBool verbose_flag)
@@ -234,9 +217,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeLoadZeroMemory: {
                 void** target = readTargetStackPointerPos(&pc, bp);
-                void* constantSource = readSourceDynamicMemoryPointerPos(&pc, context->dynamicMemory->memory);
-                const SwampString* constantString = (const SwampString*) constantSource;
-                *target = constantSource;
+                *target = readSourceDynamicMemoryPointerPos(&pc, context->dynamicMemory->memory);
             } break;
 
             case SwampOpcodeLoadInteger: {
@@ -277,6 +258,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 swampMemoryCopy(dynamicItemMemory, sourceItem, range);
                 newList->value = dynamicItemMemory;
                 newList->count = sourceList->count+1;
+                newList->itemAlign = sourceList->itemAlign;
+                newList->itemSize = sourceList->itemSize;
 
                 *target = newList;
             } break;
@@ -379,8 +362,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 size_t argumentsRange = readShortRange(&pc);
                 *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, sourceFunc, argumentsStartPointer, argumentsRange);
             } break;
-
-
 
             case SwampOpcodeEnumCase: {
                 const void* source = readSourceStackPointerPos(&pc, bp);
@@ -485,7 +466,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 *arrayTarget = newArray;
             } break;
 
-
             case SwampOpcodeStringAppend: {
                 const SwampStringReferenceData target = (SwampStringReferenceData) readTargetStackPointerPos(&pc, bp);
                 const SwampStringReference sourceStringA = *((const SwampStringReferenceData) readSourceStackPointerPos(&pc, bp));
@@ -499,7 +479,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 newString->characters = newCharacters;
                 *target = newString;
             } break;
-
 
             case SwampOpcodeJump: {
                 uint8_t jump = *pc++;

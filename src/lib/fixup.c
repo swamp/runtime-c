@@ -6,8 +6,6 @@
 #include <stddef.h>
 #include <swamp-runtime/fixup.h>
 #include <swamp-runtime/types.h>
-
-#include <swamp-runtime/core/math.h>
 #include <swamp-runtime/swamp_unpack.h>
 
 void logMemory(const uint8_t* octets, size_t count) {

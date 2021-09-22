@@ -14,7 +14,7 @@ void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const
     CLOG_INFO((*value)->characters);
 }
 
-void swampCoreDebugLogRecord(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
+void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
@@ -34,7 +34,7 @@ void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
         {"Debug.log", swampCoreDebugLog},
-        {"Debug.logRecord", swampCoreDebugLogRecord},
+        {"Debug.logAny", swampCoreDebugLogAny},
         {"Debug.toString", swampCoreDebugToString},
     };
 

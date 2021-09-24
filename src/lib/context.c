@@ -5,7 +5,8 @@
 #include <swamp-runtime/context.h>
 #include <tiny-libc/tiny_libc.h>
 
-void swampContextInit(SwampMachineContext* self, const SwampDynamicMemory* dynamicMemory, const struct SwtiChunk* typeInfo)
+void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemory,
+                      const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo)
 {
     self->dynamicMemory = dynamicMemory;
     uint8_t* stackMemory = malloc(32*1024);
@@ -13,6 +14,7 @@ void swampContextInit(SwampMachineContext* self, const SwampDynamicMemory* dynam
     self->bp = &self->stackMemory.memory;
     self->tempResult = malloc(2 * 1024);
     self->typeInfo = typeInfo;
+    self->constantStaticMemory = staticMemory;
 }
 
 void swampContextReset(SwampMachineContext* self)

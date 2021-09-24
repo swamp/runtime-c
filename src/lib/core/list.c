@@ -68,7 +68,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextInit(&ownContext, context->dynamicMemory, context->typeInfo);
+    swampContextInit(&ownContext, context->dynamicMemory, context->constantStaticMemory, context->typeInfo);
 
     SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
     uint8_t* targetItemPointer = target->value;

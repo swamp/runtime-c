@@ -33,20 +33,23 @@ int main(int argc, char* argv[])
         return unpackErr;
     }
 
-
-
     const SwampFunc* func = unpack.entry;
 
     SwampMachineContext context;
     context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
-    swampDynamicMemoryInit(context.dynamicMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
-    context.dynamicMemory->p = context.dynamicMemory->memory + unpack.dynamicMemorySize;
+    context.dynamicMemory->memory = malloc(32 * 1024);
+    context.dynamicMemory->p = context.dynamicMemory->memory;
+    context.dynamicMemory->maxAllocatedSize = 32 * 1024;
+
     context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;
     context.bp = context.stackMemory.memory;
     context.tempResult = malloc(2 * 1024);
     context.typeInfo = &unpack.typeInfoChunk;
 
+    SwampStaticMemory staticMemory;
+    swampStaticMemoryInit(&staticMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
+    context.constantStaticMemory = &staticMemory;
     typedef struct Position {
         int32_t x;
         int32_t y;
@@ -71,6 +74,7 @@ int main(int argc, char* argv[])
 
     swampContextDestroy(&context);
     swampUnpackFree(&unpack);
+    free(context.dynamicMemory->memory);
     free(context.dynamicMemory);
 
     return 0;

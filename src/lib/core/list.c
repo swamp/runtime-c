@@ -203,6 +203,10 @@ void* swampCoreListFindFunction(const char* fullyQualifiedName)
         {"List.isEmpty", swampCoreListIsEmpty},
         {"List.length", swampCoreListLength},
         {"List.map", swampCoreListMap},
+        {"List.indexedMap", swampCoreListIndexedMap},
+        {"List.filterMap", swampCoreListFilterMap},
+        {"List.foldl", swampCoreListFoldl},
+        {"List.foldlstop", swampCoreListFoldlStop},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

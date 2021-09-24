@@ -17,7 +17,7 @@ static const char* g_swamp_opcode_names[] = {
     "nop",       "cse",     "brfa",   "brt",  "jmp",  "call", "ret",         "ecall",
     "tail", "curry", "addi",       "subi",   "muli",  "divi",  "negi", "mulfx",  "divfx",          "cpeli",   "cpnei",   "cpli",
     "cplei", "cpgi", "cpgei",   "noti", "cpes", "cpnes", "andi", "ori", "xori", "noti",
-    "crlst",   "crarr",   "conjl", "addlst", "appendstr", "ldi", "ldb", "ldr", "ldz", "cpy", "lde", "callvar"};
+    "crlst",   "crarr",   "conjl", "addlst", "appendstr", "ldi", "ldb", "ldr", "ldz", "cpy", "lde", "callvar", "cmpeeq", "cmpeneq", "jmppi"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {
@@ -25,6 +25,8 @@ static const char* swamp_opcode_name(uint8_t opcode)
 }
 #define SWAMP_CONFIG_DEBUG 1
 
+typedef uint16_t SwampJump;
+typedef uint8_t SwampJumpOffset;
 
 // -------------------------------------------------------------
 // Stack
@@ -86,6 +88,16 @@ static size_t readAlign(const uint8_t **pc) {
 static size_t readCount(const uint8_t **pc) {
     return readU16(pc);
 }
+
+
+static SwampJump readJump(const uint8_t **pc) {
+    return readU16(pc);
+}
+
+static SwampJumpOffset readJumpOffset(const uint8_t **pc) {
+    return readU16(pc);
+}
+
 
 static size_t readShortCount(const uint8_t **pc) {
     return readU8(pc);
@@ -183,14 +195,14 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
 
     while (1) {
-#if SWAMP_CONFIG_DEBUG
+#if SWAMP_CONFIG_DEBUG && 0
         if (verbose_flag) {
             uint16_t addr = pc - call_stack_entry->func->opcodes;
             if (pc == 0) {
                 SWAMP_LOG_SOFT_ERROR("pc is null");
             }
 //            SWAMP_LOG_INFO("--- %04X  [0x%02x]", addr, *pc);
-//            SWAMP_LOG_INFO("--- %04X %s [0x%02x]", addr, swamp_opcode_name(*pc), *pc);
+            SWAMP_LOG_INFO("--- %04X %s [0x%02x]", addr, swamp_opcode_name(*pc), *pc);
         }
 #endif
 
@@ -365,71 +377,66 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeEnumCase: {
                 const void* source = readSourceStackPointerPos(&pc, bp);
-                uint8_t case_count = *pc++;
-                const uint8_t* jump_to_use = 0;
-                int found = 0;
+                uint8_t caseCount = *pc++;
+                const uint8_t* jumpPcToUse = 0;
                 uint8_t sourceUnionType = *((const uint8_t*)source);
                 const uint8_t* previous_jump_target_pc = 0;
-                for (uint8_t case_index = 0; case_index < case_count; ++case_index) {
+                for (uint8_t caseIndex = 0; caseIndex < caseCount; ++caseIndex) {
                     uint8_t enum_type = *pc++;
-                    uint8_t rel_jump_case = *pc++;
+                    SwampJumpOffset rel_jump_case = readJumpOffset(&pc);
+
                     if (!previous_jump_target_pc) {
                         previous_jump_target_pc = pc;
                     }
                     previous_jump_target_pc += rel_jump_case;
-                    //uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+#if 0
+                    uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+                    CLOG_INFO("enum:%d addr: %04X relative:%d", enum_type, absolute_jump_addr, rel_jump_case);
+#endif
 
-                    if (!found) {
-                        if (enum_type == sourceUnionType || enum_type == 0xff) {
-                            jump_to_use = previous_jump_target_pc;
-                            found = 1;
-                        }
+                    if (enum_type == sourceUnionType || enum_type == 0xff) {
+                        jumpPcToUse = previous_jump_target_pc;
+                        uint8_t remainingCases = caseCount - caseIndex - 1;
+                        pc += (remainingCases * (1 + 2));
                     }
                 }
-                if (jump_to_use == 0) {
-                    CLOG_ERROR("could not find matching enum")
+                if (jumpPcToUse == 0) {
+                    CLOG_ERROR("could not find matching enum %d", sourceUnionType)
                 }
-                pc = jump_to_use;
+                pc = jumpPcToUse;
             } break;
 
-                /*
-            case SwampOpcodeCasePatternMatching: {
-                const void* source = readSourceStackPointerPos(&pc, bp);
-                size_t range = readShortRange(&pc);
-                uint8_t case_count = *pc++;
+            case SwampOpcodePatternMatchingInt: {
+                SwampInt32 integerToMatch = readSourceIntStackPointerPos(&pc, bp);
+                size_t consequenceCount = readShortCount(&pc);
                 int found = 0;
-                const uint8_t* jump_to_use = 0;
-                const uint8_t* previous_jump_target_pc = 0;
-                for (uint8_t case_index = 0; case_index < case_count; ++case_index) {
-                    const void* caseSource = readSourceStackPointerPos(&pc, bp);
-                    uint8_t rel_jump_case = *pc++;
+                const uint8_t* jumpToUse = 0;
+                const uint8_t* previousJumpTarget = 0;
+                for (uint8_t consequenceIndex = 0; consequenceIndex < consequenceCount; ++consequenceIndex) {
+                    SwampInt32 consequenceValue = readInt32(&pc);
+                    SwampJumpOffset jumpOffset = readJumpOffset(&pc);
 
-                    if (!previous_jump_target_pc) {
-                        previous_jump_target_pc = pc;
+                    if (!previousJumpTarget) {
+                        previousJumpTarget = pc;
                     }
-                    previous_jump_target_pc += rel_jump_case;
-                    // uint16_t absolute_jump_addr = previous_jump_target_pc - call_stack_entry->pc;
+                    previousJumpTarget += jumpOffset;
 
-                    if (swampMemoryCompareEqual(source, caseSource, range)) {
-                        jump_to_use = previous_jump_target_pc;
-                        uint8_t rest = case_count - case_index - 1;
-                        pc += rest * 2;
+                    if (integerToMatch == consequenceValue) {
+                        jumpToUse = previousJumpTarget;
+                        uint8_t rest = consequenceCount - consequenceIndex - 1;
+                        pc += (rest * (4 + 2)) + 2;
                         found = 1;
                         break;
                     }
                 }
-#if SWAMP_CONFIG_DEBUG
                 if (!found) {
-                    // ERROR
-                    SWAMP_LOG_INFO("enum error! No case matching 0x%p. This should "
-                                   "not be "
-                                   "possible.", source);
-                    return 0;
+                    SwampJumpOffset jumpOffset = readJumpOffset(&pc);
+                    previousJumpTarget += jumpOffset;
+                    jumpToUse = previousJumpTarget;
                 }
-#endif
-                pc = jump_to_use;
+                pc = jumpToUse;
             } break;
-*/
+
             case SwampOpcodeListCreate: {
                 SwampListReferenceData listReferenceTarget = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
                 size_t itemSize = readShortRange(&pc);
@@ -481,13 +488,13 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             case SwampOpcodeJump: {
-                uint8_t jump = *pc++;
+                SwampJump jump = readJump(&pc);
                 pc += jump;
             } break;
 
             case SwampOpcodeBranchFalse: {
                 SwampBool truth = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
-                uint8_t jump = *pc++;
+                SwampJump jump = readJump(&pc);
                 if (!truth) {
                     pc += jump;
                 }
@@ -495,29 +502,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeBranchTrue: {
                 SwampBool truth = *((SwampBool*)readSourceStackPointerPos(&pc, bp));
-                uint8_t jump = *pc++;
+                SwampJump jump = readJump(&pc);
                 if (truth) {
                     pc += jump;
                 }
             } break;
 
-                /*
-            case SwampOpcodeCompareEqual: {
-                SwampBool* target = (SwampBool*)readTargetStackPointerPos(&pc, bp);
-                const void* a = readSourceStackPointerPos(&pc, bp);
-                const void* b = readSourceStackPointerPos(&pc, bp);
-                size_t range = readShortRange(&pc);
-                *target = swampMemoryCompareEqual(a, b, range);
-            } break;
-
-            case SwampOpcodeCompareNotEqual: {
-                SwampBool* target = (SwampBool*)readTargetStackPointerPos(&pc, bp);
-                const void* a = readSourceStackPointerPos(&pc, bp);
-                const void* b = readSourceStackPointerPos(&pc, bp);
-                size_t range = readShortRange(&pc);
-                *target = !swampMemoryCompareEqual(a, b, range);
-            } break;
-*/
             case SwampOpcodeStringEqual: {
                 SwampBool* target = (SwampBool*)readTargetStackPointerPos(&pc, bp);
                 const SwampString* a = *((SwampString**)readSourceStackPointerPos(&pc, bp));
@@ -530,6 +520,19 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 const SwampString* a = *((SwampString**)readSourceStackPointerPos(&pc, bp));
                 const SwampString* b = *((SwampString**)readSourceStackPointerPos(&pc, bp));
                 *target = !swampStringEqual(a, b);
+            } break;
+
+            case SwampOpcodeCmpEnumEqual: {
+                SwampBool* targetRegister = readTargetStackPointerPos(&pc, bp);
+                const uint8_t* a = readSourceStackPointerPos(&pc, bp);
+                const uint8_t* b = readSourceStackPointerPos(&pc, bp);
+                *targetRegister = *a == *b;
+            } break;
+            case SwampOpcodeCmpEnumNotEqual: {
+                SwampBool* targetRegister = readTargetStackPointerPos(&pc, bp);
+                const uint8_t* a = readSourceStackPointerPos(&pc, bp);
+                const uint8_t* b = readSourceStackPointerPos(&pc, bp);
+                *targetRegister = *a != *b;
             } break;
 
             case SwampOpcodeTailCall: {

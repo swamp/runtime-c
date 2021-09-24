@@ -63,9 +63,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 CLOG_INFO("set now as parameter count %d", func->parameterCount);
                 CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)
                 CLOG_INFO("  externalFunction external: return pos %d range %d", func->returnValue.pos, func->returnValue.range);
-                for (size_t i=0; i<func->parameterCount;++i) {
-                    CLOG_INFO("  externalFunction: param %d pos %d range %d", i, func->parameters[i].pos, func->parameters[i].range);
-                }
+//                for (size_t i=0; i<func->parameterCount;++i) {
+  //                  CLOG_INFO("  externalFunction: param %d pos %d range %d", i, func->parameters[i].pos, func->parameters[i].range);
+    //            }
 
 
             } break;

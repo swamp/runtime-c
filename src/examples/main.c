@@ -63,17 +63,11 @@ int main(int argc, char* argv[])
     parameters.source = &temp;
 
     int worked = swampRun(&result, &context, func, parameters, 1);
-#if 0
-    const SwampListReference resultList = (SwampListReference) result.target;
-    const SwampInt32* resultIntegerInList = (SwampInt32*) resultList->value;
-    CLOG_INFO("result in list: %d", *resultIntegerInList);
-#else
-
+    if (worked < 0) {
+        return worked;
+    }
     Position *v = ((Position *) context.stackMemory.memory);
     CLOG_INFO("result is: %d %d", v->x, v->y);
-    //SwampString* v = *((SwampString **) context.stackMemory.memory);
-    //CLOG_INFO("result is: %s", v->characters);
-#endif
 
     swampContextDestroy(&context);
     swampUnpackFree(&unpack);

@@ -7,7 +7,6 @@
 
 #include <swamp-runtime/swamp.h>
 
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_char_to_code);
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_char_from_code);
+void* swampCoreCharFindFunction(const char* fullyQualifiedName);
 
 #endif

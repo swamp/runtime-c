@@ -63,6 +63,9 @@
 #define SwampOpcodeMemCopy 0x27
 #define SwampOpcodeSetEnum 0x28
 #define SwampOpcodeCallExternalWithSizes 0x29
+#define SwampOpcodeCmpEnumEqual 0x2a
+#define SwampOpcodeCmpEnumNotEqual 0x2b
+#define SwampOpcodePatternMatchingInt 0x2c
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------

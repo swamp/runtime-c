@@ -3,9 +3,8 @@
 *  Licensed under the MIT License. See LICENSE in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/core/bind.h>
-
-#include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/context.h>
+#include <tiny-libc/tiny_libc.h>
 
 void swampCoreCharFromCode(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* code)
 {

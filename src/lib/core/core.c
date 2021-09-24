@@ -33,12 +33,10 @@ void* swampCoreFindFunction(const char* fullyQualifiedName)
         return foundFn;
     }
 
-
     foundFn = swampCoreMaybeFindFunction(fullyQualifiedName);
     if (foundFn) {
         return foundFn;
     }
-
 
     foundFn = swampCoreIntFindFunction(fullyQualifiedName);
     if (foundFn) {
@@ -54,8 +52,6 @@ void* swampCoreFindFunction(const char* fullyQualifiedName)
     if (foundFn) {
         return foundFn;
     }
-
-
 
     return 0;
 }

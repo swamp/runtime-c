@@ -75,7 +75,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     for (size_t i = 0; i < list->count; ++i) {
         parameters.source = sourceItemPointer;
         swampContextReset(&ownContext);
-        CLOG_INFO("calling for index %d", i);
+        CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
         tc_memcpy_octets(targetItemPointer, fnResult.target, target->itemSize);
         sourceItemPointer += list->itemSize;

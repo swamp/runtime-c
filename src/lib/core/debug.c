@@ -12,7 +12,7 @@
 
 void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
-    CLOG_INFO((*value)->characters);
+    CLOG_INFO("log: %s", (*value)->characters);
 }
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)

@@ -6,10 +6,16 @@
 
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/context.h>
+#include <swamp-runtime/core/maybe.h>
 
-void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const void* divider, const void* value)
+// withDefault : a -> Maybe a -> a
+void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const SwampUnknownType* defaultValue, const SwampMaybe** maybe)
 {
-
+    if (swampMaybeIsNothing(*maybe)) {
+        tc_memcpy_octets(result, defaultValue->ptr, defaultValue->size);
+    } else {
+        tc_memcpy_octets(result, swampMaybeJustGetValue(*maybe, defaultValue->align), defaultValue->size);
+    }
 }
 
 void* swampCoreMaybeFindFunction(const char* fullyQualifiedName)

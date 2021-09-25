@@ -27,12 +27,16 @@ int main(int argc, char* argv[])
     swampUnpackInit(&unpack, 1);
 
 
-    int unpackErr = swampUnpackFilename(&unpack, "first.swamp-pack", swampCoreFindFunction, 1);
+    int unpackErr = swampUnpackFilename(&unpack, "gameplay.swamp-pack", swampCoreFindFunction, 1);
     if (unpackErr < 0) {
         SWAMP_ERROR("couldn't unpack %d", unpackErr)
         return unpackErr;
     }
 
+    const SwampFunc* initFunc = swampLedgerFindFunction(&unpack.ledger, "init");
+    if (initFunc == 0) {
+        CLOG_ERROR("could not find 'init'-function");
+    }
     const SwampFunc* func = unpack.entry;
 
     SwampMachineContext context;
@@ -48,7 +52,7 @@ int main(int argc, char* argv[])
     context.typeInfo = &unpack.typeInfoChunk;
 
     SwampStaticMemory staticMemory;
-    swampStaticMemoryInit(&staticMemory, (uint8_t*) unpack.dynamicMemoryOctets, unpack.dynamicMemoryMaxSize);
+    swampStaticMemoryInit(&staticMemory, (uint8_t*) unpack.constantStaticMemoryOctets, unpack.constantStaticMemoryMaxSize);
     context.constantStaticMemory = &staticMemory;
     typedef struct Position {
         int32_t x;

@@ -113,7 +113,7 @@ int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
     return 0;
 }
 
-int readDynamicMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
 {
     int errorCode;
 
@@ -130,10 +130,10 @@ int readDynamicMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
         SWAMP_LOG_INFO("done!\n");
     }
 
-    self->dynamicMemoryMaxSize = 128 * 1024;
-    self->dynamicMemoryOctets = malloc(self->dynamicMemoryMaxSize );
-    tc_memcpy_octets(self->dynamicMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
-    self->dynamicMemorySize = upcomingOctetsInChunk;
+    self->constantStaticMemoryMaxSize = 128 * 1024;
+    self->constantStaticMemoryOctets = malloc(self->constantStaticMemoryMaxSize);
+    tc_memcpy_octets(self->constantStaticMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
+    self->constantStaticMemorySize = upcomingOctetsInChunk;
 
     s->position += upcomingOctetsInChunk;
 
@@ -157,9 +157,10 @@ int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunct
         SWAMP_LOG_INFO("done!\n");
     }
 
-    self->ledgerOctets = malloc(upcomingOctetsInChunk);
-    tc_memcpy_octets(self->ledgerOctets, &s->octets[s->position], upcomingOctetsInChunk);
-    self->ledgerSize = upcomingOctetsInChunk;
+    self->ledger.ledgerOctets = malloc(upcomingOctetsInChunk);
+    tc_memcpy_octets(self->ledger.ledgerOctets, &s->octets[s->position], upcomingOctetsInChunk);
+    self->ledger.ledgerSize = upcomingOctetsInChunk;
+    self->ledger.constantStaticMemory = self->constantStaticMemoryOctets;
 
     s->position += upcomingOctetsInChunk;
 
@@ -186,7 +187,7 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampRes
         return errorCode;
     }
 
-    if ((errorCode = readDynamicMemory(self, s, verboseFlag)) != 0) {
+    if ((errorCode = readConstantStaticMemory(self, s, verboseFlag)) != 0) {
         SWAMP_LOG_SOFT_ERROR("problem with code chunk");
         return errorCode;
     }
@@ -196,8 +197,10 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampRes
         return errorCode;
     }
 
-    self->entry = swampFixupLedger(self->dynamicMemoryOctets, bindFn, (SwampConstantLedgerEntry*) self->ledgerOctets);
-
+    self->entry = swampFixupLedger(self->constantStaticMemoryOctets, bindFn, (SwampConstantLedgerEntry*) self->ledger.ledgerOctets);
+    if (self->entry == 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -243,8 +246,8 @@ void swampUnpackInit(SwampUnpack* self, int verbose_flag)
 
 void swampUnpackFree(SwampUnpack* self)
 {
-    free(self->dynamicMemoryOctets);
-    free(self->ledgerOctets);
+    free(self->constantStaticMemoryOctets);
+    free(self->ledger.ledgerOctets);
     swtiChunkDestroy(&self->typeInfoChunk);
 }
 

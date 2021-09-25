@@ -7,6 +7,7 @@
 
 #include <swamp-runtime/types.h>
 #include <swamp-typeinfo/chunk.h>
+#include <swamp-runtime/ledger.h>
 
 struct SwampFunc;
 
@@ -21,12 +22,12 @@ typedef struct SwampUnpack {
     struct SwampFunc* entry;
     int verboseFlag;
     SwtiChunk typeInfoChunk;
-    const uint8_t* dynamicMemoryOctets;
-    size_t dynamicMemorySize;
-    size_t dynamicMemoryMaxSize;
+    const uint8_t* constantStaticMemoryOctets;
+    size_t constantStaticMemorySize;
+    size_t constantStaticMemoryMaxSize;
 
-    const uint8_t* ledgerOctets;
-    size_t ledgerSize;
+    SwampLedger ledger;
+
 } SwampUnpack;
 
 typedef void* (*SwampResolveExternalFunction)(const char* fullyQualifiedName);

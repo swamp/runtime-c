@@ -20,9 +20,12 @@ void logMemory(const uint8_t* octets, size_t count) {
 #define FIXUP_DYNAMIC_POINTER(field, type) field = (type) (dynamicMemoryOctets + (uintptr_t)field)
 #define FIXUP_DYNAMIC_STRING(field) FIXUP_DYNAMIC_POINTER(field, const char*)
 
+
+
 const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, SwampResolveExternalFunction bindFn, const SwampConstantLedgerEntry* entries) {
     const SwampFunc* entryFunc = 0;
     const SwampConstantLedgerEntry* entry = entries;
+    int detectedError = 0;
     while (entry->constantType != 0) {
         CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
         const uint8_t* p = (dynamicMemoryOctets + entry->offset);
@@ -42,7 +45,10 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
                 void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
                 if (resolvedFunctionPointer == 0) {
-                    CLOG_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
+                    CLOG_SOFT_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
+                    detectedError = 1;
+                    entry++;
+                    continue;
                 }
                 switch (func->parameterCount) {
                     case 1:
@@ -81,5 +87,8 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
         entry++;
     }
 
+    if (detectedError) {
+        return 0;
+    }
     return entryFunc;
 }

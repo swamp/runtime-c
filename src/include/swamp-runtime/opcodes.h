@@ -66,6 +66,8 @@
 #define SwampOpcodeCmpEnumEqual 0x2a
 #define SwampOpcodeCmpEnumNotEqual 0x2b
 #define SwampOpcodePatternMatchingInt 0x2c
+#define SwampOpcodePatternMatchingString 0x2d
+#define SwampOpcodeCallExternalWithExtendedSizes 0x2e
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------

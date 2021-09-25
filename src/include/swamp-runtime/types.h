@@ -36,6 +36,11 @@ typedef SwampInt32 SwampCharacter;
 typedef int32_t SwampFixed32;
 typedef uint32_t SwampResourceNameId;
 
+typedef struct SwampUnknownType {
+    const void* ptr; // Must be first!
+    size_t size;
+    size_t align;
+} SwampUnknownType;
 
 typedef struct SwampParameters {
     void* source;

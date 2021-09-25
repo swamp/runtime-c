@@ -16,13 +16,13 @@ static const char* g_swamp_opcode_names[] = {
     "nop",  "cse",   "brfa", "brt",   "jmp",   "call",    "ret",    "ecall",   "tail",  "curry",  "addi",      "subi",
     "muli", "divi",  "negi", "mulfx", "divfx", "cpeli",   "cpnei",  "cpli",    "cplei", "cpgi",   "cpgei",     "noti",
     "cpes", "cpnes", "andi", "ori",   "xori",  "noti",    "crlst",  "crarr",   "conjl", "addlst", "appendstr", "ldi",
-    "ldb",  "ldr",   "ldz",  "cpy",   "lde",   "callvar", "cmpeeq", "cmpeneq", "jmppi"};
+    "ldb",  "ldr",   "ldz",  "cpy",   "lde",   "callvar", "cmpeeq", "cmpeneq", "jmppi", "jmpps", "callvaralign"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {
     return g_swamp_opcode_names[opcode];
 }
-#define SWAMP_CONFIG_DEBUG 1
+#define SWAMP_CONFIG_DEBUG 0
 
 typedef uint16_t SwampJump;
 typedef uint8_t SwampJumpOffset;
@@ -197,7 +197,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
 
     while (1) {
-#if SWAMP_CONFIG_DEBUG && 0
+#if SWAMP_CONFIG_DEBUG || DEBUGLOG_PARAMS
         if (verbose_flag) {
             uint16_t addr = pc - call_stack_entry->func->opcodes;
             if (pc == 0) {
@@ -311,6 +311,37 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                         break;
                     case 4:
                         externalFunction->function4(basePointer, context, params[1], params[2], params[3], params[4]);
+                        break;
+                    default:
+                        SWAMP_LOG_ERROR("strange parameter count in external with sizes");
+                }
+            } break;
+            case SwampOpcodeCallExternalWithExtendedSizes: {
+                const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
+                const SwampFunctionExternal* externalFunction = *(
+                    (const SwampFunctionExternal**) readStackPointerPos(&pc, bp));
+                uint8_t count = readShortCount(&pc);
+                SwampUnknownType unknownTypes[8];
+                for (uint8_t i = 0; i < count; i++) {
+                    uint16_t offset = readU16(&pc);
+                    uint16_t size = readU16(&pc);
+                    uint8_t align = readU8(&pc);
+                    unknownTypes[i].ptr = basePointer + offset;
+                    unknownTypes[i].size = size;
+                    unknownTypes[i].align = align;
+                }
+                switch (count - 1) { // externalfunction->paramCOunt
+                    case 1:
+                        externalFunction->function1(basePointer, context, &unknownTypes[1]);
+                        break;
+                    case 2:
+                        externalFunction->function2(basePointer, context, &unknownTypes[1], &unknownTypes[2]);
+                        break;
+                    case 3:
+                        externalFunction->function3(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3]);
+                        break;
+                    case 4:
+                        externalFunction->function4(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4]);
                         break;
                     default:
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");

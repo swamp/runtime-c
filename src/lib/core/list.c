@@ -68,7 +68,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextInit(&ownContext, context->dynamicMemory, context->constantStaticMemory, context->typeInfo);
+    swampContextCreateTemp(&ownContext, context);
 
     SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
     uint8_t* targetItemPointer = target->value;
@@ -173,11 +173,63 @@ void swampCoreListRange()
 
 }
 
-
+void align(size_t* pos, size_t align)
+{
+    size_t rest = *pos % align;
+    if (rest != 0) {
+        *pos += align - rest;
+    }
+}
 
 
 // foldl : (a -> b -> b) -> b -> List a -> b
-void swampCoreListFoldl()
+void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunc*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
+{
+    const SwampList* list = **_list;
+    const SwampFunc* fn = **_fn;
+
+    size_t aSize = list->itemSize;
+    size_t bSize = fn->returnOctetSize;
+
+    SwampResult fnResult;
+    fnResult.target = 0;
+    fnResult.expectedOctetSize = bSize;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 2;
+    parameters.octetSize = aSize + bSize;
+
+    size_t bOffset = aSize;
+
+    align(&bOffset, initialValue->align);
+
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    uint8_t tempBuf[32];
+
+    tc_memcpy_octets(ownContext.bp, initialValue->ptr, bSize);
+    CLOG_INFO("accumulator is now for index %d, value:%d", -1, *(const SwampInt32*)ownContext.bp);
+    const uint8_t* sourceItemPointer = list->value;
+    for (size_t i = 0; i < list->count; ++i) {
+        tc_memcpy_octets(tempBuf, sourceItemPointer, aSize);
+        tc_memcpy_octets(tempBuf + bOffset, ownContext.bp, bSize);
+        parameters.source = tempBuf;
+        swampContextReset(&ownContext);
+        CLOG_INFO("calling foldl for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        CLOG_INFO("accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
+        sourceItemPointer += aSize;
+    }
+
+    tc_memcpy_octets(result, ownContext.bp, bSize);
+
+    swampContextDestroy(&ownContext);
+}
+
+// foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
+void swampCoreListFoldlStop()
 {
 
 }
@@ -188,11 +240,7 @@ void swampCoreListUnzip()
 
 }
 
-// foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
-void swampCoreListFoldlStop()
-{
 
-}
 
 
 void* swampCoreListFindFunction(const char* fullyQualifiedName)

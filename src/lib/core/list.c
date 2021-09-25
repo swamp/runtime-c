@@ -229,9 +229,58 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunc***
 }
 
 // foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
-void swampCoreListFoldlStop()
+void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFunc*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
 {
+    const SwampList* list = **_list;
+    const SwampFunc* fn = **_fn;
 
+    size_t aSize = list->itemSize;
+    size_t bSize = fn->returnOctetSize;
+
+    SwampResult fnResult;
+    fnResult.target = 0;
+    fnResult.expectedOctetSize = bSize;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 2;
+    parameters.octetSize = aSize + bSize;
+
+    size_t bOffset = aSize;
+
+    align(&bOffset, initialValue->align);
+
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    uint8_t tempBuf[32];
+    uint8_t lastKnownGoodValue[32];
+
+    tc_memcpy_octets(ownContext.bp, initialValue->ptr, bSize);
+    tc_memcpy_octets(lastKnownGoodValue, initialValue->ptr, bSize);
+    CLOG_INFO("foldlstop: accumulator is now for index %d, value:%d", -1, *(const SwampInt32*)ownContext.bp);
+    const uint8_t* sourceItemPointer = list->value;
+    for (size_t i = 0; i < list->count; ++i) {
+        tc_memcpy_octets(tempBuf, sourceItemPointer, aSize);
+        tc_memcpy_octets(tempBuf + bOffset, ownContext.bp, bSize);
+        parameters.source = tempBuf;
+        swampContextReset(&ownContext);
+        CLOG_INFO("foldlstop:  for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        if (swampMaybeIsNothing(ownContext.bp)) {
+            break;
+        } else {
+            const uint8_t* justValue = swampMaybeJustGetValue(ownContext.bp, initialValue->align);
+            tc_memcpy_octets(lastKnownGoodValue, justValue, bSize);
+            tc_memmove_octets(ownContext.bp, justValue, bSize);
+        }
+        CLOG_INFO("foldlstop: accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
+        sourceItemPointer += aSize;
+    }
+
+    tc_memcpy_octets(result, lastKnownGoodValue, bSize);
+
+    swampContextDestroy(&ownContext);
 }
 
 // unzip : List (a, b) -> (List a, List b)

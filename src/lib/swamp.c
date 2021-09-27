@@ -300,6 +300,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     params[i] = basePointer + offset;
                 }
                 switch (count - 1) { // externalfunction->paramCOunt
+                    case 0:
+                        externalFunction->function0(basePointer, context);
+                        break;
                     case 1:
                         externalFunction->function1(basePointer, context, params[1]);
                         break;
@@ -365,6 +368,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%04X", externalFunction->fullyQualifiedName, pc,
                                  bp - context->stackMemory.memory)
                     switch (func->parameterCount) {
+                        case 0:
+                            externalFunction->function0(basePointer, context);
+                            break;
                         case 1:
                             externalFunction->function1(basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos);

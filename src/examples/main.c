@@ -11,8 +11,24 @@
 #include <unistd.h>
 #include <swamp-runtime/core/core.h>
 #include <swamp-runtime/context.h>
+#include <swamp-ecs-wrap/bind.h>
 
 clog_config g_clog;
+
+void* swampExampleFindFunction(const char* name)
+{
+    void *fn;
+
+    fn = swampCoreFindFunction(name);
+    if (fn) {
+        return fn;
+    }
+
+    fn = ecsWrapFindFunction(name);
+
+    return fn;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -27,17 +43,17 @@ int main(int argc, char* argv[])
     swampUnpackInit(&unpack, 1);
 
 
-    int unpackErr = swampUnpackFilename(&unpack, "gameplay.swamp-pack", swampCoreFindFunction, 1);
+    int unpackErr = swampUnpackFilename(&unpack, "gameplay.swamp-pack", swampExampleFindFunction, 1);
     if (unpackErr < 0) {
-        SWAMP_ERROR("couldn't unpack %d", unpackErr)
-        return unpackErr;
+        //SWAMP_ERROR("couldn't unpack %d", unpackErr)
+        //return unpackErr;
     }
 
     const SwampFunc* initFunc = swampLedgerFindFunction(&unpack.ledger, "init");
     if (initFunc == 0) {
         CLOG_ERROR("could not find 'init'-function");
     }
-    const SwampFunc* func = unpack.entry;
+    const SwampFunc* func = swampLedgerFindFunction(&unpack.ledger, "main"); //unpack.entry;
 
     SwampMachineContext context;
     context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
@@ -60,7 +76,7 @@ int main(int argc, char* argv[])
     } Position;
 
     SwampResult result;
-    result.expectedOctetSize = sizeof(Position);
+    result.expectedOctetSize = 4; // sizeof(Position);
     result.target = 0;
 
     SwampBool temp;

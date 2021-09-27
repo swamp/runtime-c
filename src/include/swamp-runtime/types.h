@@ -36,6 +36,16 @@ typedef SwampInt32 SwampCharacter;
 typedef int32_t SwampFixed32;
 typedef uint32_t SwampResourceNameId;
 
+typedef size_t (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
+typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
+
+typedef struct SwampUnmanaged {
+    const void* ptr;
+    const char* debugName;
+    SwampUnmanagedSerialize serialize;
+    SwampUnmanagedToString toString;
+} SwampUnmanaged;
+
 typedef struct SwampUnknownType {
     const void* ptr; // Must be first!
     size_t size;
@@ -122,6 +132,7 @@ typedef struct SwampCurryFunc {
     const struct SwampFunc* curryFunction;
 } SwampCurryFunc;
 
+typedef void (*SwampExternalFunction0)(void* result, struct SwampMachineContext* context);
 typedef void (*SwampExternalFunction1)(void* result, struct SwampMachineContext* context, const void* argument1);
 typedef void (*SwampExternalFunction2)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2);
 typedef void (*SwampExternalFunction3)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3);
@@ -144,6 +155,7 @@ typedef struct SwampFunctionExternal {
     SwampExternalFunction3 function3;
     SwampExternalFunction4 function4;
     const char* fullyQualifiedName;
+    SwampExternalFunction0 function0;
 } SwampFunctionExternal;
 
 struct SwampMachineContext;

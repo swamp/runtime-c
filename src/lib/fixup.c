@@ -51,6 +51,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     continue;
                 }
                 switch (func->parameterCount) {
+                    case 0:
+                        func->function0 = resolvedFunctionPointer;
+                        break;
                     case 1:
                         func->function1 = resolvedFunctionPointer;
                         break;
@@ -64,7 +67,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                         func->function4 = resolvedFunctionPointer;
                         break;
                     default:
-                        CLOG_ERROR("paramcount above 4 or below 1 is not supported (%d)", func->parameterCount)
+                        CLOG_ERROR("paramcount above 4 or below 0 is not supported (%d)", func->parameterCount)
                 }
                 CLOG_INFO("set now as parameter count %d", func->parameterCount);
                 CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)

@@ -15,7 +15,7 @@ typedef struct SwampMachineContext {
     SwampStackMemory stackMemory;
     uint8_t* bp;
     SwampDynamicMemory* dynamicMemory;
-    SwampStaticMemory* constantStaticMemory;
+    const SwampStaticMemory* constantStaticMemory;
     uint8_t* tempResult;
     const struct SwtiChunk* typeInfo;
 } SwampMachineContext;

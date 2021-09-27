@@ -19,7 +19,7 @@ typedef struct SwampOctetStream {
 
 
 typedef struct SwampUnpack {
-    struct SwampFunc* entry;
+    const struct SwampFunc* entry;
     int verboseFlag;
     SwtiChunk typeInfoChunk;
     const uint8_t* constantStaticMemoryOctets;

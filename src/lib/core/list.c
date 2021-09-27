@@ -73,8 +73,8 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
     uint8_t* targetItemPointer = target->value;
     for (size_t i = 0; i < list->count; ++i) {
-        parameters.source = sourceItemPointer;
         swampContextReset(&ownContext);
+        tc_memcpy_octets(ownContext.bp + fn->returnOctetSize, sourceItemPointer, list->itemSize);
         CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
         tc_memcpy_octets(targetItemPointer, fnResult.target, target->itemSize);
@@ -215,8 +215,9 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunc***
     for (size_t i = 0; i < list->count; ++i) {
         tc_memcpy_octets(tempBuf, sourceItemPointer, aSize);
         tc_memcpy_octets(tempBuf + bOffset, ownContext.bp, bSize);
-        parameters.source = tempBuf;
+
         swampContextReset(&ownContext);
+        tc_memcpy_octets(ownContext.bp + bSize, tempBuf, aSize + bSize);
         CLOG_INFO("calling foldl for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
         CLOG_INFO("accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
@@ -263,8 +264,8 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
     for (size_t i = 0; i < list->count; ++i) {
         tc_memcpy_octets(tempBuf, sourceItemPointer, aSize);
         tc_memcpy_octets(tempBuf + bOffset, ownContext.bp, bSize);
-        parameters.source = tempBuf;
         swampContextReset(&ownContext);
+        tc_memcpy_octets(ownContext.bp +bSize, tempBuf, aSize + bSize);
         CLOG_INFO("foldlstop:  for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
         if (swampMaybeIsNothing(ownContext.bp)) {

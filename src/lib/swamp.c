@@ -194,7 +194,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         return -2;
     }
 
-    swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
+    //swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
 
     while (1) {
 #if SWAMP_CONFIG_DEBUG || DEBUGLOG_PARAMS

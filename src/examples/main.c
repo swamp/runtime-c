@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     SwampParameters parameters;
     parameters.octetSize = sizeof(SwampBool);
     parameters.parameterCount = 1;
-    parameters.source = &temp;
+    tc_memcpy_octets(context.bp + result.expectedOctetSize, &temp, sizeof(SwampBool));
 
     int worked = swampRun(&result, &context, func, parameters, 1);
     if (worked < 0) {

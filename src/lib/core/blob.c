@@ -73,7 +73,7 @@ void swampCoreBlobMap(SwampList** result, SwampMachineContext* context, SwampFun
    SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
    uint8_t* targetItemPointer = target->value;
    for (size_t i = 0; i < list->count; ++i) {
-       parameters.source = sourceItemPointer;
+       tc_memcpy_octets(ownContext.stackMemory.memory + fn->returnOctetSize, sourceItemPointer, parameters.octetSize);
        swampContextReset(&ownContext);
        CLOG_INFO("calling for index %d", i);
        swampRun(&fnResult, &ownContext, fn, parameters, 1);

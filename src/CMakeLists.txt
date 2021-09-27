@@ -82,6 +82,10 @@ target_include_directories(swamp-runtime PUBLIC ${deps}tiny-libc/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}flood-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}raff-c/src/include)
 
+target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-c/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-wrap-c/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}tinge-c/src/include) # remove this later
+
 set_target_properties(swamp-runtime
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"

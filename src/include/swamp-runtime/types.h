@@ -53,7 +53,6 @@ typedef struct SwampUnknownType {
 } SwampUnknownType;
 
 typedef struct SwampParameters {
-    void* source;
     size_t octetSize;
     size_t parameterCount;
 } SwampParameters;

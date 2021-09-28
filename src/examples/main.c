@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 
     SwampMachineContext context;
     context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
-    context.dynamicMemory->maxAllocatedSize = 64 * 1024;
+    context.dynamicMemory->maxAllocatedSize = 128 * 1024;
     context.dynamicMemory->memory = malloc(context.dynamicMemory->maxAllocatedSize);
     context.dynamicMemory->p = context.dynamicMemory->memory;
 

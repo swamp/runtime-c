@@ -57,12 +57,12 @@ int main(int argc, char* argv[])
 
     SwampMachineContext context;
     context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
-    context.dynamicMemory->memory = malloc(32 * 1024);
+    context.dynamicMemory->maxAllocatedSize = 64 * 1024;
+    context.dynamicMemory->memory = malloc(context.dynamicMemory->maxAllocatedSize);
     context.dynamicMemory->p = context.dynamicMemory->memory;
-    context.dynamicMemory->maxAllocatedSize = 32 * 1024;
 
-    context.stackMemory.memory = malloc(32 * 1024);
     context.stackMemory.maximumStackMemory = 32* 1024;
+    context.stackMemory.memory = malloc(context.stackMemory.maximumStackMemory);
     context.bp = context.stackMemory.memory;
     context.tempResult = malloc(2 * 1024);
     context.typeInfo = &unpack.typeInfoChunk;

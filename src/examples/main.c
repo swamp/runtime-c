@@ -70,6 +70,36 @@ int main(int argc, char* argv[])
     if (initFunc == 0) {
         CLOG_ERROR("could not find 'init'-function");
     }
+    SwampResult initResult;
+    initResult.expectedOctetSize = initFunc->returnOctetSize;
+
+
+    SwampMachineContext initContext;
+    initContext.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
+    initContext.dynamicMemory->maxAllocatedSize = 128 * 1024;
+    initContext.dynamicMemory->memory = malloc(initContext.dynamicMemory->maxAllocatedSize);
+    initContext.dynamicMemory->p = initContext.dynamicMemory->memory;
+
+    initContext.stackMemory.maximumStackMemory = 32 * 1024;
+    initContext.stackMemory.memory = malloc(initContext.stackMemory.maximumStackMemory);
+    initContext.bp = initContext.stackMemory.memory;
+    initContext.tempResult = malloc(2 * 1024);
+    initContext.typeInfo = &unpack.typeInfoChunk;
+
+    SwampStaticMemory staticMemory;
+    swampStaticMemoryInit(&staticMemory, (uint8_t*) unpack.constantStaticMemoryOctets,
+                          unpack.constantStaticMemoryMaxSize);
+    initContext.constantStaticMemory = &staticMemory;
+
+    SwampParameters initParameters;
+    initParameters.octetSize = 0;
+    initParameters.parameterCount = 0;
+    int initWorked = swampRun(&initResult, &initContext, initFunc, initParameters, 1);
+    if (initWorked < 0) {
+        return initWorked;
+    }
+
+
     const SwampFunc* func = swampLedgerFindFunction(&unpack.ledger, "main"); // unpack.entry;
 
     SwampMachineContext context;
@@ -84,10 +114,10 @@ int main(int argc, char* argv[])
     context.tempResult = malloc(2 * 1024);
     context.typeInfo = &unpack.typeInfoChunk;
 
-    SwampStaticMemory staticMemory;
-    swampStaticMemoryInit(&staticMemory, (uint8_t*) unpack.constantStaticMemoryOctets,
+    SwampStaticMemory initStaticMemory;
+    swampStaticMemoryInit(&initStaticMemory, (uint8_t*) unpack.constantStaticMemoryOctets,
                           unpack.constantStaticMemoryMaxSize);
-    context.constantStaticMemory = &staticMemory;
+    context.constantStaticMemory = &initStaticMemory;
     typedef struct Position {
         int32_t x;
         int32_t y;
@@ -99,7 +129,7 @@ int main(int argc, char* argv[])
     SwampBool temp;
     SwampParameters parameters;
     parameters.octetSize = sizeof(SwampBool);
-    parameters.parameterCount = 1;
+    parameters.parameterCount = 2;
     tc_memcpy_octets(context.bp + result.expectedOctetSize, &temp, sizeof(SwampBool));
 
     int worked = swampRun(&result, &context, func, parameters, 1);

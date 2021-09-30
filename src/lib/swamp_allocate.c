@@ -124,11 +124,12 @@ SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, s
 }
 
 
-SwampCurryFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
+SwampCurryFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, uint16_t typeIdIndex, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
 {
     SwampCurryFunc * func = (SwampCurryFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampCurryFunc), 8);
     func->func.type = SwampFunctionTypeCurry;
     func->curryFunction = sourceFunc;
+    func->typeIdIndex = typeIdIndex;
     func->curryOctetSize = parametersOctetSize;
     func->curryOctets = swampAllocateOctets(self, parameters, parametersOctetSize);
 

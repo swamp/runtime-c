@@ -132,6 +132,7 @@ typedef struct SwampCurryFunc {
     size_t curryOctetSize;
     const uint8_t* curryOctets;
     const struct SwampFunc* curryFunction;
+    uint16_t typeIdIndex;
 } SwampCurryFunc;
 
 typedef void (*SwampExternalFunction0)(void* result, struct SwampMachineContext* context);

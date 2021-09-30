@@ -22,7 +22,7 @@ static const char* swamp_opcode_name(uint8_t opcode)
 {
     return g_swamp_opcode_names[opcode];
 }
-#define SWAMP_CONFIG_DEBUG 0
+#define SWAMP_CONFIG_DEBUG 1
 
 typedef uint16_t SwampJump;
 typedef uint8_t SwampJumpOffset;
@@ -44,7 +44,7 @@ typedef struct SwampCallStack {
     size_t count;
 } SwampCallStack;
 
-#define DEBUGLOG_PARAMS 0
+#define DEBUGLOG_PARAMS 1
 
 static uint32_t readU32(const uint8_t** pc)
 {
@@ -423,9 +423,10 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             case SwampOpcodeCurry: {
                 SwampFunc** targetFunc = (SwampFunc**) readTargetStackPointerPos(&pc, bp);
                 const SwampFunc* sourceFunc = (const SwampFunc*) readSourceStackPointerPos(&pc, bp);
+                uint16_t typeIdIndex = readU16(&pc);
                 const void* argumentsStartPointer = readSourceStackPointerPos(&pc, bp);
                 size_t argumentsRange = readShortRange(&pc);
-                *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, sourceFunc, argumentsStartPointer,
+                *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, typeIdIndex, sourceFunc, argumentsStartPointer,
                                                      argumentsRange);
             } break;
 

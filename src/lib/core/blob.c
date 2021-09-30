@@ -60,7 +60,6 @@ void swampCoreBlobMap(SwampList** result, SwampMachineContext* context, SwampFun
    const uint8_t* sourceItemPointer = list->value;
 
    SwampResult fnResult;
-   fnResult.target = context->tempResult;
    fnResult.expectedOctetSize = fn->returnOctetSize;
 
    SwampParameters parameters;
@@ -77,7 +76,7 @@ void swampCoreBlobMap(SwampList** result, SwampMachineContext* context, SwampFun
        swampContextReset(&ownContext);
        CLOG_INFO("calling for index %d", i);
        swampRun(&fnResult, &ownContext, fn, parameters, 1);
-       tc_memcpy_octets(targetItemPointer, fnResult.target, target->itemSize);
+       tc_memcpy_octets(targetItemPointer, ownContext.bp, target->itemSize);
        sourceItemPointer += list->itemSize;
        targetItemPointer += target->itemSize;
    }

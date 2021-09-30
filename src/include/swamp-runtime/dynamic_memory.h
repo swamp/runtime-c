@@ -15,6 +15,6 @@ typedef struct SwampDynamicMemory {
 } SwampDynamicMemory;
 
 void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOctetSize);
-void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize);
+void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_DYNAMIC_MEMORY_H

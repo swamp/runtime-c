@@ -60,7 +60,6 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     const uint8_t* sourceItemPointer = list->value;
 
     SwampResult fnResult;
-    fnResult.target = context->tempResult;
     fnResult.expectedOctetSize = fn->returnOctetSize;
 
     SwampParameters parameters;
@@ -77,7 +76,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
         tc_memcpy_octets(ownContext.bp + fn->returnOctetSize, sourceItemPointer, list->itemSize);
         CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
-        tc_memcpy_octets(targetItemPointer, fnResult.target, target->itemSize);
+        tc_memcpy_octets(targetItemPointer, ownContext.bp, target->itemSize);
         sourceItemPointer += list->itemSize;
         targetItemPointer += target->itemSize;
     }
@@ -192,7 +191,6 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunc***
     size_t bSize = fn->returnOctetSize;
 
     SwampResult fnResult;
-    fnResult.target = 0;
     fnResult.expectedOctetSize = bSize;
 
     SwampParameters parameters;
@@ -239,7 +237,6 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
     size_t bSize = fn->returnOctetSize;
 
     SwampResult fnResult;
-    fnResult.target = 0;
     fnResult.expectedOctetSize = bSize;
 
     SwampParameters parameters;

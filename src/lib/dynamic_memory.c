@@ -12,9 +12,15 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
     self->maxAllocatedSize = maxOctetSize;
 }
 
-void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize)
+void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align)
 {
-    size_t total = itemCount *itemSize;
+    size_t pos = (uintptr_t)self->p - (uintptr_t)self->memory;
+    size_t rest = pos % align;
+    if (rest != 0) {
+        self->p += align - rest;
+        pos += align - rest;
+    }
+    size_t total = itemCount * itemSize;
     if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
         SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items at %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;

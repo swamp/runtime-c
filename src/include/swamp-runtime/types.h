@@ -36,6 +36,10 @@ typedef SwampInt32 SwampCharacter;
 typedef int32_t SwampFixed32;
 typedef uint32_t SwampResourceNameId;
 
+typedef uint32_t SwampMemoryPosition;
+
+void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
+
 typedef size_t (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
 typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
@@ -58,7 +62,6 @@ typedef struct SwampParameters {
 } SwampParameters;
 
 typedef struct SwampResult {
-    void* target;
     size_t expectedOctetSize;
 } SwampResult;
 

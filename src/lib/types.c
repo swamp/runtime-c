@@ -13,3 +13,11 @@ int swampStringEqual(const SwampString* a, const SwampString* b)
 
     return tc_memcmp(a->characters, b->characters, a->characterCount) == 0;
 }
+
+void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align)
+{
+    size_t rest = *position % align;
+    if (rest != 0) {
+        *position = *position + (align - rest);
+    }
+}

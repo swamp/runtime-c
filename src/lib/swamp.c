@@ -219,7 +219,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                         return -3;
                     }
 
-                    result->target = (void*) bp;
                     return 0;
                 }
 
@@ -270,8 +269,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 const void* sourceItem = readSourceStackPointerPos(&pc, bp);
                 size_t range = readShortRange(&pc);
 
-                SwampList* newList = swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampList));
-                void* dynamicItemMemory = swampDynamicMemoryAlloc(context->dynamicMemory, 1, range);
+                SwampList* newList = swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampList), 8);
+                void* dynamicItemMemory = swampDynamicMemoryAlloc(context->dynamicMemory, 1, range, sourceList->itemAlign);
                 swampMemoryCopy(dynamicItemMemory, sourceItem, range);
                 newList->value = dynamicItemMemory;
                 newList->count = sourceList->count + 1;
@@ -498,7 +497,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 size_t itemSize = readShortRange(&pc);
                 size_t itemAlign = readAlign(&pc);
                 size_t itemCount = readShortCount(&pc);
-                void* targetItems = swampDynamicMemoryAlloc(context->dynamicMemory, itemSize, itemCount);
+                void* targetItems = swampDynamicMemoryAlloc(context->dynamicMemory, itemCount, itemSize, itemAlign);
                 uint8_t* pItems = targetItems;
                 for (size_t i = 0; i < itemCount; ++i) {
                     const void* item = readSourceStackPointerPos(&pc, bp);
@@ -515,7 +514,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 size_t itemSize = readShortRange(&pc);
                 size_t itemAlign = readAlign(&pc);
                 size_t itemCount = readShortCount(&pc);
-                void* targetItems = swampDynamicMemoryAlloc(context->dynamicMemory, itemSize, itemCount);
+                void* targetItems = swampDynamicMemoryAlloc(context->dynamicMemory, itemCount, itemSize, itemAlign);
                 uint8_t* pItems = targetItems;
                 for (size_t i = 0; i < itemCount; ++i) {
                     const void* item = readSourceStackPointerPos(&pc, bp);
@@ -523,7 +522,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     pItems += itemSize;
                 }
                 SwampArray* newArray = (SwampArray*) swampDynamicMemoryAlloc(context->dynamicMemory, 1,
-                                                                             sizeof(SwampArray));
+                                                                             sizeof(SwampArray), 8);
                 newArray->value = targetItems;
                 newArray->count = itemCount;
                 newArray->itemSize = itemSize;
@@ -538,11 +537,11 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 const SwampStringReference sourceStringB = *(
                     (const SwampStringReferenceData) readSourceStackPointerPos(&pc, bp));
                 size_t totalCharacterCount = sourceStringA->characterCount + sourceStringB->characterCount;
-                char* newCharacters = swampDynamicMemoryAlloc(context->dynamicMemory, 1, totalCharacterCount + 1);
+                char* newCharacters = swampDynamicMemoryAlloc(context->dynamicMemory, 1, totalCharacterCount + 1, 1);
                 tc_memcpy_octets(newCharacters, sourceStringA->characters, sourceStringA->characterCount);
                 tc_memcpy_octets(newCharacters + sourceStringA->characterCount, sourceStringB->characters,
                                  sourceStringB->characterCount + 1);
-                SwampString* newString = swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampString));
+                SwampString* newString = swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampString), 8);
                 newString->characterCount = totalCharacterCount;
                 newString->characters = newCharacters;
                 *target = newString;

@@ -133,6 +133,7 @@ typedef struct SwampCurryFunc {
     const uint8_t* curryOctets;
     const struct SwampFunc* curryFunction;
     uint16_t typeIdIndex;
+    uint8_t firstParameterAlign;
 } SwampCurryFunc;
 
 typedef void (*SwampExternalFunction0)(void* result, struct SwampMachineContext* context);

@@ -45,7 +45,7 @@ SwampList* swampListAllocatePrepare(SwampDynamicMemory* self, size_t itemCount, 
 }
 
 
-SwampBlob* swampBlobAllocatePrepare(SwampDynamicMemory* self, const uint8_t* octets, size_t octetCount)
+SwampBlob* swampBlobAllocatePrepare(SwampDynamicMemory* self, size_t octetCount)
 {
     SwampBlob* newNode = (SwampBlob*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampBlob), 8);
 
@@ -67,7 +67,7 @@ const SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, 
 
 SwampBlob* swampBlobAllocate(SwampDynamicMemory* self, const uint8_t* octets, size_t octetCount)
 {
-    SwampBlob* blob = swampBlobAllocatePrepare(self, octets, octetCount);
+    SwampBlob* blob = swampBlobAllocatePrepare(self, octetCount);
 
     tc_memcpy_octets(blob->octets, octets, octetCount);
 }

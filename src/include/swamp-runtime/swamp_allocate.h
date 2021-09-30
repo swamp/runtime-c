@@ -21,5 +21,6 @@ SwampList* swampListAllocatePrepare(struct SwampDynamicMemory* self, size_t item
 const SwampList* swampListAllocateNoCopy(struct SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize, size_t itemAlign);
 const SwampList* swampAllocateListAppendNoCopy(struct SwampDynamicMemory* self, const SwampList* a, const SwampList* b);
 SwampBlob* swampBlobAllocate(struct SwampDynamicMemory* self, const uint8_t* octets, size_t octetCount);
+SwampBlob* swampBlobAllocatePrepare(struct SwampDynamicMemory* self, size_t octetCount);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_SWAMP_ALLOCATE_H

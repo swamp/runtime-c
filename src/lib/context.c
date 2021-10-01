@@ -9,7 +9,7 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
                       const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo)
 {
     self->dynamicMemory = dynamicMemory;
-    uint8_t* stackMemory = malloc(32*1024);
+    uint8_t* stackMemory = tc_malloc(32*1024);
     swampStackMemoryInit(&self->stackMemory, stackMemory, 32*1024);
     self->bp = self->stackMemory.memory;
     self->tempResult = malloc(2 * 1024);
@@ -19,16 +19,26 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
 
 void swampContextReset(SwampMachineContext* self)
 {
-    self->bp = self->stackMemory.memory;
+    //self->bp = self->stackMemory.memory;
 }
 
 void swampContextDestroy(SwampMachineContext* self)
 {
-    free(self->stackMemory.memory);
-    free(self->tempResult);
+    tc_free(self->stackMemory.memory);
+    tc_free(self->tempResult);
+}
+
+void swampContextDestroyTemp(SwampMachineContext* self)
+{
+    tc_free(self->stackMemory.memory);
 }
 
 void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context)
 {
-    swampContextInit(target, context->dynamicMemory, context->constantStaticMemory, context->typeInfo);
+    uint8_t* stackMemory = tc_malloc(32*1024);
+    swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
+    target->bp = target->stackMemory.memory;
+    target->tempResult = context->tempResult;
+    target->typeInfo = context->typeInfo;
+    target->constantStaticMemory = context->constantStaticMemory;
 }

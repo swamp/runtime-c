@@ -24,5 +24,6 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, con
 void swampContextReset(SwampMachineContext* self);
 void swampContextDestroy(SwampMachineContext* self);
 void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context);
+void swampContextDestroyTemp(SwampMachineContext* self);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CONTEXT_H

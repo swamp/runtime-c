@@ -7,4 +7,6 @@
 
 void* swampCoreFindFunction(const char* fullyQualifiedName);
 
+
+
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_CORE_H

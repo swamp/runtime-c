@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     } Position;
 
     SwampResult result;
-    result.expectedOctetSize = 4; // sizeof(Position);
+    result.expectedOctetSize = 48; // sizeof(Position);
 
     SwampBool temp;
     SwampParameters parameters;
@@ -132,10 +132,10 @@ int main(int argc, char* argv[])
     parameters.parameterCount = 2;
     tc_memcpy_octets(context.bp + result.expectedOctetSize, &temp, sizeof(SwampBool));
 
-    int worked = swampRun(&result, &context, func, parameters, 1);
-    if (worked < 0) {
-        return worked;
-    }
+   // int worked = swampRun(&result, &context, func, parameters, 1);
+    //if (worked < 0) {
+      //  return worked;
+   // }
     Position* v = ((Position*) context.stackMemory.memory);
     CLOG_INFO("result is: %d %d", v->x, v->y);
 

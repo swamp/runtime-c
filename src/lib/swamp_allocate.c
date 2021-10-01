@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/dynamic_memory.h>
-#include <tiny-libc/tiny_libc.h>
-#include <swamp-runtime/types.h>
 #include <swamp-runtime/swamp_allocate.h>
+#include <clog/clog.h>
 #include <swamp-runtime/log.h>
+#include <swamp-runtime/types.h>
+#include <tiny-libc/tiny_libc.h>
 
 const SwampString* swampStringAllocate(SwampDynamicMemory* self, const char* s)
 {
@@ -70,6 +71,8 @@ SwampBlob* swampBlobAllocate(SwampDynamicMemory* self, const uint8_t* octets, si
     SwampBlob* blob = swampBlobAllocatePrepare(self, octetCount);
 
     tc_memcpy_octets(blob->octets, octets, octetCount);
+
+    return blob;
 }
 
 const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize, size_t itemAlign)
@@ -87,7 +90,7 @@ const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* i
 const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const SwampList* a, const SwampList* b)
 {
     if (a->itemSize != b->itemSize) {
-        SWAMP_ERROR("must have exactly same item size to be")
+        SWAMP_ERROR("must have exactly same item size to be okay")
         return 0;
     }
     SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList), 8);
@@ -124,13 +127,14 @@ SwampFunc* swampFuncAllocate(SwampDynamicMemory* self, const uint8_t* opcodes, s
 }
 
 
-SwampCurryFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, uint16_t typeIdIndex, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
+SwampCurryFunc* swampCurryFuncAllocate(SwampDynamicMemory* self, uint16_t typeIdIndex, uint8_t firstAlign, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize)
 {
     SwampCurryFunc * func = (SwampCurryFunc*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampCurryFunc), 8);
     func->func.type = SwampFunctionTypeCurry;
     func->curryFunction = sourceFunc;
     func->typeIdIndex = typeIdIndex;
     func->curryOctetSize = parametersOctetSize;
+    func->firstParameterAlign = firstAlign;
     func->curryOctets = swampAllocateOctets(self, parameters, parametersOctetSize);
 
     return func;

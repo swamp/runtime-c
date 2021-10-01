@@ -44,7 +44,7 @@ typedef struct SwampCallStack {
     size_t count;
 } SwampCallStack;
 
-#define DEBUGLOG_PARAMS 1
+#define DEBUGLOG_PARAMS 0
 
 static uint32_t readU32(const uint8_t** pc)
 {
@@ -178,7 +178,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     call_stack_entry->func = f;
     call_stack_entry->pc = pc;
 
-    CLOG_VERBOSE("SAVE start '%s' pc:%p bp:%p", f->debugName, pc, bp)
+    //CLOG_VERBOSE("SAVE start '%s' pc:%p bp:%p", f->debugName, pc, bp)
 
     if (runParameters.parameterCount != f->parameterCount) {
         // ERROR
@@ -198,7 +198,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
     while (1) {
 #if SWAMP_CONFIG_DEBUG || DEBUGLOG_PARAMS
-        if (verbose_flag) {
+        if (verbose_flag && 0) {
             uint16_t addr = pc - call_stack_entry->func->opcodes;
             if (pc == 0) {
                 SWAMP_LOG_SOFT_ERROR("pc is null");
@@ -212,7 +212,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeReturn: {
                 if (stack->count == 0) {
-                    CLOG_VERBOSE("swampRun() is complete")
+                    if (verbose_flag) {
+                       // CLOG_VERBOSE("swampRun(%s) is complete", call_stack_entry->func->debugName);
+                    }
                     if (result->expectedOctetSize != f->returnOctetSize) {
                         SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize,
                                              f->returnOctetSize);
@@ -225,8 +227,10 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 call_stack_entry = &stack->entries[--stack->count];
                 pc = call_stack_entry->pc;
                 bp = call_stack_entry->basePointer;
-                CLOG_VERBOSE("POP back to '%s' pc: %p bp: %04X", call_stack_entry->func->debugName, pc,
-                             bp - context->stackMemory.memory);
+                if (verbose_flag) {
+                   // CLOG_VERBOSE("POP back to '%s' pc: %p bp: %d", call_stack_entry->func->debugName, pc,
+                     //            bp - context->stackMemory.memory);
+                }
                 // context = &call_stack_entry->context;
             } break;
 
@@ -282,8 +286,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
             case SwampOpcodeListAppend: {
                 SwampListReferenceData target = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
-                const SwampListReference sourceListA = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
-                const SwampListReference sourceListB = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
+                const SwampListReference sourceListA = *(const SwampListReferenceData) readSourceStackPointerPos(&pc, bp);
+                const SwampListReference sourceListB = *(const SwampListReferenceData) readSourceStackPointerPos(&pc, bp);
                 *target = swampAllocateListAppendNoCopy(context->dynamicMemory, sourceListA, sourceListB);
             } break;
 
@@ -355,7 +359,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 const SwampFunc* func = *((const SwampFunc**) readStackPointerPos(&pc, bp));
 
                 if (func->func.type == SwampFunctionTypeCurry) {
-                    CLOG_VERBOSE("SwampFunctionTypeCurry pc:%p bp:%p", pc, bp)
+                    //CLOG_VERBOSE("SwampFunctionTypeCurry pc:%p bp:%p", pc, bp)
                     const SwampCurryFunc* curry = (const SwampCurryFunc*) func;
                     swampMemoryMove((basePointer + curry->curryOctetSize), basePointer, func->parametersOctetSize);
                     swampMemoryCopy(basePointer, curry->curryOctets, curry->curryOctetSize);
@@ -364,8 +368,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
                 if (func->func.type == SwampFunctionTypeExternal) {
                     const SwampFunctionExternal* externalFunction = (const SwampFunctionExternal*) func;
-                    CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%04X", externalFunction->fullyQualifiedName, pc,
-                                 bp - context->stackMemory.memory)
+                   // CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%d", externalFunction->fullyQualifiedName, pc,
+                     //            bp - context->stackMemory.memory)
                     switch (func->parameterCount) {
                         case 0:
                             externalFunction->function0(basePointer, context);
@@ -416,17 +420,18 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     // Set variables
                     bp = basePointer;
                     pc = func->opcodes;
-                    CLOG_VERBOSE("Call '%s' pc:%p bp:%04X", func->debugName, pc, bp - context->stackMemory.memory)
+                    //CLOG_VERBOSE("Call '%s' pc:%p bp:%04X", func->debugName, pc, bp - context->stackMemory.memory)
                 }
             } break;
 
             case SwampOpcodeCurry: {
                 SwampFunc** targetFunc = (SwampFunc**) readTargetStackPointerPos(&pc, bp);
-                const SwampFunc* sourceFunc = (const SwampFunc*) readSourceStackPointerPos(&pc, bp);
                 uint16_t typeIdIndex = readU16(&pc);
+                uint8_t align = readU8(&pc);
+                const SwampFunc* sourceFunc = *(const SwampFunc**) readSourceStackPointerPos(&pc, bp);
                 const void* argumentsStartPointer = readSourceStackPointerPos(&pc, bp);
                 size_t argumentsRange = readShortRange(&pc);
-                *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, typeIdIndex, sourceFunc, argumentsStartPointer,
+                *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, typeIdIndex, align, sourceFunc, argumentsStartPointer,
                                                      argumentsRange);
             } break;
 

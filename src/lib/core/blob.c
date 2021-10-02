@@ -15,26 +15,6 @@
 #include <swamp-typeinfo/chunk.h>
 #include <swamp-typeinfo/typeinfo.h>
 
-SwampMemoryPosition swampExecutePrepare(const SwampFunction* func, const void* bp, const SwampFunc** outFn)
-{
-    if (func->type == SwampFunctionTypeCurry) {
-        const SwampCurryFunc* curry = (const SwampCurryFunc*) func;
-        const SwampFunc* fn = curry->curryFunction;
-        SwampMemoryPosition pos = fn->returnOctetSize;
-        swampMemoryPositionAlign(&pos, curry->firstParameterAlign);
-        tc_memcpy_octets(bp + pos, curry->curryOctets, curry->curryOctetSize);
-        *outFn = curry->curryFunction;
-        return pos + curry->curryOctetSize;
-    }
-
-    if (func->type == SwampFunctionTypeInternal) {
-        const SwampFunc* fn = (const SwampFunc*) func;
-        *outFn = fn;
-        return fn->returnOctetSize;
-    }
-
-    CLOG_ERROR("unknown function");
-}
 
 
 void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)

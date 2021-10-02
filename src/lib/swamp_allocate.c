@@ -35,6 +35,13 @@ const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self)
 SwampList* swampListAllocatePrepare(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t itemAlign)
 {
     SwampList* newNode = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList), 8);
+    if (itemSize == 0) {
+        CLOG_ERROR("itemSize can not be zero");
+    }
+
+    if (itemAlign == 0 || itemAlign > 8) {
+        CLOG_ERROR("itemSize can not be zero or more than eight");
+    }
 
     uint8_t* itemMemory = swampDynamicMemoryAlloc(self, itemCount, itemSize, itemAlign);
     newNode->value = itemMemory;

@@ -10,7 +10,9 @@
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/opcodes.h>
 #include <swamp-runtime/swamp.h>
+#include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/swamp_unpack.h>
+#include <swamp-typeinfo/typeinfo.h>
 #include <swamp-yaml-load/bind.h>
 #include <unistd.h>
 
@@ -29,7 +31,6 @@ void* swampExampleFindFunction(const char* name)
     if (fn) {
         return fn;
     }
-
 
     fn = ecsWrapFindFunction(name);
 
@@ -73,7 +74,6 @@ int main(int argc, char* argv[])
     SwampResult initResult;
     initResult.expectedOctetSize = initFunc->returnOctetSize;
 
-
     SwampMachineContext initContext;
     initContext.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
     initContext.dynamicMemory->maxAllocatedSize = 128 * 1024;
@@ -99,7 +99,6 @@ int main(int argc, char* argv[])
         return initWorked;
     }
 
-
     const SwampFunc* func = swampLedgerFindFunction(&unpack.ledger, "main"); // unpack.entry;
 
     SwampMachineContext context;
@@ -114,10 +113,7 @@ int main(int argc, char* argv[])
     context.tempResult = malloc(2 * 1024);
     context.typeInfo = &unpack.typeInfoChunk;
 
-    SwampStaticMemory initStaticMemory;
-    swampStaticMemoryInit(&initStaticMemory, (uint8_t*) unpack.constantStaticMemoryOctets,
-                          unpack.constantStaticMemoryMaxSize);
-    context.constantStaticMemory = &initStaticMemory;
+    context.constantStaticMemory = initContext.constantStaticMemory;
     typedef struct Position {
         int32_t x;
         int32_t y;
@@ -128,14 +124,32 @@ int main(int argc, char* argv[])
 
     SwampBool temp;
     SwampParameters parameters;
-    parameters.octetSize = sizeof(SwampBool);
-    parameters.parameterCount = 2;
-    tc_memcpy_octets(context.bp + result.expectedOctetSize, &temp, sizeof(SwampBool));
 
-   // int worked = swampRun(&result, &context, func, parameters, 1);
-    //if (worked < 0) {
-      //  return worked;
-   // }
+    parameters.parameterCount = 2;
+
+    SwampMemoryPosition pos = func->returnOctetSize;
+
+    swampMemoryPositionAlign(&pos, initFunc->returnAlign);
+    tc_memcpy_octets(context.bp + pos, &initContext.bp, initFunc->returnOctetSize);
+    pos += initFunc->returnOctetSize;
+
+    const SwtiType* mainFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, func->typeIndex);
+    const SwtiFunctionType* mainFnType = (const SwtiFunctionType*) mainFuncType;
+
+    swampMemoryPositionAlign(&pos, 8);
+    const SwtiType* mainReturnType = mainFnType->parameterTypes[1];
+    SwtiMemorySize mainFnSize = swtiGetMemorySize(mainReturnType);
+    SwtiMemoryAlign mainFnAlign = swtiGetMemoryAlign(mainReturnType);
+    SwampList* inputList = swampListAllocate(context.dynamicMemory, 0, 0, mainFnSize, mainFnAlign);
+    tc_memcpy_octets(context.bp + pos, &inputList, sizeof(SwampList*));
+    pos += sizeof(SwampList*);
+    parameters.octetSize = pos;
+
+    CLOG_INFO("starting MAIN()");
+    int worked = swampRun(&result, &context, func, parameters, 1);
+    if (worked < 0) {
+        return worked;
+    }
     Position* v = ((Position*) context.stackMemory.memory);
     CLOG_INFO("result is: %d %d", v->x, v->y);
 

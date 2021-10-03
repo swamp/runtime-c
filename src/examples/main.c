@@ -20,6 +20,11 @@
 
 clog_config g_clog;
 
+
+static void fakeCollide(EcsWrapWorldUnmanaged** targetUnmanagedWorld, const SwampMachineContext* context, const void** tilemap, const EcsWrapWorldUnmanaged** sourceWorld) {
+    *targetUnmanagedWorld = *sourceWorld;
+}
+
 void* swampExampleFindFunction(const char* name)
 {
     void* fn;
@@ -35,8 +40,15 @@ void* swampExampleFindFunction(const char* name)
     }
 
     fn = ecsWrapFindFunction(name);
+    if (fn) {
+        return fn;
+    }
 
-    return fn;
+    if (tc_str_equal(name, "Turmoil.Collide2.withWorld")) {
+        return fakeCollide;
+    }
+
+    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -154,14 +166,6 @@ int main(int argc, char* argv[])
     *((SwampList**)(mainContext.bp + mainPos)) = inputList;
     mainPos += sizeof(SwampList*);
 
-
-    SwampUnmanaged* unmanaged = *(const SwampUnmanaged**) (mainContext.bp + 88);
-    const EcsWrapWorldUnmanaged* unmanagedWorld = (const EcsWrapWorldUnmanaged*) unmanaged;
-
-
-
-
-    mainPos += sizeof(SwampList*);
     parameters.octetSize = mainPos;
 
     CLOG_INFO("starting MAIN()");
@@ -169,10 +173,14 @@ int main(int argc, char* argv[])
     if (worked < 0) {
         return worked;
     }
-    Position* v = ((Position*) mainContext.stackMemory.memory);
-    CLOG_INFO("result is: %d %d", v->x, v->y);
+    const SwtiType* mainFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, initFunc->typeIndex);
+    const SwtiFunctionType* mainFnType = (const SwtiFunctionType*) mainFuncType;
+    const SwtiType* mainReturnType = mainFnType->parameterTypes[mainFnType->parameterCount-1];
+    char mainTempStr[32*1024];
 
-    swampContextDestroy(&mainContext);
+    CLOG_INFO("main.update result: %s", swampDumpToAsciiString(mainContext.bp, mainReturnType, 0, mainTempStr, 32*1024));
+
+    //swampContextDestroy(&mainContext);
     swampUnpackFree(&unpack);
     free(mainContext.dynamicMemory->memory);
     free(mainContext.dynamicMemory);

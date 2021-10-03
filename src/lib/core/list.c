@@ -203,7 +203,6 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
 
     size_t bAlign = initialValue->align;
 
-    CLOG_INFO("accumulator is now for index %d, value:%d", -1, *(const SwampInt32*)ownContext.bp);
     if (list->count == 0) {
         tc_memcpy_octets(ownContext.bp, initialValue->ptr, bSize);
     }
@@ -232,9 +231,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
         pos += bSize;
 
 
-        CLOG_INFO("calling foldl for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
-        CLOG_INFO("accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
         sourceItemPointer += aSize;
     }
 

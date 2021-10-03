@@ -86,6 +86,7 @@ target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-c/src/include) 
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-wrap-c/src/include) # remove this later
 target_include_directories(swamp-runtime PUBLIC ${deps}tinge-c/src/include) # remove this later
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/yaml-load-c/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}monotonic-time-c/src/include) # remove this later
 
 set_target_properties(swamp-runtime
     PROPERTIES

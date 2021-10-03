@@ -2,6 +2,7 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+#include <clog/clog.h>
 #include <swamp-runtime/dynamic_memory.h>
 #include <swamp-runtime/log.h>
 
@@ -18,15 +19,19 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
     size_t rest = pos % align;
     if (rest != 0) {
         self->p += align - rest;
-        pos += align - rest;
+        //pos += align - rest;
     }
+
     size_t total = itemCount * itemSize;
     if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
         SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items at %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;
     }
+
     void* allocated = self->p;
-    self->p += itemCount * itemSize;
+
+    self->p += total;
+
 
     return allocated;
 }

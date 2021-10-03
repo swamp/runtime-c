@@ -17,6 +17,7 @@
 #include <swamp-typeinfo/typeinfo.h>
 #include <swamp-yaml-load/bind.h>
 #include <unistd.h>
+#include <monotonic-time/monotonic_time.h>
 
 clog_config g_clog;
 
@@ -206,10 +207,18 @@ int main(int argc, char* argv[])
     parameters.octetSize = mainPos;
 
     CLOG_INFO("starting MAIN()");
+    size_t allocatedBefore = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
+
+    MonotonicTimeNanoseconds beforeNs = monotonicTimeNanosecondsNow();
     int worked = swampRun(&result, &mainContext, mainFunc, parameters, 1);
     if (worked < 0) {
         return worked;
     }
+    MonotonicTimeNanoseconds afterNs = monotonicTimeNanosecondsNow();
+
+    size_t allocatedAfter = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
+    CLOG_INFO("performance: %lu microseconds allocations: %lu", (afterNs - beforeNs) / 1000, (allocatedAfter - allocatedBefore) / 1024);
+
     const SwtiType* mainFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, initFunc->typeIndex);
     const SwtiFunctionType* mainFnType = (const SwtiFunctionType*) mainFuncType;
     const SwtiType* mainReturnType = mainFnType->parameterTypes[mainFnType->parameterCount-1];

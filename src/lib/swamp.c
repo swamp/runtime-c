@@ -10,6 +10,7 @@
 #include <swamp-runtime/types.h>
 
 #include <clog/clog.h>
+#include <monotonic-time/monotonic_time.h>
 #include <string.h> // memset
 
 static const char* g_swamp_opcode_names[] = {
@@ -22,7 +23,7 @@ static const char* swamp_opcode_name(uint8_t opcode)
 {
     return g_swamp_opcode_names[opcode];
 }
-#define SWAMP_CONFIG_DEBUG 1
+#define SWAMP_CONFIG_DEBUG 0
 
 typedef uint16_t SwampJump;
 typedef uint8_t SwampJumpOffset;
@@ -35,6 +36,7 @@ typedef struct SwampCallStackEntry {
     const uint8_t* pc;
     const uint8_t* basePointer;
     const SwampFunc* func;
+    MonotonicTimeNanoseconds debugBeforeTimeNs;
 } SwampCallStackEntry;
 
 #define MAX_CALL_STACK_COUNT (24)
@@ -46,7 +48,9 @@ typedef struct SwampCallStack {
 
 #define DEBUGLOG_PARAMS 0
 
-static uint32_t readU32(const uint8_t** pc)
+#define SWAMP_INLINE __attribute__ ((__always_inline__))
+
+SWAMP_INLINE uint32_t readU32(const uint8_t** pc)
 {
     const uint32_t* p = (const uint32_t*) *pc;
 
@@ -57,7 +61,7 @@ static uint32_t readU32(const uint8_t** pc)
     return *p;
 }
 
-static uint16_t readU16(const uint8_t** pc)
+SWAMP_INLINE uint16_t readU16(const uint8_t** pc)
 {
     const uint16_t* p = (const uint16_t*) *pc;
 
@@ -68,7 +72,7 @@ static uint16_t readU16(const uint8_t** pc)
     return *p;
 }
 
-static uint8_t readU8(const uint8_t** pc)
+SWAMP_INLINE uint8_t readU8(const uint8_t** pc)
 {
     const uint8_t* p = (const uint8_t*) *pc;
 
@@ -79,72 +83,72 @@ static uint8_t readU8(const uint8_t** pc)
     return *p;
 }
 
-static size_t readShortRange(const uint8_t** pc)
+SWAMP_INLINE size_t readShortRange(const uint8_t** pc)
 {
     return readU16(pc);
 }
 
-static size_t readAlign(const uint8_t** pc)
+SWAMP_INLINE size_t readAlign(const uint8_t** pc)
 {
     return readU8(pc);
 }
 
-static size_t readCount(const uint8_t** pc)
+SWAMP_INLINE size_t readCount(const uint8_t** pc)
 {
     return readU16(pc);
 }
 
-static SwampJump readJump(const uint8_t** pc)
+SWAMP_INLINE SwampJump readJump(const uint8_t** pc)
 {
     return readU16(pc);
 }
 
-static SwampJumpOffset readJumpOffset(const uint8_t** pc)
+SWAMP_INLINE SwampJumpOffset readJumpOffset(const uint8_t** pc)
 {
     return readU16(pc);
 }
 
-static size_t readShortCount(const uint8_t** pc)
+SWAMP_INLINE size_t readShortCount(const uint8_t** pc)
 {
     return readU8(pc);
 }
 
-static SwampInt32 readInt32(const uint8_t** pc)
+SWAMP_INLINE SwampInt32 readInt32(const uint8_t** pc)
 {
     return (SwampInt32) readU32(pc);
 }
 
-static SwampBool readBool(const uint8_t** pc)
+SWAMP_INLINE SwampBool readBool(const uint8_t** pc)
 {
     return (SwampBool) readU8(pc);
 }
 
-static void* readStackPointerPos(const uint8_t** pc, const uint8_t* bp)
+SWAMP_INLINE void* readStackPointerPos(const uint8_t** pc, const uint8_t* bp)
 {
     return (void*) (bp + readU32(pc));
 }
 
-static void* readTargetStackPointerPos(const uint8_t** pc, const uint8_t* bp)
+SWAMP_INLINE void* readTargetStackPointerPos(const uint8_t** pc, const uint8_t* bp)
 {
     return readStackPointerPos(pc, bp);
 }
 
-static SwampInt32* readTargetStackIntPointerPos(const uint8_t** pc, const uint8_t* bp)
+SWAMP_INLINE SwampInt32* readTargetStackIntPointerPos(const uint8_t** pc, const uint8_t* bp)
 {
     return (SwampInt32*) readTargetStackPointerPos(pc, bp);
 }
 
-static const void* readSourceStackPointerPos(const uint8_t** pc, const uint8_t* bp)
+SWAMP_INLINE const void* readSourceStackPointerPos(const uint8_t** pc, const uint8_t* bp)
 {
     return readStackPointerPos(pc, bp);
 }
 
-static const void* readSourceStaticMemoryPointerPos(const uint8_t** pc, const SwampStaticMemory* staticMemory)
+SWAMP_INLINE const void* readSourceStaticMemoryPointerPos(const uint8_t** pc, const SwampStaticMemory* staticMemory)
 {
     return swampStaticMemoryGet(staticMemory, readU32(pc));
 }
 
-static SwampInt32 readSourceIntStackPointerPos(const uint8_t** pc, const uint8_t* bp)
+SWAMP_INLINE SwampInt32 readSourceIntStackPointerPos(const uint8_t** pc, const uint8_t* bp)
 {
     return *((const SwampInt32*) readSourceStackPointerPos(pc, bp));
 }
@@ -164,6 +168,8 @@ static SwampInt32 readSourceIntStackPointerPos(const uint8_t** pc, const uint8_t
 #define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*) target, source, size)
 
 #define swampMemoryMove(target, source, size) tc_memmove_octets((void*) target, source, size)
+
+#define SWAMP_RUN_MEASURE_PERFORMANCE (0)
 
 int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc* f, SwampParameters runParameters,
              SwampBool verbose_flag)
@@ -195,7 +201,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     }
 
     //swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
-
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+    call_stack_entry->debugBeforeTimeNs = monotonicTimeNanosecondsNow();
+#endif
     while (1) {
 #if SWAMP_CONFIG_DEBUG || DEBUGLOG_PARAMS
         if (verbose_flag && 0) {
@@ -211,6 +219,11 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         switch (*pc++) {
 
             case SwampOpcodeReturn: {
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+                MonotonicTimeNanoseconds after = monotonicTimeNanosecondsNow();
+                MonotonicTimeNanoseconds timeSpent = after - call_stack_entry->debugBeforeTimeNs;
+                CLOG_INFO("time spent in func %s:%lu", call_stack_entry->func->debugName, timeSpent);
+#endif
                 if (stack->count == 0) {
                     if (verbose_flag) {
                        // CLOG_VERBOSE("swampRun(%s) is complete", call_stack_entry->func->debugName);
@@ -421,6 +434,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     bp = basePointer;
                     pc = func->opcodes;
                     //CLOG_VERBOSE("Call '%s' pc:%p bp:%04X", func->debugName, pc, bp - context->stackMemory.memory)
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+                    call_stack_entry->debugBeforeTimeNs = monotonicTimeNanosecondsNow();
+#endif
                 }
             } break;
 

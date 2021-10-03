@@ -39,6 +39,7 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
     target->bp = target->stackMemory.memory;
     target->tempResult = context->tempResult;
+    target->dynamicMemory = context->dynamicMemory;
     target->typeInfo = context->typeInfo;
     target->constantStaticMemory = context->constantStaticMemory;
 }

@@ -51,6 +51,31 @@ void* swampExampleFindFunction(const char* name)
     return 0;
 }
 
+/*
+type PlayerAction =
+None
+| Dash
+| Up
+| Down
+| Left
+| Right
+| Fire
+
+
+type alias PlayerInput =
+{ inputId : Int
+ , inputValue : PlayerAction
+}
+ */
+
+enum HackInputPlayerAction {
+    HackInputUp = 2
+};
+typedef struct TurmoilPlayerInput {
+    SwampInt32 inputId;
+    uint8_t playerAction;
+} TurmoilPlayerInput;
+
 int main(int argc, char* argv[])
 {
     g_clog.log = clog_console;
@@ -77,8 +102,8 @@ int main(int argc, char* argv[])
 
     int unpackErr = swampUnpackFilename(&unpack, "gameplay.swamp-pack", swampExampleFindFunction, 1);
     if (unpackErr < 0) {
-        // SWAMP_ERROR("couldn't unpack %d", unpackErr)
-        // return unpackErr;
+        SWAMP_ERROR("couldn't unpack %d", unpackErr)
+        return unpackErr;
     }
 
     const SwampFunc* initFunc = swampLedgerFindFunction(&unpack.ledger, "init");
@@ -162,7 +187,19 @@ int main(int argc, char* argv[])
     const SwtiType* playerInputType = swtiChunkGetFromName(initContext.typeInfo, "HackInput.PlayerInput");
     SwtiMemorySize playerInputSize = swtiGetMemorySize(playerInputType);
     SwtiMemoryAlign playerInputAlign = swtiGetMemoryAlign(playerInputType);
-    SwampList* inputList = swampListAllocate(mainContext.dynamicMemory, 0, 0, playerInputSize, playerInputAlign);
+
+    SwampList* inputList = swampListAllocatePrepare(mainContext.dynamicMemory, 1, playerInputSize, playerInputAlign);
+    // SwampList* inputList = swampListAllocate(mainContext.dynamicMemory, 0, 0, playerInputSize, playerInputAlign);
+    TurmoilPlayerInput exampleInput;
+
+    if (sizeof(exampleInput) != playerInputSize) {
+        CLOG_ERROR("internal error, sizeof exampleinput");
+    }
+
+    exampleInput.inputId = 1;
+    exampleInput.playerAction = HackInputUp;
+
+    tc_memcpy_octets(inputList->value + 0, &exampleInput, sizeof(exampleInput));
     *((SwampList**)(mainContext.bp + mainPos)) = inputList;
     mainPos += sizeof(SwampList*);
 

@@ -216,7 +216,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
         fnResult.expectedOctetSize = bSize;
 
         SwampParameters parameters;
-        parameters.parameterCount = 2;
+        parameters.parameterCount = internalFunction->parameterCount;
         parameters.octetSize = aSize + bSize;
 
         swampMemoryPositionAlign(&pos, aAlign);
@@ -233,7 +233,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
 
 
         CLOG_INFO("calling foldl for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
-        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         CLOG_INFO("accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
         sourceItemPointer += aSize;
     }

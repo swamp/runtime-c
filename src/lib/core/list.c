@@ -204,6 +204,9 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
     size_t bAlign = initialValue->align;
 
     CLOG_INFO("accumulator is now for index %d, value:%d", -1, *(const SwampInt32*)ownContext.bp);
+    if (list->count == 0) {
+        tc_memcpy_octets(ownContext.bp, initialValue->ptr, bSize);
+    }
     const uint8_t* sourceItemPointer = list->value;
     for (size_t i = 0; i < list->count; ++i) {
         SwampFunc* internalFunction;

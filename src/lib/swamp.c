@@ -198,7 +198,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
     while (1) {
 #if SWAMP_CONFIG_DEBUG || DEBUGLOG_PARAMS
-        if (verbose_flag) {
+        if (verbose_flag && 0) {
             uint16_t addr = pc - call_stack_entry->func->opcodes;
             if (pc == 0) {
                 SWAMP_LOG_SOFT_ERROR("pc is null");

@@ -58,12 +58,18 @@ file(GLOB_RECURSE deps_src FOLLOW_SYMLINKS
 message("deps_src ${deps_src}")
 function(unixlike)
         message("unixlike")
+
+
+
 endfunction()
 
 if (OS_LINUX)
         message("Linux Detected!")
         unixlike()
-
+        file(GLOB_RECURSE deps_platform_src FOLLOW_SYMLINKS
+                "${deps}*/src/platform/posix/*.c"
+                )
+        message("deps_platform_src ${deps_platform_src}")
 elseif (OS_MACOS)
         message("MacOS detected!")
         unixlike()
@@ -73,6 +79,7 @@ endif()
 add_library(swamp-runtime
         ${lib_src}
         ${deps_src}
+        ${deps_platform_src}
 )
 target_include_directories(swamp-runtime PUBLIC include)
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/dump-c/src/include)
@@ -87,6 +94,10 @@ target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-wrap-c/src/incl
 target_include_directories(swamp-runtime PUBLIC ${deps}tinge-c/src/include) # remove this later
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/yaml-load-c/src/include) # remove this later
 target_include_directories(swamp-runtime PUBLIC ${deps}monotonic-time-c/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}impact-swamp/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}impact/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}basal-c/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}tyran/src/include) # remove this later
 
 set_target_properties(swamp-runtime
     PROPERTIES
@@ -101,9 +112,11 @@ endif()
 
 target_compile_options(swamp-runtime PRIVATE -Wall -Wno-unused-variable ${sanitizers})
 
-if (NOT isDebug)
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
     message("optimize!")
     target_compile_options(swamp-runtime PRIVATE -O3) #  -flto file format no recognized
+else()
+    target_compile_options(swamp-runtime PRIVATE -O0 -g)
 endif()
 
 target_link_libraries(swamp-runtime m)

@@ -11,6 +11,7 @@
 #include <swamp-runtime/core/core.h>
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/opcodes.h>
+#include <impact-swamp/bind.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/swamp_unpack.h>
@@ -45,9 +46,11 @@ void* swampExampleFindFunction(const char* name)
         return fn;
     }
 
-    if (tc_str_equal(name, "Turmoil.Collide2.withWorld")) {
-        return fakeCollide;
+    fn = impSwampFindFunction(name);
+    if (fn) {
+        return fn;
     }
+
 
     return 0;
 }
@@ -207,6 +210,7 @@ int main(int argc, char* argv[])
     parameters.octetSize = mainPos;
 
     CLOG_INFO("starting MAIN()");
+    //sleep(1);
     size_t allocatedBefore = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
 
     MonotonicTimeNanoseconds beforeNs = monotonicTimeNanosecondsNow();

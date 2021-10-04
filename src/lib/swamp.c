@@ -379,7 +379,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     func = curry->curryFunction;
                 }
 
+
+
                 if (func->func.type == SwampFunctionTypeExternal) {
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+                    MonotonicTimeNanoseconds beforeTimeNs = monotonicTimeNanosecondsNow();
+#endif
                     const SwampFunctionExternal* externalFunction = (const SwampFunctionExternal*) func;
                    // CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%d", externalFunction->fullyQualifiedName, pc,
                      //            bp - context->stackMemory.memory)
@@ -412,6 +417,10 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                         default:
                             SWAMP_LOG_ERROR("strange parameter count in external");
                     }
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+                    MonotonicTimeNanoseconds afterTimeNs = monotonicTimeNanosecondsNow();
+                    CLOG_INFO("external '%s' %lu ns", externalFunction->fullyQualifiedName, afterTimeNs - beforeTimeNs);
+#endif
                 } else {
 #if SWAMP_CONFIG_DEBUG
                     if (stack->count >= 31) {

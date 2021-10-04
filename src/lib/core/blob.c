@@ -56,6 +56,24 @@ void swampCoreBlobLength(SwampInt32* result, SwampMachineContext* context, const
     *result = (*_list)->count;
 }
 
+// __externalfn fromArray : Array Int -> Blob
+void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, const SwampArray** _array)
+{
+    const SwampArray* array = *_array;
+
+    if (array->itemSize != sizeof(SwampInt32)) {
+        CLOG_ERROR("must be swamp integer array for blob");
+    }
+
+    SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, array->count);
+    uint8_t* targetItemPointer = targetBlob->octets;
+    for (size_t i=0; i<array->count; ++i) {
+        *targetItemPointer++ = *(const SwampInt32*)(array->value + i * array->itemSize);
+    }
+
+    *result = targetBlob;
+}
+
 // map : (a -> b) -> List a -> List b
 void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunc** _fn, const SwampBlob** _blob)
 {
@@ -369,6 +387,7 @@ void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
         {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.map", swampCoreBlobMap},
         {"Blob.indexedMap", swampCoreBlobIndexedMap}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
         {"Blob.get2d", swampCoreBlobGet2d},
+        {"Blob.fromArray", swampCoreBlobFromArray},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

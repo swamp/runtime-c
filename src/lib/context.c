@@ -24,6 +24,8 @@ void swampContextReset(SwampMachineContext* self)
 
 void swampContextDestroy(SwampMachineContext* self)
 {
+    tc_free(self->dynamicMemory->memory);
+    tc_free(self->dynamicMemory);
     tc_free(self->stackMemory.memory);
     tc_free(self->tempResult);
 }

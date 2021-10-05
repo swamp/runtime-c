@@ -11,6 +11,32 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
     self->memory = memory;
     self->p = memory;
     self->maxAllocatedSize = maxOctetSize;
+
+    self->ledgerCapacity = 512;
+    self->ledgerCount = 0;
+    self->ledgerEntries = tc_malloc_type_count(SwampDynamicMemoryLedgerEntry, self->ledgerCapacity);
+
+}
+
+void swampDynamicMemoryDestroy(SwampDynamicMemory* self)
+{
+    tc_memset_octets(self->memory, 0xbc, self->maxAllocatedSize);
+    if (self->ledgerEntries != 0) {
+        tc_free(self->ledgerEntries);
+    }
+}
+
+void swampDynamicMemoryDebugOutput(const SwampDynamicMemory* self)
+{
+    for (size_t i=0; i<self->ledgerCount; ++i) {
+        const SwampDynamicMemoryLedgerEntry* entry = &self->ledgerEntries[i];
+        CLOG_INFO("ledger %d: %d '%s' (%dx%d align: %d)", i, entry->itemCount*entry->itemSize, entry->debugName, entry->itemCount, entry->itemSize,  entry->itemAlign);
+    }
+}
+
+size_t swampDynamicMemoryAllocatedSize(const SwampDynamicMemory* self)
+{
+    return self->p - self->memory;
 }
 
 void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align)
@@ -34,4 +60,20 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
 
 
     return allocated;
+}
+
+void* swampDynamicMemoryAllocDebug(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align, const char* debug)
+{
+    if (self->ledgerCount == self->ledgerCapacity) {
+        CLOG_ERROR("out of ledger space");
+    }
+
+    SwampDynamicMemoryLedgerEntry * entry = &self->ledgerEntries[self->ledgerCount];
+    self->ledgerCount++;
+    entry->debugName = debug;
+    entry->itemSize = itemSize;
+    entry->itemCount = itemCount;
+    entry->itemAlign = align;
+
+    return swampDynamicMemoryAlloc(self, itemCount, itemSize, align);
 }

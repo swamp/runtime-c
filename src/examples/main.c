@@ -4,21 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 #include <clog/clog.h>
 #include <clog/console.h>
+#include <impact-swamp/bind.h>
+#include <monotonic-time/monotonic_time.h>
 #include <swamp-dump/dump_ascii.h>
 #include <swamp-ecs-wrap/bind.h>
 #include <swamp-ecs-wrap/world.h>
+#include <swamp-runtime/compact.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/core/core.h>
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/opcodes.h>
-#include <impact-swamp/bind.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/swamp_unpack.h>
 #include <swamp-typeinfo/typeinfo.h>
 #include <swamp-yaml-load/bind.h>
 #include <unistd.h>
-#include <monotonic-time/monotonic_time.h>
 
 clog_config g_clog;
 
@@ -121,6 +122,7 @@ int main(int argc, char* argv[])
     initContext.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
     initContext.dynamicMemory->maxAllocatedSize = 256 * 1024;
     initContext.dynamicMemory->memory = malloc(initContext.dynamicMemory->maxAllocatedSize);
+    initContext.dynamicMemory->ledgerEntries = 0;
     initContext.dynamicMemory->p = initContext.dynamicMemory->memory;
 
     initContext.stackMemory.maximumStackMemory = 32 * 1024;
@@ -229,6 +231,24 @@ int main(int argc, char* argv[])
     char mainTempStr[32*1024];
 
     CLOG_INFO("main.update result: %s", swampDumpToAsciiString(mainContext.bp, mainReturnType, 0, mainTempStr, 32*1024));
+
+    SwampDynamicMemory compactMemory;
+#define COMPACT_MEMORY_SIZE (128*1024)
+    uint8_t* compactOctets = tc_malloc(COMPACT_MEMORY_SIZE);
+    swampDynamicMemoryInit(&compactMemory, compactOctets, COMPACT_MEMORY_SIZE);
+
+    void* clonedState;
+    int compactErr = swampCompact(mainContext.bp, mainReturnType, &compactMemory, &clonedState);
+    if (compactErr < 0) {
+        return compactErr;
+    }
+
+    swampDynamicMemoryDestroy(mainContext.dynamicMemory);
+
+    CLOG_INFO("main.update compacted: %s", swampDumpToAsciiString(clonedState, mainReturnType, 0, mainTempStr, 32*1024));
+
+    CLOG_INFO("compacted memory: %d", swampDynamicMemoryAllocatedSize(&compactMemory));
+    swampDynamicMemoryDebugOutput(&compactMemory);
 
     //swampContextDestroy(&mainContext);
     swampUnpackFree(&unpack);

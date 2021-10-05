@@ -35,19 +35,23 @@ typedef int32_t SwampInt32;
 typedef SwampInt32 SwampCharacter;
 typedef int32_t SwampFixed32;
 typedef uint32_t SwampResourceNameId;
-
 typedef uint32_t SwampMemoryPosition;
+
+struct SwampDynamicMemory;
 
 void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
 
 typedef size_t (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
 typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
+typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
+
 typedef struct SwampUnmanaged {
     const void* ptr;
     const char* debugName;
     SwampUnmanagedSerialize serialize;
     SwampUnmanagedToString toString;
+    SwampUnmanagedCompact compact;
 } SwampUnmanaged;
 
 typedef struct SwampUnknownType {

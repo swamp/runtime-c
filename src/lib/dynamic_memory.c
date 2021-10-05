@@ -28,6 +28,7 @@ void swampDynamicMemoryReset(SwampDynamicMemory* self)
 {
     self->p = self->memory;
     self->ledgerCount = 0;
+    tc_memset_octets(self->memory, 0xce, self->maxAllocatedSize);
 }
 
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self)
@@ -65,12 +66,17 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
     }
 
     size_t total = itemCount * itemSize;
+    if (total > 34 * 1024) {
+        CLOG_SOFT_ERROR("too large allocation %d", total);
+    }
     if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
         SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items of %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;
     }
 
     void* allocated = self->p;
+
+    tc_memset_octets(self->p, 0xfd, total);
 
     self->p += total;
 

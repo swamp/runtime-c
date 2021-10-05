@@ -45,6 +45,7 @@ typedef size_t (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, siz
 typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
 typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
+typedef int (*SwampUnmanagedClone)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
 
 typedef struct SwampUnmanaged {
     const void* ptr;
@@ -52,6 +53,7 @@ typedef struct SwampUnmanaged {
     SwampUnmanagedSerialize serialize;
     SwampUnmanagedToString toString;
     SwampUnmanagedCompact compact;
+    SwampUnmanagedClone clone;
 } SwampUnmanaged;
 
 typedef struct SwampUnknownType {

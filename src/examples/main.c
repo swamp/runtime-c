@@ -9,6 +9,7 @@
 #include <swamp-dump/dump_ascii.h>
 #include <swamp-ecs-wrap/bind.h>
 #include <swamp-ecs-wrap/world.h>
+#include <swamp-runtime/clone.h>
 #include <swamp-runtime/compact.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/core/core.h>
@@ -118,11 +119,11 @@ int main(int argc, char* argv[])
     if (initFunc == 0) {
         CLOG_ERROR("could not find 'init'-function");
     }
-    SwampDynamicMemory dynamicMemory[2];
+    SwampDynamicMemory dynamicMemory[3];
     size_t dynamicMemoryIndex = 0;
     SwampDynamicMemory* dynamicMemoryToUse = &dynamicMemory[dynamicMemoryIndex];
     SwampDynamicMemory* dynamicMemoryNext = &dynamicMemory[!dynamicMemoryIndex];
-    for (size_t i = 0; i < 2; ++i) {
+    for (size_t i = 0; i < 3; ++i) {
         swampDynamicMemoryInitOwnAlloc(&dynamicMemory[i], 128 * 1024);
     }
 
@@ -130,7 +131,7 @@ int main(int argc, char* argv[])
     initResult.expectedOctetSize = initFunc->returnOctetSize;
 
     SwampMachineContext initContext;
-    initContext.dynamicMemory = dynamicMemoryToUse;
+    initContext.dynamicMemory = &dynamicMemory[2];
 
     initContext.stackMemory.maximumStackMemory = 32 * 1024;
     initContext.stackMemory.memory = malloc(initContext.stackMemory.maximumStackMemory);
@@ -158,9 +159,10 @@ int main(int argc, char* argv[])
     CLOG_INFO("result: %s", swampDumpToAsciiString(initContext.bp, initReturnType, 0, tempStr, 32 * 1024));
 
     const SwampFunc* mainFunc = swampLedgerFindFunction(&unpack.ledger, "main"); // unpack.entry;
-
+    swampDynamicMemoryReset(dynamicMemoryNext);
+    swampDynamicMemoryReset(dynamicMemoryToUse);
     tc_memcpy_octets(dynamicMemoryToUse->memory, initContext.bp, initFunc->returnOctetSize);
-    dynamicMemoryToUse->p = dynamicMemoryToUse->memory + initFunc->returnOctetSize;
+    dynamicMemoryToUse->p += initFunc->returnOctetSize;
 
 
 
@@ -168,13 +170,15 @@ int main(int argc, char* argv[])
     SwampMachineContext mainContext;
     mainContext.dynamicMemory = dynamicMemoryToUse;
 
+
+
     mainContext.stackMemory.maximumStackMemory = 32 * 1024;
     mainContext.stackMemory.memory = malloc(mainContext.stackMemory.maximumStackMemory);
     mainContext.tempResult = malloc(2 * 1024);
     mainContext.typeInfo = &unpack.typeInfoChunk;
     mainContext.constantStaticMemory = initContext.constantStaticMemory;
 
-    for (size_t gameplayLoop = 0; gameplayLoop < 10; ++gameplayLoop) {
+    for (size_t gameplayLoop = 0; gameplayLoop < 120; ++gameplayLoop) {
         SwampResult result;
         result.expectedOctetSize = 48; // sizeof(Position);
 
@@ -239,9 +243,8 @@ int main(int argc, char* argv[])
 
 
 
-
         void* compactedState;
-        int compactErr = swampCompact(mainContext.bp, mainReturnType, dynamicMemoryNext, &compactedState);
+        int compactErr = swampClone(mainContext.bp, mainReturnType, dynamicMemoryNext, &compactedState);
         if (compactErr < 0) {
             return compactErr;
         }

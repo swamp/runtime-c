@@ -63,7 +63,7 @@ void swampCoreArrayGrab(void* result, SwampMachineContext* context, const SwampI
     const SwampArray* array = *_array;
 
     if (*index < 0 || *index >= (SwampInt32) array->count) {
-        CLOG_ERROR("illegal")
+        CLOG_ERROR("illegal array index %d", *index);
         return;
     }
 

@@ -22,11 +22,14 @@ typedef struct SwampDynamicMemory {
     SwampDynamicMemoryLedgerEntry* ledgerEntries;
     size_t ledgerCount;
     size_t ledgerCapacity;
+    size_t ownAlloc;
 } SwampDynamicMemory;
 
 void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOctetSize);
+void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, size_t maxOctetSize);
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self);
 void swampDynamicMemoryDebugOutput(const SwampDynamicMemory* self);
+void swampDynamicMemoryReset(SwampDynamicMemory* self);
 
 void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align);
 void* swampDynamicMemoryAllocDebug(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align,

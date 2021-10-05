@@ -15,14 +15,30 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
     self->ledgerCapacity = 512;
     self->ledgerCount = 0;
     self->ledgerEntries = tc_malloc_type_count(SwampDynamicMemoryLedgerEntry, self->ledgerCapacity);
+    self->ownAlloc = 0;
+}
 
+void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, size_t maxOctetSize)
+{
+    swampDynamicMemoryInit(self, tc_malloc(maxOctetSize), maxOctetSize);
+    self->ownAlloc = 1;
+}
+
+void swampDynamicMemoryReset(SwampDynamicMemory* self)
+{
+    self->p = self->memory;
+    self->ledgerCount = 0;
 }
 
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self)
 {
-    tc_memset_octets(self->memory, 0xbc, self->maxAllocatedSize);
     if (self->ledgerEntries != 0) {
         tc_free(self->ledgerEntries);
+    }
+    if (self->ownAlloc) {
+        tc_memset_octets(self->memory, 0xbc, self->maxAllocatedSize);
+        tc_free(self->memory);
+        self->memory = 0;
     }
 }
 
@@ -50,7 +66,7 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
 
     size_t total = itemCount * itemSize;
     if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
-        SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items at %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
+        SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items of %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;
     }
 

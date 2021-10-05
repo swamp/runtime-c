@@ -23,8 +23,9 @@
 
 clog_config g_clog;
 
-
-static void fakeCollide(EcsWrapWorldUnmanaged** targetUnmanagedWorld, const SwampMachineContext* context, const void** tilemap, const EcsWrapWorldUnmanaged** sourceWorld) {
+static void fakeCollide(EcsWrapWorldUnmanaged** targetUnmanagedWorld, const SwampMachineContext* context,
+                        const void** tilemap, const EcsWrapWorldUnmanaged** sourceWorld)
+{
     *targetUnmanagedWorld = *sourceWorld;
 }
 
@@ -52,7 +53,6 @@ void* swampExampleFindFunction(const char* name)
         return fn;
     }
 
-
     return 0;
 }
 
@@ -73,13 +73,16 @@ type alias PlayerInput =
 }
  */
 
-enum HackInputPlayerAction {
-    HackInputUp = 2
-};
+enum HackInputPlayerAction { HackInputUp = 2 };
 typedef struct TurmoilPlayerInput {
     SwampInt32 inputId;
     uint8_t playerAction;
 } TurmoilPlayerInput;
+
+typedef struct Position {
+    int32_t x;
+    int32_t y;
+} Position;
 
 int main(int argc, char* argv[])
 {
@@ -115,15 +118,19 @@ int main(int argc, char* argv[])
     if (initFunc == 0) {
         CLOG_ERROR("could not find 'init'-function");
     }
+    SwampDynamicMemory dynamicMemory[2];
+    size_t dynamicMemoryIndex = 0;
+    SwampDynamicMemory* dynamicMemoryToUse = &dynamicMemory[dynamicMemoryIndex];
+    SwampDynamicMemory* dynamicMemoryNext = &dynamicMemory[!dynamicMemoryIndex];
+    for (size_t i = 0; i < 2; ++i) {
+        swampDynamicMemoryInitOwnAlloc(&dynamicMemory[i], 128 * 1024);
+    }
+
     SwampResult initResult;
     initResult.expectedOctetSize = initFunc->returnOctetSize;
 
     SwampMachineContext initContext;
-    initContext.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
-    initContext.dynamicMemory->maxAllocatedSize = 256 * 1024;
-    initContext.dynamicMemory->memory = malloc(initContext.dynamicMemory->maxAllocatedSize);
-    initContext.dynamicMemory->ledgerEntries = 0;
-    initContext.dynamicMemory->p = initContext.dynamicMemory->memory;
+    initContext.dynamicMemory = dynamicMemoryToUse;
 
     initContext.stackMemory.maximumStackMemory = 32 * 1024;
     initContext.stackMemory.memory = malloc(initContext.stackMemory.maximumStackMemory);
@@ -145,115 +152,117 @@ int main(int argc, char* argv[])
     }
     const SwtiType* initFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, initFunc->typeIndex);
     const SwtiFunctionType* initFnType = (const SwtiFunctionType*) initFuncType;
-    const SwtiType* initReturnType = initFnType->parameterTypes[initFnType->parameterCount-1];
-    char tempStr[32*1024];
+    const SwtiType* initReturnType = initFnType->parameterTypes[initFnType->parameterCount - 1];
+    char tempStr[32 * 1024];
 
-    CLOG_INFO("result: %s", swampDumpToAsciiString(initContext.bp, initReturnType, 0, tempStr, 32*1024));
+    CLOG_INFO("result: %s", swampDumpToAsciiString(initContext.bp, initReturnType, 0, tempStr, 32 * 1024));
 
     const SwampFunc* mainFunc = swampLedgerFindFunction(&unpack.ledger, "main"); // unpack.entry;
 
+    tc_memcpy_octets(dynamicMemoryToUse->memory, initContext.bp, initFunc->returnOctetSize);
+    dynamicMemoryToUse->p = dynamicMemoryToUse->memory + initFunc->returnOctetSize;
+
+
+
+
     SwampMachineContext mainContext;
-    /*
-    context.dynamicMemory = tc_malloc_type_count(SwampDynamicMemory, 1);
-    context.dynamicMemory->maxAllocatedSize = 128 * 1024;
-    context.dynamicMemory->memory = malloc(context.dynamicMemory->maxAllocatedSize);
-    context.dynamicMemory->p = context.dynamicMemory->memory;
-     */
-    mainContext.dynamicMemory = initContext.dynamicMemory;
+    mainContext.dynamicMemory = dynamicMemoryToUse;
 
     mainContext.stackMemory.maximumStackMemory = 32 * 1024;
     mainContext.stackMemory.memory = malloc(mainContext.stackMemory.maximumStackMemory);
-    mainContext.bp = mainContext.stackMemory.memory;
     mainContext.tempResult = malloc(2 * 1024);
     mainContext.typeInfo = &unpack.typeInfoChunk;
-
     mainContext.constantStaticMemory = initContext.constantStaticMemory;
-    typedef struct Position {
-        int32_t x;
-        int32_t y;
-    } Position;
 
-    SwampResult result;
-    result.expectedOctetSize = 48; // sizeof(Position);
+    for (size_t gameplayLoop = 0; gameplayLoop < 10; ++gameplayLoop) {
+        SwampResult result;
+        result.expectedOctetSize = 48; // sizeof(Position);
 
-    SwampBool temp;
-    SwampParameters parameters;
+        SwampParameters parameters;
 
-    parameters.parameterCount = 2;
+        parameters.parameterCount = 2;
 
-    tc_memset_octets(mainContext.bp, 0xff, mainFunc->returnOctetSize);
-    SwampMemoryPosition mainPos = mainFunc->returnOctetSize;
+        mainContext.bp = mainContext.stackMemory.memory;
+        tc_memset_octets(mainContext.bp, 0xff, mainFunc->returnOctetSize);
+        SwampMemoryPosition mainPos = mainFunc->returnOctetSize;
 
-    swampMemoryPositionAlign(&mainPos, initFunc->returnAlign);
-    tc_memcpy_octets(mainContext.bp + mainPos, initContext.bp, initFunc->returnOctetSize);
-    mainPos += initFunc->returnOctetSize;
+        swampMemoryPositionAlign(&mainPos, initFunc->returnAlign);
 
 
-    swampMemoryPositionAlign(&mainPos, 8);
-    const SwtiType* playerInputType = swtiChunkGetFromName(initContext.typeInfo, "HackInput.PlayerInput");
-    SwtiMemorySize playerInputSize = swtiGetMemorySize(playerInputType);
-    SwtiMemoryAlign playerInputAlign = swtiGetMemoryAlign(playerInputType);
+        tc_memcpy_octets(mainContext.bp + mainPos, dynamicMemoryToUse->memory, initFunc->returnOctetSize);
+        mainPos += initFunc->returnOctetSize;
 
-    SwampList* inputList = swampListAllocatePrepare(mainContext.dynamicMemory, 1, playerInputSize, playerInputAlign);
-    // SwampList* inputList = swampListAllocate(mainContext.dynamicMemory, 0, 0, playerInputSize, playerInputAlign);
-    TurmoilPlayerInput exampleInput;
+        swampMemoryPositionAlign(&mainPos, 8);
+        const SwtiType* playerInputType = swtiChunkGetFromName(initContext.typeInfo, "HackInput.PlayerInput");
+        SwtiMemorySize playerInputSize = swtiGetMemorySize(playerInputType);
+        SwtiMemoryAlign playerInputAlign = swtiGetMemoryAlign(playerInputType);
 
-    if (sizeof(exampleInput) != playerInputSize) {
-        CLOG_ERROR("internal error, sizeof exampleinput");
+        SwampList* inputList = swampListAllocatePrepare(mainContext.dynamicMemory, 1, playerInputSize,
+                                                        playerInputAlign);
+        // SwampList* inputList = swampListAllocate(mainContext.dynamicMemory, 0, 0, playerInputSize, playerInputAlign);
+        TurmoilPlayerInput exampleInput;
+
+        if (sizeof(exampleInput) != playerInputSize) {
+            CLOG_ERROR("internal error, sizeof exampleinput");
+        }
+
+        exampleInput.inputId = 1;
+        exampleInput.playerAction = HackInputUp;
+
+        tc_memcpy_octets(inputList->value + 0, &exampleInput, sizeof(exampleInput));
+        *((SwampList**) (mainContext.bp + mainPos)) = inputList;
+        mainPos += sizeof(SwampList*);
+
+        parameters.octetSize = mainPos;
+
+        CLOG_INFO("starting MAIN()");
+        size_t allocatedBefore = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
+
+        MonotonicTimeNanoseconds beforeNs = monotonicTimeNanosecondsNow();
+        int worked = swampRun(&result, &mainContext, mainFunc, parameters, 1);
+        if (worked < 0) {
+            return worked;
+        }
+        MonotonicTimeNanoseconds afterNs = monotonicTimeNanosecondsNow();
+
+        size_t allocatedAfter = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
+        CLOG_INFO("performance: %lu microseconds allocations: %lu", (afterNs - beforeNs) / 1000,
+                  (allocatedAfter - allocatedBefore) / 1024);
+
+        const SwtiType* mainFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, initFunc->typeIndex);
+        const SwtiFunctionType* mainFnType = (const SwtiFunctionType*) mainFuncType;
+        const SwtiType* mainReturnType = mainFnType->parameterTypes[mainFnType->parameterCount - 1];
+        char mainTempStr[32 * 1024];
+
+        //CLOG_INFO("main.update %d result: %s", gameplayLoop,
+          //        swampDumpToAsciiString(mainContext.bp, mainReturnType, 0, mainTempStr, 32 * 1024));
+
+
+
+
+        void* compactedState;
+        int compactErr = swampCompact(mainContext.bp, mainReturnType, dynamicMemoryNext, &compactedState);
+        if (compactErr < 0) {
+            return compactErr;
+        }
+
+        CLOG_INFO("main.update %d compacted: %s", gameplayLoop,
+                  swampDumpToAsciiString(compactedState, mainReturnType, 0, mainTempStr, 32 * 1024));
+
+        CLOG_INFO("compacted memory: %d", swampDynamicMemoryAllocatedSize(dynamicMemoryNext));
+        swampDynamicMemoryDebugOutput(dynamicMemoryNext);
+
+        dynamicMemoryIndex = !dynamicMemoryIndex;
+        dynamicMemoryToUse = &dynamicMemory[dynamicMemoryIndex];
+        dynamicMemoryNext = &dynamicMemory[!dynamicMemoryIndex];
+        swampDynamicMemoryReset(dynamicMemoryNext);
+        mainContext.dynamicMemory = dynamicMemoryToUse;
     }
 
-    exampleInput.inputId = 1;
-    exampleInput.playerAction = HackInputUp;
-
-    tc_memcpy_octets(inputList->value + 0, &exampleInput, sizeof(exampleInput));
-    *((SwampList**)(mainContext.bp + mainPos)) = inputList;
-    mainPos += sizeof(SwampList*);
-
-    parameters.octetSize = mainPos;
-
-    CLOG_INFO("starting MAIN()");
-    //sleep(1);
-    size_t allocatedBefore = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
-
-    MonotonicTimeNanoseconds beforeNs = monotonicTimeNanosecondsNow();
-    int worked = swampRun(&result, &mainContext, mainFunc, parameters, 1);
-    if (worked < 0) {
-        return worked;
-    }
-    MonotonicTimeNanoseconds afterNs = monotonicTimeNanosecondsNow();
-
-    size_t allocatedAfter = mainContext.dynamicMemory->p - mainContext.dynamicMemory->memory;
-    CLOG_INFO("performance: %lu microseconds allocations: %lu", (afterNs - beforeNs) / 1000, (allocatedAfter - allocatedBefore) / 1024);
-
-    const SwtiType* mainFuncType = swtiChunkTypeFromIndex(initContext.typeInfo, initFunc->typeIndex);
-    const SwtiFunctionType* mainFnType = (const SwtiFunctionType*) mainFuncType;
-    const SwtiType* mainReturnType = mainFnType->parameterTypes[mainFnType->parameterCount-1];
-    char mainTempStr[32*1024];
-
-    CLOG_INFO("main.update result: %s", swampDumpToAsciiString(mainContext.bp, mainReturnType, 0, mainTempStr, 32*1024));
-
-    SwampDynamicMemory compactMemory;
-#define COMPACT_MEMORY_SIZE (128*1024)
-    uint8_t* compactOctets = tc_malloc(COMPACT_MEMORY_SIZE);
-    swampDynamicMemoryInit(&compactMemory, compactOctets, COMPACT_MEMORY_SIZE);
-
-    void* clonedState;
-    int compactErr = swampCompact(mainContext.bp, mainReturnType, &compactMemory, &clonedState);
-    if (compactErr < 0) {
-        return compactErr;
-    }
-
-    swampDynamicMemoryDestroy(mainContext.dynamicMemory);
-
-    CLOG_INFO("main.update compacted: %s", swampDumpToAsciiString(clonedState, mainReturnType, 0, mainTempStr, 32*1024));
-
-    CLOG_INFO("compacted memory: %d", swampDynamicMemoryAllocatedSize(&compactMemory));
-    swampDynamicMemoryDebugOutput(&compactMemory);
-
-    //swampContextDestroy(&mainContext);
+    // swampContextDestroy(&mainContext);
     swampUnpackFree(&unpack);
-    free(mainContext.dynamicMemory->memory);
-    free(mainContext.dynamicMemory);
+    swampDynamicMemoryDestroy(&dynamicMemory[0]);
+    swampDynamicMemoryDestroy(&dynamicMemory[1]);
 
     return 0;
 }

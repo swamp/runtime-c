@@ -12,6 +12,8 @@
 #include <clog/clog.h>
 #include <monotonic-time/monotonic_time.h>
 #include <string.h> // memset
+#include <swamp-dump/dump_ascii.h>
+#include <swamp-typeinfo/chunk.h>
 
 static const char* g_swamp_opcode_names[] = {
     "nop",  "cse",   "brfa", "brt",   "jmp",   "call",    "ret",    "ecall",   "tail",  "curry",  "addi",      "subi",
@@ -200,7 +202,24 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         return -2;
     }
 
-    //swampMemoryCopy(bp + result->expectedOctetSize, runParameters.source, runParameters.octetSize);
+#if 1
+    CLOG_INFO("call '%s' %d", f->debugName, f->parameterCount);
+    char temp[8*1024];
+    const SwtiFunctionType* fnType = swtiChunkTypeFromIndex(context->typeInfo, f->typeIndex);
+    SwampMemoryPosition pos = 0;
+    pos += f->returnOctetSize;
+
+    for (size_t i=0; i<fnType->parameterCount-1; ++i) {
+        const SwtiType* paramType = fnType->parameterTypes[i];
+        size_t align = swtiGetMemoryAlign(paramType);
+        swampMemoryPositionAlign(&pos, align);
+
+        CLOG_INFO("  param %d %s", i, swampDumpToAsciiString(bp + pos, paramType, 0, temp, 8*1024));
+        pos += swtiGetMemorySize(paramType);
+    }
+
+#endif
+
 #if SWAMP_RUN_MEASURE_PERFORMANCE
     call_stack_entry->debugBeforeTimeNs = monotonicTimeNanosecondsNow();
 #endif

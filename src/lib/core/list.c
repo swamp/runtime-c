@@ -81,7 +81,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
         targetItemPointer += target->itemSize;
     }
 
-    swampContextDestroy(&ownContext);
+    swampContextDestroyTemp(&ownContext);
 
     *result = target;
 }
@@ -93,9 +93,56 @@ void swampCoreListMap2()
 }
 
 // indexedMap: (Int -> a -> b) -> List a -> List b
-void swampCoreListIndexedMap()
+void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
+    const SwampList* list = *_list;
+    const uint8_t* sourceItemPointer = list->value;
+    const SwampFunction* fn = *_fn;
 
+
+    const SwampFunc* swampFn = 0;
+    if (fn->type == SwampFunctionTypeCurry) {
+        const SwampCurryFunc* curry = (SwampCurryFunc*) fn;
+        swampFn = curry->curryFunction;
+    } else if (fn->type == SwampFunctionTypeInternal) {
+        swampFn = (const SwampFunc*) fn;
+    } else {
+        CLOG_ERROR("unknown function type")
+    }
+
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = swampFn->returnOctetSize;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 2;
+    parameters.octetSize = list->itemSize;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    SwampList* targetListB = swampListAllocatePrepare(context->dynamicMemory, list->count, swampFn->returnOctetSize, swampFn->returnAlign);
+    uint8_t* targetItemPointer = targetListB->value;
+    for (size_t i = 0; i < list->count; ++i) {
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+        SwampInt32 index = i;
+
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &index, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        swampMemoryPositionAlign(&pos, list->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
+        CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        tc_memcpy_octets(targetItemPointer, ownContext.bp, targetListB->itemSize);
+        sourceItemPointer += list->itemSize;
+        targetItemPointer += targetListB->itemSize;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = targetListB;
 }
 
 // any : (a -> Bool) -> List a -> Bool
@@ -119,7 +166,7 @@ void swampCoreListMember()
 // filterMap : (a -> Maybe b) -> List a -> List b
 void swampCoreListFilterMap()
 {
-
+    CLOG_ERROR("Not implemented")
 }
 
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c

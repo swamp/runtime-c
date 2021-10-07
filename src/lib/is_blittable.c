@@ -14,7 +14,10 @@ int swampIsBlittableOrEcs(const SwtiType* stateType)
             const SwtiArrayType* arrayType = ((const SwtiArrayType*) stateType);
             return swampIsBlittableOrEcs(arrayType->itemType);
         } break;
-        case SwtiTypeList:
+        case SwtiTypeList: {
+            const SwtiListType* listType = ((const SwtiListType*) stateType);
+            return swampIsBlittableOrEcs(listType->itemType);
+        } break;
         case SwtiTypeResourceName:
             return 0;
         case SwtiTypeUnmanaged: {

@@ -38,6 +38,7 @@ typedef uint32_t SwampResourceNameId;
 typedef uint32_t SwampMemoryPosition;
 
 struct SwampDynamicMemory;
+struct SwampUnmanaged;
 
 void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
 
@@ -107,6 +108,16 @@ typedef SwampArray** SwampArrayReferenceData;
 
 
 typedef SwampArray SwampList;
+
+#define SWAMP_LIST_TYPE_DECLARE(type) \
+typedef struct SwampList##type { \
+    const type* value; \
+    size_t count; \
+    size_t itemSize; \
+    size_t itemAlign; \
+    } SwampList##type;
+
+#define SWAMP_LIST_TYPE(type) SwampList##type
 
 typedef const SwampList* SwampListReference;
 typedef const SwampList** SwampListReferenceData;

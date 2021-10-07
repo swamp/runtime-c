@@ -68,7 +68,30 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
 
             *_array = newArrayStruct;
         } break;
-        case SwtiTypeList:
+        case SwtiTypeList: {
+            const SwtiListType* listType = ((const SwtiListType*) type);
+            SwampList** _list = (const SwampList**) v;
+            const SwampList* list = *_list;
+            SwampList* newArrayStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampList), 8,
+                                                                      "SwampList");
+
+            const void* newItems = swampDynamicMemoryAllocDebug(targetMemory, list->count, list->itemSize,
+                                                                list->itemAlign, "list items");
+            tc_memcpy_octets(newItems, list->value, list->count * list->itemSize);
+            *newArrayStruct = *list;
+            newArrayStruct->value = newItems;
+            const uint8_t* p = newArrayStruct->value;
+            for (size_t i = 0; i < newArrayStruct->count; i++) {
+                int errorCode = compactOrClone(p, listType->itemType, doClone, targetMemory);
+                if (errorCode != 0) {
+                    return errorCode;
+                }
+
+                p += newArrayStruct->itemSize;
+            }
+
+            *_list = newArrayStruct;
+        } break;
         case SwtiTypeFunction:
             return -1;
         case SwtiTypeString: {

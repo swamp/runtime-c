@@ -40,7 +40,7 @@ SwampList* swampListAllocatePrepare(SwampDynamicMemory* self, size_t itemCount, 
     }
 
     if (itemAlign == 0 || itemAlign > 8) {
-        CLOG_ERROR("itemSize can not be zero or more than eight");
+        CLOG_ERROR("itemAlign can not be zero or more than eight");
     }
 
     uint8_t* itemMemory = swampDynamicMemoryAlloc(self, itemCount, itemSize, itemAlign);

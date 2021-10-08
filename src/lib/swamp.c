@@ -202,7 +202,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         return -2;
     }
 
-#if 1
+#if SWAMP_CALL_DEBUG
     CLOG_INFO("call '%s' %d", f->debugName, f->parameterCount);
     char temp[8*1024];
     const SwtiFunctionType* fnType = swtiChunkTypeFromIndex(context->typeInfo, f->typeIndex);

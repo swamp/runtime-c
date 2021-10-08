@@ -11,6 +11,7 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
     self->memory = memory;
     self->p = memory;
     self->maxAllocatedSize = maxOctetSize;
+    tc_memset_octets(memory, 0xfa, maxOctetSize);
 
     self->ledgerCapacity = 512;
     self->ledgerCount = 0;

@@ -23,7 +23,7 @@ jobs:
         run: go get github.com/piot/deps/src/deps
 
       - name: deps fetch dependencies
-        run: $GOPATH/bin/deps fetch -m clone
+        run: %GOPATH%/bin/deps fetch -m clone
         env:
           GITHUB_TOKEN: ${{ secrets.DEPS_PAT }}
 

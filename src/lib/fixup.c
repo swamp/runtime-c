@@ -69,9 +69,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     default:
                         CLOG_ERROR("paramcount above 4 or below 0 is not supported (%d)", func->parameterCount)
                 }
-                CLOG_INFO("set now as parameter count %d", func->parameterCount);
-                CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)
-                CLOG_INFO("  externalFunction external: return pos %d range %d", func->returnValue.pos, func->returnValue.range);
+//                CLOG_INFO("set now as parameter count %d", func->parameterCount);
+  //              CLOG_INFO("  externalFunction: %s parameter count %d", func->fullyQualifiedName, func->parameterCount)
+    //            CLOG_INFO("  externalFunction external: return pos %d range %d", func->returnValue.pos, func->returnValue.range);
 //                for (size_t i=0; i<func->parameterCount;++i) {
   //                  CLOG_INFO("  externalFunction: param %d pos %d range %d", i, func->parameters[i].pos, func->parameters[i].range);
     //            }
@@ -81,7 +81,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
             case LedgerTypeString: {
                 SwampString* str = (const SwampString *)p;
                 FIXUP_DYNAMIC_STRING(str->characters);
-                CLOG_INFO("  str: characters: %s (%d)", str->characters, str->characterCount);
+                //CLOG_INFO("  str: characters: %s (%d)", str->characters, str->characterCount);
             } break;
             case LedgerTypeResourceNameChunk: {
                 SwampResourceNameChunkEntry* resourceNameChunk = (const SwampResourceNameChunkEntry*) p;
@@ -90,7 +90,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     char* str = resourceNameChunk->resourceNames[i];
                     FIXUP_DYNAMIC_STRING(resourceNameChunk->resourceNames[i]);
                 }
-                CLOG_INFO("first resource name is '%s'", *resourceNameChunk->resourceNames);
+                //CLOG_INFO("first resource name is '%s'", *resourceNameChunk->resourceNames);
             } break;
             case LedgerTypeResourceName: {
                 // Intentionally do nothing

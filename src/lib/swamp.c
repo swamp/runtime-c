@@ -28,7 +28,7 @@ static const char* swamp_opcode_name(uint8_t opcode)
 #define SWAMP_CONFIG_DEBUG 0
 
 typedef uint16_t SwampJump;
-typedef uint8_t SwampJumpOffset;
+typedef uint16_t SwampJumpOffset;
 
 // -------------------------------------------------------------
 // Stack
@@ -501,7 +501,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     if (enum_type == sourceUnionType || enum_type == 0xff) {
                         jumpPcToUse = previous_jump_target_pc;
                         uint8_t remainingCases = caseCount - caseIndex - 1;
-                        pc += (remainingCases * (1 + 2));
+                        pc += (remainingCases * (1 + sizeof(SwampJumpOffset)));
+                        break;
                     }
                 }
                 if (jumpPcToUse == 0) {
@@ -741,7 +742,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 *target = !a;
             } break;
             default:
-                SWAMP_LOG_INFO("Unknown opcode: %02x", *(pc - 1));
+                SWAMP_ERROR("Unknown opcode: %02x", *(pc - 1));
                 return 0;
         }
     }

@@ -47,7 +47,7 @@ const SwampResourceNameChunkEntry* swampLedgerFindResourceNames(const SwampLedge
         switch (entry->constantType) {
             case LedgerTypeResourceNameChunk: {
                 const SwampResourceNameChunkEntry* resourceNames = (const SwampResourceNameChunkEntry*) p;
-                CLOG_INFO("resource name count %d first is '%s'", resourceNames->resourceCount, *resourceNames->resourceNames);
+                //CLOG_INFO("resource name count %d first is '%s'", resourceNames->resourceCount, *resourceNames->resourceNames);
                 return resourceNames;
             }
         }

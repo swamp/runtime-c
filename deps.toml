@@ -6,3 +6,15 @@ version = "0.0.0"
 [[dependencies]]
 name = 'swamp/dump-c'
 version = "*"
+
+[[dependencies]]
+name = 'piot/monotonic-time-c'
+version = "*"
+
+[[dependencies]]
+name = 'piot/raff-c'
+version = "*"
+
+# swamp/typeinfo-c
+# piot/clog
+# piot/tiny-libc

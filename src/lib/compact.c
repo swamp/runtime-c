@@ -22,7 +22,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwtiRecordType* record = (const SwtiRecordType*) type;
             for (size_t i = 0; i < record->fieldCount; i++) {
                 const SwtiRecordTypeField* field = &record->fields[i];
-                int errorCode = compactOrClone(v + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory);
+                int errorCode = compactOrClone((uint8_t*)v + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }

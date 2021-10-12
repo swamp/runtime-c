@@ -14,7 +14,7 @@ SwampMemoryPosition swampExecutePrepare(const SwampFunction* func, const void* b
         const SwampFunc* fn = curry->curryFunction;
         SwampMemoryPosition pos = fn->returnOctetSize;
         swampMemoryPositionAlign(&pos, curry->firstParameterAlign);
-        tc_memcpy_octets(bp + pos, curry->curryOctets, curry->curryOctetSize);
+        tc_memcpy_octets((uint8_t*)bp + pos, curry->curryOctets, curry->curryOctetSize);
         pos += curry->curryOctetSize;
         *outFn = curry->curryFunction;
         return pos;

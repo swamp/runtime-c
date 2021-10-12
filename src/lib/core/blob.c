@@ -7,6 +7,7 @@
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-runtime/core/types.h>
+#include <swamp-runtime/core/array.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/types.h>
@@ -68,7 +69,7 @@ void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, co
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, array->count);
     uint8_t* targetItemPointer = targetBlob->octets;
     for (size_t i=0; i<array->count; ++i) {
-        *targetItemPointer++ = *(const SwampInt32*)(array->value + i * array->itemSize);
+        *targetItemPointer++ = *(const SwampInt32*)(((uint8_t*)array->value) + i * array->itemSize);
     }
 
     *result = targetBlob;

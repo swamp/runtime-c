@@ -50,7 +50,11 @@ typedef struct SwampCallStack {
 
 #define DEBUGLOG_PARAMS 0
 
+#if _MSC_VER
+#define SWAMP_INLINE __forceinline
+#else
 #define SWAMP_INLINE __attribute__ ((__always_inline__))
+#endif
 
 SWAMP_INLINE uint32_t readU32(const uint8_t** pc)
 {

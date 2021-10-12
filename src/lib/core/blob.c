@@ -15,8 +15,7 @@
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-typeinfo/chunk.h>
 #include <swamp-typeinfo/typeinfo.h>
-
-
+#include <swamp-runtime/execute.h>
 
 void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {

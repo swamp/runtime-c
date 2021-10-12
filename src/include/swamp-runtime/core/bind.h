@@ -7,6 +7,11 @@
 
 #include <swamp-runtime/types.h>
 
-swamp_external_fn swamp_core_find_function(const char* function_name);
+typedef struct SwampBindingInfo {
+    const char* name;
+    void* fn;
+} SwampBindingInfo;
+
+void* swampCoreFindFunction(const char* function_name);
 
 #endif

@@ -5,4 +5,5 @@ Makefile
 bin/
 *.a
 deps/
-
+.cmake/
+.idea/

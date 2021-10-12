@@ -2,20 +2,33 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#include <swamp-runtime/allocator.h>
-#include <swamp-runtime/log.h>
-#include <swamp-runtime/swamp.h>
+#include <swamp-runtime/core/bind.h>
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_int_to_fixed)
+#include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/context.h>
+
+void swampCoreIntRound(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* fixed)
 {
-    const swamp_int32 a = swamp_value_int(arguments[0]);
-
-    return swamp_allocator_alloc_integer(allocator, a * SWAMP_FIXED_FACTOR);
+    *result = *fixed / SWAMP_FIXED_FACTOR;
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_fixed_to_int)
+void swampCoreIntToFixed(SwampFixed32* result, SwampMachineContext* context, const SwampInt32 * intValue)
 {
-    const swamp_int32 a = swamp_value_int(arguments[0]);
+    *result = *intValue * SWAMP_FIXED_FACTOR;
+}
 
-    return swamp_allocator_alloc_integer(allocator, a / SWAMP_FIXED_FACTOR);
+void* swampCoreIntFindFunction(const char* fullyQualifiedName)
+{
+    SwampBindingInfo info[] = {
+        {"Int.round", swampCoreIntRound},
+        {"Int.toFixed", swampCoreIntToFixed},
+    };
+
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
+            return info[i].fn;
+        }
+    }
+    // SWAMP_LOG_INFO("didn't find: %s", function_name);
+    return 0;
 }

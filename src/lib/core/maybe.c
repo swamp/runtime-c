@@ -2,19 +2,33 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+#include <swamp-runtime/core/bind.h>
+
+#include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/context.h>
 #include <swamp-runtime/core/maybe.h>
 
-#include <swamp-runtime/allocator.h>
-
-#include <swamp-runtime/ref_count.h>
-#include <swamp-runtime/swamp.h>
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_maybe_with_default)
+// withDefault : a -> Maybe a -> a
+void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const SwampUnknownType* defaultValue, const SwampMaybe** maybe)
 {
-    if (swamp_value_is_just(arguments[1])) {
-        return swamp_value_just(arguments[1]);
+    if (swampMaybeIsNothing(*maybe)) {
+        tc_memcpy_octets(result, defaultValue->ptr, defaultValue->size);
+    } else {
+        tc_memcpy_octets(result, swampMaybeJustGetValue(*maybe, defaultValue->align), defaultValue->size);
     }
+}
 
-    INC_REF(arguments[0]);
-    return arguments[0];
+void* swampCoreMaybeFindFunction(const char* fullyQualifiedName)
+{
+    SwampBindingInfo info[] = {
+        {"Maybe.withDefault", swampCoreMaybeWithDefault},
+    };
+
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
+            return info[i].fn;
+        }
+    }
+    // SWAMP_LOG_INFO("didn't find: %s", function_name);
+    return 0;
 }

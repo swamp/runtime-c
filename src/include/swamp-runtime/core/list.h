@@ -2,17 +2,17 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#ifndef swamp_h
-#define swamp_h
+#ifndef SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H
+#define SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H
 
 #include <swamp-runtime/types.h>
-#include <swamp-runtime/dynamic_memory.h>
-#include <swamp-runtime/stack_memory.h>
 
 struct SwampMachineContext;
 
-int swampRun(SwampResult* result, struct SwampMachineContext* context, const SwampFunc* f, SwampParameters run_parameters,
-             SwampBool verbose_flag);
+void* swampCoreListFindFunction(const char* fullyQualifiedName);
+
+void swampCoreListHead(SwampMaybe* result, struct SwampMachineContext* context, const SwampList** list);
 
 
-#endif
+
+#endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CORE_LIST_H

@@ -1,39 +1,39 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Peter Bjorklund. All rights reserved.
- *  Licensed under the MIT License. See LICENSE in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-#include <swamp-runtime/allocator.h>
-#include <swamp-runtime/swamp.h>
-#include <swamp-runtime/core/char.h>
-#include <swamp-runtime/log.h>
-#include <swamp-runtime/ref_count.h>
+*  Copyright (c) Peter Bjorklund. All rights reserved.
+*  Licensed under the MIT License. See LICENSE in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+#include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/context.h>
+#include <tiny-libc/tiny_libc.h>
 
-// Characters and Integers are the same thing
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_char_to_code)
+void swampCoreCharFromCode(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* code)
 {
-#if CONFIGURATION_DEBUG
-    if (!swamp_value_is_int(arguments[0])) {
-        SWAMP_LOG_ERROR("character is not an integer");
-        return 0;
-    }
-#endif
-
-    INC_REF(arguments[0])
-
-    return arguments[0];
+   *result = *code;
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_char_from_code)
+void swampCoreCharOrd(SwampInt32* result, SwampMachineContext* context, const SwampInt32 * charValue)
 {
-#if CONFIGURATION_DEBUG
-    if (!swamp_value_is_int(arguments[0])) {
-        SWAMP_LOG_ERROR("character is not an integer");
-        return 0;
-    }
-#endif
+   *result = *charValue;
+}
 
-    INC_REF(arguments[0])
+void swampCoreCharToCode(SwampInt32* result, SwampMachineContext* context, const SwampInt32 * charValue)
+{
+    *result = *charValue;
+}
 
-    return arguments[0];
+void* swampCoreCharFindFunction(const char* fullyQualifiedName)
+{
+   SwampBindingInfo info[] = {
+       {"Char.fromCode", swampCoreCharFromCode},
+        {"Char.toCode", swampCoreCharToCode},
+       {"Char.ord", swampCoreCharOrd},
+   };
+
+   for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+       if (tc_str_equal(info[i].name, fullyQualifiedName)) {
+           return info[i].fn;
+       }
+   }
+   // SWAMP_LOG_INFO("didn't find: %s", function_name);
+   return 0;
 }

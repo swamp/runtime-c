@@ -2,14 +2,11 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#ifndef swamp_core_math_h
-#define swamp_core_math_h
+#include <swamp-runtime/stack_memory.h>
 
-#include <swamp-runtime/swamp.h>
+void swampStackMemoryInit(SwampStackMemory* self, void* memory, size_t maxSize)
+{
+    self->memory = memory;
+    self->maximumStackMemory = maxSize;
+}
 
-struct SwampMachineContext;
-
-void swampCoreMathRemainderBy(SwampInt32* result, struct SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value);
-void* swampCoreMathFindFunction(const char* fullyQualifiedName);
-
-#endif

@@ -2,44 +2,55 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#include <string.h>
+#include <clog/clog.h>
 #include <swamp-dump/dump_ascii.h>
-#include <swamp-dump/dump_ascii_no_color.h>
-#include <swamp-dump/types.h>
-#include <swamp-runtime/allocator.h>
-#include <swamp-runtime/ref_count.h>
-#include <swamp-runtime/swamp.h>
+#include <swamp-runtime/context.h>
+#include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/debug.h>
 #include <swamp-typeinfo/chunk.h>
+#include <swamp-runtime/swamp_allocate.h>
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_debug_log)
+void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
-    const swamp_string* output = swamp_value_string(arguments[0]);
-
-
-    fprintf(stderr, "log: ");
-    fputs(output->characters, stderr);
-    fputs("\n\033[39m", stderr);
-
-    fflush(stderr);
-
-    INC_REF(arguments[0]);
-    return (const swamp_value*) output;
+    CLOG_INFO("log: %s", (*value)->characters);
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_debug_to_string)
+void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
-#define tempBufSize (32 * 1024)
-    char buf[tempBufSize];
-    buf[0] = 0;
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
-    const swamp_value* any = arguments[0];
-    swamp_int32 typeIndex;
+#define MaxBufSize (8*1024)
+    char buf[MaxBufSize];
 
-    const swamp_value* v = swamp_value_any(any, &typeIndex);
+    CLOG_INFO("log: %s", swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
+}
 
-    const SwtiType* foundType = swtiChunkTypeFromIndex(allocator->typeInfo, typeIndex);
 
-    swampDumpToAsciiStringNoColor(v, foundType, swampDumpFlagAliasOnce, buf, tempBufSize);
+void swampCoreDebugToString(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
+{
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
-    return swamp_allocator_alloc_string(allocator, buf);
+#define MaxBufSize (8*1024)
+    char buf[MaxBufSize];
+
+    swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize);
+
+    *result = swampStringAllocate(context->dynamicMemory, buf);
+}
+
+void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
+{
+    SwampBindingInfo info[] = {
+        {"Debug.log", swampCoreDebugLog},
+        {"Debug.logAny", swampCoreDebugLogAny},
+        {"Debug.toString", swampCoreDebugToString},
+    };
+
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
+            return info[i].fn;
+        }
+    }
+    // SWAMP_LOG_INFO("didn't find: %s", function_name);
+    return 0;
 }

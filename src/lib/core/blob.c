@@ -2,303 +2,405 @@
  *  Copyright (c) Peter Bjorklund. All rights reserved.
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-#include <stdlib.h>
-#include <string.h>
-#include <swamp-runtime/allocator.h>
-#include <swamp-runtime/core/blob.h>
-#include <swamp-runtime/log.h>
-#include <swamp-runtime/print.h>
-#include <swamp-runtime/ref_count.h>
+#include <clog/clog.h>
+#include <swamp-runtime/context.h>
+#include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/maybe.h>
+#include <swamp-runtime/core/types.h>
+#include <swamp-runtime/core/array.h>
 #include <swamp-runtime/swamp.h>
+#include <swamp-runtime/swamp_allocate.h>
+#include <swamp-runtime/types.h>
+#include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/core/maybe.h>
+#include <swamp-typeinfo/chunk.h>
+#include <swamp-typeinfo/typeinfo.h>
+#include <swamp-runtime/execute.h>
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_is_empty)
+void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
-    const swamp_blob* blob = swamp_value_blob(arguments[0]);
+    const SwampList* list = *_list;
 
-    return swamp_allocator_alloc_boolean(allocator, blob->octet_count == 0);
+    if (list->count == 0) {
+        swampMaybeNothing(result);
+    } else {
+        swampMaybeJust(result, list->itemAlign, list->value, list->itemSize);
+    }
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_from_list)
-{
-    const swamp_list* intList = swamp_value_list(arguments[0]);
+#define SwampCollectionIndex(coll, index) (((const uint8_t*) coll->value) + (index) *coll->itemSize)
 
-    return swamp_allocator_alloc_blob(allocator, 0, 0, 0);
+// tail : List a -> Maybe (List a)
+void swampCoreBlobTail(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
+{
+    const SwampList* list = *_list;
+
+    if (list->count == 0) {
+        swampMaybeNothing(result);
+    } else {
+        swampMaybeJust(result, list->itemAlign, SwampCollectionIndex(list, list->count - 1), list->itemSize);
+    }
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_to_list)
+// isEmpty : List a -> Bool
+void swampCoreBlobIsEmpty(SwampBool* result, SwampMachineContext* context, const SwampList** _list)
 {
-    const swamp_blob* blob = swamp_value_blob(arguments[0]);
-    const swamp_value** octetInts = malloc(sizeof(const swamp_value*)*blob->octet_count);
+    const SwampList* list = *_list;
 
-    for (size_t i=0; i<blob->octet_count;++i) {
-        octetInts[i] = swamp_allocator_alloc_integer(&allocator->allocator, blob->octets[i]);
+    *result = list->count == 0;
+}
+
+// length : List a -> Int
+void swampCoreBlobLength(SwampInt32* result, SwampMachineContext* context, const SwampList** _list)
+{
+    *result = (*_list)->count;
+}
+
+// __externalfn fromArray : Array Int -> Blob
+void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, const SwampArray** _array)
+{
+    const SwampArray* array = *_array;
+
+    if (array->itemSize != sizeof(SwampInt32)) {
+        CLOG_ERROR("must be swamp integer array for blob");
     }
 
-    swamp_list* list = swamp_allocator_alloc_list_create_and_transfer(&allocator->allocator, octetInts, blob->octet_count);
-
-    free(octetInts);
-
-    return (const swamp_value*) list;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_map)
-{
-    const swamp_func* fn = swamp_value_func(arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
-
-    uint8_t* copy = malloc(blob->octet_count);
-    if (copy == 0) {
-        return 0;
+    SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, array->count);
+    uint8_t* targetItemPointer = targetBlob->octets;
+    for (size_t i=0; i<array->count; ++i) {
+        *targetItemPointer++ = *(const SwampInt32*)(((uint8_t*)array->value) + i * array->itemSize);
     }
 
-    for (size_t i = 0; i < blob->octet_count; ++i) {
-        const uint8_t v = blob->octets[i];
-        const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, v);
-        const swamp_int* result = swamp_execute(allocator, fn, &intValue, 1, 0);
-
-        copy[i] = (uint8_t) result->value;
-    }
-
-    const swamp_blob* blobCopy = swamp_allocator_alloc_blob(allocator, copy, blob->octet_count, 0);
-
-    free(copy);
-
-    return (const swamp_value*) blobCopy;
+    *result = targetBlob;
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_indexed_map)
+// map : (a -> b) -> List a -> List b
+void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunc** _fn, const SwampBlob** _blob)
 {
-    const swamp_func* fn = swamp_value_func(arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
+    const SwampBlob* blob = *_blob;
+    const SwampFunc* fn = *_fn;
+    const uint8_t* sourceItemPointer = blob->octets;
 
-    uint8_t* copy = malloc(blob->octet_count);
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = fn->returnOctetSize;
 
-    for (size_t i = 0; i < blob->octet_count; ++i) {
+    SwampParameters parameters;
+    parameters.parameterCount = 1;
+    parameters.octetSize = sizeof(SwampInt32);
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+// , fn->returnOctetSize,
+    //                                                 fn->returnAlign
+    SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    uint8_t* targetItemPointer = target->octets;
+    for (size_t i = 0; i < blob->octetCount; ++i) {
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+        fnResult.expectedOctetSize = internalFunction->returnOctetSize;
+
+        SwampInt32 v = *sourceItemPointer;
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+
+        tc_memcpy_octets(ownContext.bp + pos, &v, parameters.octetSize);
+        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        SwampInt32 returnValue = *(SwampInt32*) ownContext.bp;
+
+        *targetItemPointer = (uint8_t) returnValue;
+        sourceItemPointer++;
+        targetItemPointer++;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = target;
+
+}
+
+// map2 : (a -> b -> c) -> List a -> List b -> List c
+void swampCoreBlobMap2()
+{
+}
+
+
+// __externalfn indexedMap : (Int -> Int -> Int) -> Blob -> Blob
+void swampCoreBlobIndexedMap(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = blob->octets;
+
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = 0;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 1;
+    parameters.octetSize = sizeof(SwampInt32);
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+    // , fn->returnOctetSize,
+    //                                                 fn->returnAlign
+    SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    uint8_t* targetItemPointer = target->octets;
+    for (size_t i = 0; i < blob->octetCount; ++i) {
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+        fnResult.expectedOctetSize = internalFunction->returnOctetSize;
+        SwampInt32 index = i;
+
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &index, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        SwampInt32 v = *sourceItemPointer;
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &v, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        parameters.octetSize = pos;
+        parameters.parameterCount = internalFunction->parameterCount;
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+        *targetItemPointer = (uint8_t) (*(SwampInt32*) ownContext.bp);
+        sourceItemPointer++;
+        targetItemPointer++;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = target;
+}
+
+// any : (a -> Bool) -> List a -> Bool
+void swampCoreBlobAny()
+{
+}
+
+// find : (a -> Bool) -> List a -> Maybe a
+void swampCoreBlobFind()
+{
+}
+
+//  member : a -> List a -> Bool
+void swampCoreBlobMember()
+{
+}
+
+// filterMap : (a -> Maybe b) -> List a -> List b
+void swampCoreBlobFilterMap()
+{
+}
+
+// __externalfn filterIndexedMap : (Int -> Int -> Maybe a) -> Blob -> List a
+void swampCoreBlobFilterIndexedMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+    const SwampFunction* fn = *_fn;
+
+    size_t typeIndex;
+    if (fn->type == SwampFunctionTypeCurry) {
+        const SwampCurryFunc* curry = (const SwampCurryFunc*) fn;
+        typeIndex = curry->typeIdIndex;
+    } else if (fn->type == SwampFunctionTypeInternal) {
+        const SwampFunc* internalFunc = (const SwampFunc*) fn;
+        typeIndex = internalFunc->typeIndex;
+    }
+
+    const SwtiType* functionType = swtiChunkTypeFromIndex(context->typeInfo, typeIndex);
+    if (functionType->type != SwtiTypeFunction) {
+        CLOG_ERROR("wrong type");
+    }
+    const SwtiFunctionType* funcType = (const SwtiFunctionType*) functionType;
+    const SwtiType* returnType = funcType->parameterTypes[funcType->parameterCount-1];
+    SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
+    SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
+    uint8_t* temp = tc_malloc(returnSize * blob->octetCount);
+    size_t resultCount = 0;
+    uint8_t* targetPointer = temp;
+
+    SwampMachineContext ownContext;
+
+    swampContextCreateTemp(&ownContext, context);
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = returnSize;
+
+    SwampParameters parameters;
+
+    for (size_t i = 0; i < blob->octetCount; ++i) {
         const uint8_t* v = blob->octets[i];
-        const swamp_int* indexValue = swamp_allocator_alloc_integer_ex(allocator, i);
-        const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, v);
-        const swamp_value* arguments[] = {indexValue, intValue};
-        const swamp_int* result = swamp_execute(allocator, fn, arguments, 2, 0);
-        copy[i] = (uint8_t) result->value;
-    }
 
-    const swamp_blob* blobCopy = swamp_allocator_alloc_blob_ex(allocator, copy, blob->octet_count, 0);
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
 
-    free(copy);
+        uint8_t* argumentPointer = ownContext.bp;
 
-    return (const swamp_value*) blobCopy;
-}
+        swampMemoryPositionAlign(&pos, 4);
+        SwampInt32 indexValue = i;
+        tc_memcpy_octets(argumentPointer + pos, &indexValue, sizeof(SwampInt32));
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_filter_indexed_map)
-{
-    const swamp_func* fn = swamp_value_func(arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
+        SwampInt32 intValue = v;
+        swampMemoryPositionAlign(&pos, 4);
+        tc_memcpy_octets(argumentPointer + pos, &intValue, sizeof(SwampInt32));
 
-    const swamp_value** results = malloc(sizeof(swamp_value*) * blob->octet_count);
-    size_t result_count = 0;
+        parameters.parameterCount = internalFunction->parameterCount;
+        parameters.octetSize = sizeof(SwampInt32) + sizeof(SwampInt32);
 
-    for (size_t i = 0; i < blob->octet_count; ++i) {
-        const uint8_t* v = blob->octets[i];
-        const swamp_int* indexValue = swamp_allocator_alloc_integer_ex(&allocator->allocator, i);
-        const swamp_int* intValue = swamp_allocator_alloc_integer_ex(&allocator->allocator, v);
-        const swamp_value* arguments[] = {indexValue, intValue};
-        const swamp_value* maybeResult = swamp_execute(allocator, fn, arguments, 2, 0);
-        if (swamp_value_is_just(maybeResult)) {
-            const swamp_value* result = swamp_value_just(maybeResult);
-            results[result_count++] = result;
-            INC_REF(result);
+        int runErr = swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+        if (runErr < 0) {
+            CLOG_ERROR("couldn't run %d", runErr);
+            return;
+        }
+
+        if (swampMaybeIsJust(ownContext.bp)) {
+            const void* sourceData = swampMaybeJustGetValue(ownContext.bp, returnAlign);
+            tc_memcpy_octets(targetPointer, sourceData, returnSize);
+            targetPointer += returnSize;
+            resultCount++;
         }
     }
 
-    const swamp_blob* list = swamp_allocator_alloc_list_create_and_transfer(allocator, results, result_count);
+    const SwampList* list = swampListAllocate(context->dynamicMemory, temp, resultCount, returnSize, returnAlign);
 
-    free(results);
+    tc_free(temp);
 
-    return (const swamp_value*) list;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_length)
-{
-    const swamp_blob* blob = swamp_value_blob(arguments[0]);
-
-    const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octet_count);
-
-    return intValue;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_get)
-{
-    const swamp_int* indexValue = swamp_value_int(arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
-    int index = indexValue->value;
-    if (index < 0 || index >= blob->octet_count) {
-        return swamp_allocator_alloc_nothing(allocator);
-    }
-
-    const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octets[index]);
-
-    return swamp_allocator_alloc_just(allocator, intValue);
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_grab)
-{
-    const swamp_int* indexValue = swamp_value_int(arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
-    int index = indexValue->value;
-    if (index < 0 || index >= blob->octet_count) {
-        SWAMP_ERROR("index is out of bounds %d %d", index, blob->octet_count);
-        return 0;
-    }
-
-    const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octets[index]);
-
-    return intValue;
+    *result = list;
 }
 
 
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_get_2d)
+int swampBlobIsEmpty(const SwampBlob* blob) // TODO: Move this
 {
-    const vec2* position = SWAMP_VALUE_CAST(vec2, arguments[0]);
-    const sz2* size = SWAMP_VALUE_CAST(sz2, arguments[1]);
-    const swamp_blob* blob = swamp_value_blob(arguments[2]);
+    return blob->octets == 0;
+}
+
+//       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
+void swampCoreBlobFilterMap2()
+{
+}
+
+// filter : (a -> Bool) -> List a -> List a
+void swampCoreBlobFilter()
+{
+}
+
+// filter2 : (a -> b -> Bool) -> List a -> List b -> List b
+void swampCoreBlobFilter2()
+{
+}
+
+// remove : (a -> Bool) -> List a -> List a
+void swampCoreBlobRemove()
+{
+}
+
+// remove2 : (a -> b -> Bool) -> List a -> List b -> List b
+void swampCoreBlobRemove2()
+{
+}
+
+// concatMap : (a -> List b) -> List a -> List b
+void swampCoreBlobConcatMap()
+{
+}
+
+// concat : List (List a) -> List a
+void swampCoreBlobConcat()
+{
+}
+
+// range : Int -> Int -> List Int
+void swampCoreBlobRange()
+{
+}
+
+// foldl : (a -> b -> b) -> b -> List a -> b
+void swampCoreBlobFoldl()
+{
+}
+
+// unzip : List (a, b) -> (List a, List b)
+void swampCoreBlobUnzip()
+{
+}
+
+// foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
+void swampCoreBlobFoldlStop()
+{
+}
+
+// __externalfn get2d : { x : Int, y : Int } -> { width : Int, height : Int } -> Blob -> Maybe Int
+void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampCorePosition2i* position, SwampCoreSize2i* size, const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
 
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
-    if (position->x->value < 0 || position->x->value >= size->width->value) {
-        // SWAMP_LOG_SOFT_ERROR("position X is out of bounds %d %d", position->x->value, size->width->value);
-        return swamp_allocator_alloc_nothing(allocator);
+    if (position->x < 0 || position->x >= size->width) {
+        // SWAMP_LOG_SOFT_ERROR("position X is out of bounds %d %d", position->x, size->width);
+        swampMaybeNothing(result);
+        return;
     }
 
-    if (position->y->value < 0 || position->y->value >= size->height->value) {
-        // SWAMP_LOG_SOFT_ERROR("position Y is out of bounds %d %d", position->y->value, size->height->value);
-        return swamp_allocator_alloc_nothing(allocator);
+    if (position->y < 0 || position->y >= size->height) {
+        // SWAMP_LOG_SOFT_ERROR("position Y is out of bounds %d %d", position->y, size->height);
+        swampMaybeNothing(result);
+        return;
     }
 
-    int index = position->y->value * size->width->value + position->x->value;
+    int index = position->y * size->width + position->x;
 
-    if (index < 0 || index >= blob->octet_count) {
+    if (index < 0 || index >= blob->octetCount) {
         // SWAMP_LOG_SOFT_ERROR("position is out of octet count bounds %d %d", index, blob->octet_count);
-        return swamp_allocator_alloc_nothing(allocator);
+        swampMaybeNothing(result);
+        return;
     }
 
-    const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octets[index]);
+    SwampInt32 v = blob->octets[index];
 
-    return swamp_allocator_alloc_just(allocator, intValue);
+    swampMaybeJust(result, 4, &v, sizeof(SwampInt32));
 }
 
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_grab_2d)
+// __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
+void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size, const SwampBlob** _blob)
 {
-    const vec2* position = SWAMP_VALUE_CAST(vec2, arguments[0]);
-    const sz2* size = SWAMP_VALUE_CAST(sz2, arguments[1]);
-    const swamp_blob* blob = swamp_value_blob(arguments[2]);
+    const SwampBlob* blob = *_blob;
 
-    // These checks are not really needed. You can just check the index, but this
-    // gives more valuable information about what went wrong.
-    if (position->x->value < 0 || position->x->value > size->width->value) {
-        SWAMP_LOG_ERROR("position X is out of bounds %d %d", position->x->value, size->width->value);
-        return 0;
+    int area = size->height * size->width;
+    if (area < 0 || area > blob->octetCount) {
+        *result = swampStringAllocate(context->dynamicMemory, "");
+        return;
     }
-
-    if (position->y->value < 0 || position->y->value > size->height->value) {
-        SWAMP_LOG_ERROR("position Y is out of bounds %d %d", position->y->value, size->height->value);
-        return 0;
-    }
-
-    int index = position->y->value * size->width->value + position->x->value;
-
-    if (index < 0 || index >= blob->octet_count) {
-        SWAMP_LOG_ERROR("position is out of octet count bounds %d %d", index, blob->octet_count);
-        return 0;
-    }
-
-    const swamp_int* intValue = swamp_allocator_alloc_integer_ex(allocator, blob->octets[index]);
-
-    return intValue;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set)
-{
-    const swamp_int* indexValue = swamp_value_int(arguments[0]);
-    const swamp_int32 newValue = swamp_value_int(arguments[1]);
-    const swamp_blob* blob = swamp_value_blob(arguments[2]);
-    int index = indexValue->value;
-    if (index < 0 || index >= blob->octet_count) {
-        return blob;
-    }
-    uint8_t* copy = malloc(blob->octet_count);
-    memcpy(copy, blob->octets, blob->octet_count);
-    copy[index] = newValue;
-
-    const swamp_blob* blobCopy = swamp_allocator_alloc_blob_ex(allocator, copy, blob->octet_count, 0);
-
-    free(copy);
-
-    return blobCopy;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_set_2d)
-{
-    const vec2* position = SWAMP_VALUE_CAST(vec2, arguments[0]);
-    const sz2* size = SWAMP_VALUE_CAST(sz2, arguments[1]);
-    swamp_int32 newValue = swamp_value_int(arguments[2]);
-    const swamp_blob* blob = swamp_value_blob(arguments[3]);
-
-    // These checks are not really needed. You can just check the index, but this
-    // gives more valuable information about what went wrong.
-    if (position->x->value < 0 || position->x->value >= size->width->value) {
-        SWAMP_LOG_SOFT_ERROR("position X is out of bounds %d %d", position->x->value, size->width->value);
-        return blob;
-    }
-
-    if (position->y->value < 0 || position->y->value >= size->height->value) {
-        SWAMP_LOG_SOFT_ERROR("position Y is out of bounds %d %d", position->y->value, size->height->value);
-        return blob;
-    }
-
-    int index = position->y->value * size->width->value + position->x->value;
-
-    if (index < 0 || index >= blob->octet_count) {
-        SWAMP_LOG_SOFT_ERROR("position is out of octet count bounds %d %d", index, blob->octet_count);
-        return blob;
-    }
-
-    uint8_t* copy = malloc(blob->octet_count);
-    memcpy(copy, blob->octets, blob->octet_count);
-    copy[index] = newValue;
-
-    const swamp_blob* blobCopy = swamp_allocator_alloc_blob_ex(allocator, copy, blob->octet_count, 0);
-
-    free(copy);
-
-    return blobCopy;
-}
-
-SWAMP_FUNCTION_EXPOSE(swamp_core_blob_to_string_2d)
-{
-    const sz2* size = SWAMP_VALUE_CAST(sz2, arguments[0]);
-    const swamp_blob* blob = swamp_value_blob(arguments[1]);
-
-    int area = size->height->value * size->width->value;
-    if (area < 0 || area > blob->octet_count) {
-        return swamp_allocator_alloc_string(allocator, "");
-    }
-    char* result = malloc(size->height->value * (size->width->value + 1) + 2);
+    char* tempString = tc_malloc(size->height * (size->width + 1) + 2);
 
     int index = 0;
-    for (size_t y = 0; y < size->height->value; ++y) {
-        result[index++] = '\n';
-        for (size_t x = 0; x < size->width->value; ++x) {
-            uint8_t ch = blob->octets[size->width->value * y + x];
-            result[index++] = ch;
+    for (size_t y = 0; y < size->height; ++y) {
+        tempString[index++] = '\n';
+        for (size_t x = 0; x < size->width; ++x) {
+            uint8_t ch = blob->octets[size->width * y + x];
+            tempString[index++] = ch;
         }
     }
-    result[index++] = '\n';
-    result[index] = 0;
+    tempString[index++] = '\n';
+    tempString[index] = 0;
 
-    const swamp_int* stringValue = swamp_allocator_alloc_string(allocator, result);
+    *result = swampStringAllocate(context->dynamicMemory, tempString);
 
-    free(result);
+    tc_free(tempString);
+}
 
-    return stringValue;
+void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
+{
+    SwampBindingInfo info[] = {
+        {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.map", swampCoreBlobMap},
+        {"Blob.indexedMap", swampCoreBlobIndexedMap}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
+        {"Blob.get2d", swampCoreBlobGet2d},
+        {"Blob.fromArray", swampCoreBlobFromArray},
+    };
+
+    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
+        if (tc_str_equal(info[i].name, fullyQualifiedName)) {
+            return info[i].fn;
+        }
+    }
+    // SWAMP_LOG_INFO("didn't find: %s", function_name);
+    return 0;
 }

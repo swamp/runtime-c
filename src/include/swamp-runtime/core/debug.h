@@ -6,8 +6,10 @@
 #define swamp_core_debug_h
 
 #include <swamp-runtime/swamp.h>
+#include <swamp-runtime/context.h>
 
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_debug_log);
-SWAMP_FUNCTION_EXPOSE_DECLARE(swamp_core_debug_to_string);
+void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const struct SwampString** value);
+void swampCoreDebugToString(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value);
+void* swampCoreDebugFindFunction(const char* fullyQualifiedName);
 
 #endif

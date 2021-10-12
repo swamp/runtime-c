@@ -27,14 +27,14 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
     const SwampConstantLedgerEntry* entry = entries;
     int detectedError = 0;
     while (entry->constantType != 0) {
-        CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
+        //CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
         const uint8_t* p = (dynamicMemoryOctets + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
                 SwampFunc* func = (const SwampFunc*)p;
                 FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
                 FIXUP_DYNAMIC_STRING(func->debugName);
-                CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
+                //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 if (tc_str_equal(func->debugName, "main")) {
                     entryFunc = func;
                 }
@@ -42,7 +42,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
             case LedgerTypeExternalFunc: {
                 SwampFunctionExternal* func = (const SwampFunctionExternal *)p;
                 FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
-                CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
+                //CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
                 void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
                 if (resolvedFunctionPointer == 0) {
                     CLOG_SOFT_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
@@ -82,6 +82,18 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 SwampString* str = (const SwampString *)p;
                 FIXUP_DYNAMIC_STRING(str->characters);
                 CLOG_INFO("  str: characters: %s (%d)", str->characters, str->characterCount);
+            } break;
+            case LedgerTypeResourceNameChunk: {
+                SwampResourceNameChunkEntry* resourceNameChunk = (const SwampResourceNameChunkEntry*) p;
+                FIXUP_DYNAMIC_POINTER(resourceNameChunk->resourceNames, char**);
+                for (size_t i=0; i<resourceNameChunk->resourceCount; ++i) {
+                    char* str = resourceNameChunk->resourceNames[i];
+                    FIXUP_DYNAMIC_STRING(resourceNameChunk->resourceNames[i]);
+                }
+                CLOG_INFO("first resource name is '%s'", *resourceNameChunk->resourceNames);
+            } break;
+            case LedgerTypeResourceName: {
+                // Intentionally do nothing
             } break;
             default: {
                 CLOG_ERROR("Unknown ledger fixup")

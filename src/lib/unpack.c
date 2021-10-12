@@ -104,7 +104,7 @@ int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
         return errorCode;
     }
 
-    if (verboseFlag) {
+    if (verboseFlag || 1) {
         swtiChunkDebugOutput(&self->typeInfoChunk, 0, "readTypeInformation");
     }
 

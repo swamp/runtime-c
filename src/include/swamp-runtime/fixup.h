@@ -12,6 +12,11 @@ struct SwampFunc;
 
 #include <stdint.h>
 
+typedef struct SwampResourceNameChunkEntry {
+    char** resourceNames;
+    size_t resourceCount;
+} SwampResourceNameChunkEntry;
+
 typedef struct SwampConstantLedgerEntry {
     uint32_t constantType;
     uint32_t offset;
@@ -19,8 +24,9 @@ typedef struct SwampConstantLedgerEntry {
 
 #define LedgerTypeExternalFunc (4)
 #define LedgerTypeFunc (3)
+#define LedgerTypeResourceName (2)
 #define LedgerTypeString (1)
-
+#define LedgerTypeResourceNameChunk (5)
 
 const struct SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, SwampResolveExternalFunction fn, const struct SwampConstantLedgerEntry* entries);
 

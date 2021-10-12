@@ -18,6 +18,7 @@ typedef struct SwampMachineContext {
     const SwampStaticMemory* constantStaticMemory;
     uint8_t* tempResult;
     const struct SwtiChunk* typeInfo;
+    void* userData;
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory, const struct SwtiChunk* typeInfo);

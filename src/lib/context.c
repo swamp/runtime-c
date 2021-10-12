@@ -44,4 +44,5 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     target->dynamicMemory = context->dynamicMemory;
     target->typeInfo = context->typeInfo;
     target->constantStaticMemory = context->constantStaticMemory;
+    target->userData = context->userData;
 }

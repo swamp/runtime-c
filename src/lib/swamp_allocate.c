@@ -21,6 +21,7 @@ const SwampString* swampStringAllocate(SwampDynamicMemory* self, const char* s)
     return string;
 }
 
+
 const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self)
 {
     SwampList* emptyList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList), 8);
@@ -96,9 +97,16 @@ const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* i
 
 const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const SwampList* a, const SwampList* b)
 {
-    if (a->itemSize != b->itemSize) {
+    if (a->itemSize != b->itemSize && a->count != 0 && b->count != 0) {
         SWAMP_ERROR("must have exactly same item size to be okay")
         return 0;
+    }
+    if (a->count == 0) {
+        return b;
+    }
+
+    if (b->count == 0) {
+        return a;
     }
     SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList), 8);
     uint8_t* itemArray = swampDynamicMemoryAlloc(self, a->count + b->count, a->itemSize, a->itemAlign);

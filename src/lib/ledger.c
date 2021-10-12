@@ -21,15 +21,34 @@ const SwampFunc* swampLedgerFindFunction(const SwampLedger* self, const char* na
 
     const SwampConstantLedgerEntry* entry = entries;
     while (entry->constantType != 0) {
-        CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
         const uint8_t* p = (constantStaticMemory + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
                 const SwampFunc* func = (const SwampFunc*) p;
-                CLOG_INFO("checking '%s'", func->debugName);
                 if (tc_str_equal(func->debugName, name)) {
                     return func;
                 }
+            }
+        }
+        entry++;
+    }
+
+    return 0;
+}
+
+const SwampResourceNameChunkEntry* swampLedgerFindResourceNames(const SwampLedger* self)
+{
+    const uint8_t* const constantStaticMemory = self->constantStaticMemory;
+    const SwampConstantLedgerEntry* entries = self->ledgerOctets;
+
+    const SwampConstantLedgerEntry* entry = entries;
+    while (entry->constantType != 0) {
+        const uint8_t* p = (constantStaticMemory + entry->offset);
+        switch (entry->constantType) {
+            case LedgerTypeResourceNameChunk: {
+                const SwampResourceNameChunkEntry* resourceNames = (const SwampResourceNameChunkEntry*) p;
+                CLOG_INFO("resource name count %d first is '%s'", resourceNames->resourceCount, *resourceNames->resourceNames);
+                return resourceNames;
             }
         }
         entry++;

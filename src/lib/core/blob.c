@@ -266,6 +266,12 @@ void swampCoreBlobFilterIndexedMap(SwampList** result, SwampMachineContext* cont
     *result = list;
 }
 
+
+int swampBlobIsEmpty(const SwampBlob* blob) // TODO: Move this
+{
+    return blob->octets == 0;
+}
+
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
 void swampCoreBlobFilterMap2()
 {

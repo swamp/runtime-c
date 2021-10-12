@@ -73,7 +73,7 @@ typedef struct SwampResult {
 } SwampResult;
 
 #define SWAMP_FIXED32_TO_FLOAT(v) (v / (float) SWAMP_FIXED_FACTOR)
-#define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v)->value);
+#define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v));
 
 
 
@@ -95,6 +95,8 @@ typedef struct SwampBlob {
     const uint8_t* octets;
     size_t octetCount;
 } SwampBlob;
+
+int swampBlobIsEmpty(const SwampBlob* blob);
 
 typedef struct SwampArray {
     const void* value;

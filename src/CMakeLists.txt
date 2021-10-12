@@ -25,6 +25,10 @@ endif()
 if (APPLE)
         add_compile_definitions(TORNADO_OS_MACOS)
         set(OS_MACOS 1)
+elseif (WIN32)
+        add_compile_definitions(TORNADO_OS_WINDOWS)
+        set(OS_WINDOWS 1)
+        message("windows detected")
 elseif (UNIX)
         add_compile_definitions(TORNADO_OS_LINUX)
         set(OS_LINUX 1)
@@ -39,9 +43,9 @@ endif()
 set(deps ../deps/)
 
 add_compile_definitions(_POSIX_C_SOURCE=200112L)
-add_compile_options(-Wall -Wextra -Wshadow -Weffc++ -Wstrict-aliasing -ansi -pedantic -Wno-unused-function -Wno-unused-parameter)
-
-
+if (!OS_WINDOWS)
+add_compile_options(-Wall -Wextra -Wshadow -Weffc++ -Wstrict-aliasing -ansi -pedantic -Wno-unused-function -Wno-unused-parameter -Wall -Wno-unused-variable)
+endif()
 
 
 file(GLOB_RECURSE lib_src FOLLOW_SYMLINKS
@@ -110,7 +114,7 @@ if (useSanitizers)
 endif()
 
 
-target_compile_options(swamp-runtime PRIVATE -Wall -Wno-unused-variable ${sanitizers})
+target_compile_options(swamp-runtime PRIVATE  ${sanitizers})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     message("optimize!")

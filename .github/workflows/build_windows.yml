@@ -1,0 +1,41 @@
+name: build Windows
+on: [push]
+jobs:
+  build:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.4
+        with:
+          cmake-version: "3.18.x"
+
+      - name: Use cmake
+        run: cmake --version
+
+      - name: install deps
+        run: go get github.com/piot/deps/src/deps
+
+      - name: deps fetch dependencies
+        run: $HOME/go/bin/deps fetch -m clone
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPS_PAT }}
+
+      - name: build
+        run: cmake .
+        working-directory: src/
+
+      - name: Build extension
+        run: msbuild swamp-runtime.sln /t:Rebuild
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Swamp Runtime Windows Executable
+          path: |
+            src/bin/

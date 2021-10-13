@@ -238,12 +238,13 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         switch (*pc++) {
 
             case SwampOpcodeReturn: {
-#if SWAMP_RUN_MEASURE_PERFORMANCE
-                MonotonicTimeNanoseconds after = monotonicTimeNanosecondsNow();
-                MonotonicTimeNanoseconds timeSpent = after - call_stack_entry->debugBeforeTimeNs;
-                CLOG_INFO("time spent in func %s:%lu", call_stack_entry->func->debugName, timeSpent);
-#endif
+
                 if (stack->count == 0) {
+#if SWAMP_RUN_MEASURE_PERFORMANCE
+                    MonotonicTimeNanoseconds after = monotonicTimeNanosecondsNow();
+                    MonotonicTimeNanoseconds timeSpent = after - call_stack_entry->debugBeforeTimeNs;
+                    CLOG_INFO("time spent in func %s:%lu", call_stack_entry->func->debugName, timeSpent);
+#endif
                     if (verbose_flag) {
                        // CLOG_VERBOSE("swampRun(%s) is complete", call_stack_entry->func->debugName);
                     }

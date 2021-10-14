@@ -197,7 +197,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
         SWAMP_LOG_INFO("mismatch! param count %zu vs function says %zu (%p, %s)", runParameters.parameterCount,
                        f->parameterCount, (const void*) f, f->debugName);
         // swamp_value_print((const swamp_value*) f, "swamp_run()");
-        return 0;
+        return -3;
     }
 
     if (result->expectedOctetSize != f->returnOctetSize) {

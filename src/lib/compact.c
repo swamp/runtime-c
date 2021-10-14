@@ -150,10 +150,11 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
 
 int swampCompact(void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** compactedState)
 {
+    #if 0
     if (!swampIsBlittableOrEcs(stateType)) {
         CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted");
     }
-
+    #endif
     if (targetMemory->p != targetMemory->memory) {
         CLOG_ERROR("target memory must be reset");
     }

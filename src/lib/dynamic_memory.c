@@ -15,7 +15,11 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
 
     self->ledgerCapacity = 512;
     self->ledgerCount = 0;
+#if SWAMP_DYNAMIC_MEMORY_DEBUG
     self->ledgerEntries = tc_malloc_type_count(SwampDynamicMemoryLedgerEntry, self->ledgerCapacity);
+    #else
+    self->ledgerEntries = 0;
+    #endif
     self->ownAlloc = 0;
 }
 
@@ -29,7 +33,9 @@ void swampDynamicMemoryReset(SwampDynamicMemory* self)
 {
     self->p = self->memory;
     self->ledgerCount = 0;
+#if SWAMP_DYNAMIC_MEMORY_DEBUG
     tc_memset_octets(self->memory, 0xce, self->maxAllocatedSize);
+    #endif
 }
 
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self)
@@ -90,6 +96,7 @@ void* swampDynamicMemoryAllocDebug(SwampDynamicMemory* self, size_t itemCount, s
     if (self->ledgerCount == self->ledgerCapacity) {
         CLOG_ERROR("out of ledger space");
     }
+    #if SWAMP_DYNAMIC_MEMORY_DEBUG
 
     SwampDynamicMemoryLedgerEntry * entry = &self->ledgerEntries[self->ledgerCount];
     self->ledgerCount++;
@@ -97,6 +104,7 @@ void* swampDynamicMemoryAllocDebug(SwampDynamicMemory* self, size_t itemCount, s
     entry->itemSize = itemSize;
     entry->itemCount = itemCount;
     entry->itemAlign = align;
+    #endif
 
     return swampDynamicMemoryAlloc(self, itemCount, itemSize, align);
 }

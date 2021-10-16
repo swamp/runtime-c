@@ -118,7 +118,7 @@ void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFun
 }
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
-void swampCoreBlobMap2()
+void swampCoreBlobMap2(void)
 {
 }
 
@@ -172,22 +172,22 @@ void swampCoreBlobIndexedMap(SwampBlob** result, SwampMachineContext* context, S
 }
 
 // any : (a -> Bool) -> List a -> Bool
-void swampCoreBlobAny()
+void swampCoreBlobAny(void)
 {
 }
 
 // find : (a -> Bool) -> List a -> Maybe a
-void swampCoreBlobFind()
+void swampCoreBlobFind(void)
 {
 }
 
 //  member : a -> List a -> Bool
-void swampCoreBlobMember()
+void swampCoreBlobMember(void)
 {
 }
 
 // filterMap : (a -> Maybe b) -> List a -> List b
-void swampCoreBlobFilterMap()
+void swampCoreBlobFilterMap(void)
 {
 }
 
@@ -273,57 +273,57 @@ int swampBlobIsEmpty(const SwampBlob* blob) // TODO: Move this
 }
 
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
-void swampCoreBlobFilterMap2()
+void swampCoreBlobFilterMap2(void)
 {
 }
 
 // filter : (a -> Bool) -> List a -> List a
-void swampCoreBlobFilter()
+void swampCoreBlobFilter(void)
 {
 }
 
 // filter2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreBlobFilter2()
+void swampCoreBlobFilter2(void)
 {
 }
 
 // remove : (a -> Bool) -> List a -> List a
-void swampCoreBlobRemove()
+void swampCoreBlobRemove(void)
 {
 }
 
 // remove2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreBlobRemove2()
+void swampCoreBlobRemove2(void)
 {
 }
 
 // concatMap : (a -> List b) -> List a -> List b
-void swampCoreBlobConcatMap()
+void swampCoreBlobConcatMap(void)
 {
 }
 
 // concat : List (List a) -> List a
-void swampCoreBlobConcat()
+void swampCoreBlobConcat(void)
 {
 }
 
 // range : Int -> Int -> List Int
-void swampCoreBlobRange()
+void swampCoreBlobRange(void)
 {
 }
 
 // foldl : (a -> b -> b) -> b -> List a -> b
-void swampCoreBlobFoldl()
+void swampCoreBlobFoldl(void)
 {
 }
 
 // unzip : List (a, b) -> (List a, List b)
-void swampCoreBlobUnzip()
+void swampCoreBlobUnzip(void)
 {
 }
 
 // foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
-void swampCoreBlobFoldlStop()
+void swampCoreBlobFoldlStop(void)
 {
 }
 

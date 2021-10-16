@@ -70,7 +70,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     swampContextCreateTemp(&ownContext, context);
 
     SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
-    uint8_t* targetItemPointer = target->value;
+    uint8_t* targetItemPointer = (uint8_t*)target->value;
     for (size_t i = 0; i < list->count; ++i) {
         swampContextReset(&ownContext);
         tc_memcpy_octets(ownContext.bp + fn->returnOctetSize, sourceItemPointer, list->itemSize);
@@ -87,7 +87,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
 }
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
-void swampCoreListMap2()
+void swampCoreListMap2(void)
 {
 
 }
@@ -121,7 +121,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
     swampContextCreateTemp(&ownContext, context);
 
     SwampList* targetListB = swampListAllocatePrepare(context->dynamicMemory, list->count, swampFn->returnOctetSize, swampFn->returnAlign);
-    uint8_t* targetItemPointer = targetListB->value;
+    uint8_t* targetItemPointer = (uint8_t*)targetListB->value;
     for (size_t i = 0; i < list->count; ++i) {
         const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
@@ -146,75 +146,75 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
 }
 
 // any : (a -> Bool) -> List a -> Bool
-void swampCoreListAny()
+void swampCoreListAny(void)
 {
 
 }
 
 //find : (a -> Bool) -> List a -> Maybe a
-void swampCoreListFind()
+void swampCoreListFind(void)
 {
 
 }
 
 //  member : a -> List a -> Bool
-void swampCoreListMember()
+void swampCoreListMember(void)
 {
 
 }
 
 // filterMap : (a -> Maybe b) -> List a -> List b
-void swampCoreListFilterMap()
+void swampCoreListFilterMap(void)
 {
     CLOG_ERROR("Not implemented")
 }
 
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
-void swampCoreListFilterMap2()
+void swampCoreListFilterMap2(void)
 {
 
 }
 
 // filter : (a -> Bool) -> List a -> List a
-void swampCoreListFilter()
+void swampCoreListFiltervoid(void)
 {
 
 }
 
 
 // filter2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreListFilter2()
+void swampCoreListFilter2(void)
 {
 
 }
 
 //remove : (a -> Bool) -> List a -> List a
-void swampCoreListRemove()
+void swampCoreListRemove(void)
 {
 
 }
 
 // remove2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreListRemove2()
+void swampCoreListRemove2(void)
 {
 
 }
 
 // concatMap : (a -> List b) -> List a -> List b
-void swampCoreListConcatMap()
+void swampCoreListConcatMap(void)
 {
 
 }
 
 // concat : List (List a) -> List a
-void swampCoreListConcat()
+void swampCoreListConcat(void)
 {
 
 }
 
 
 // range : Int -> Int -> List Int
-void swampCoreListRange()
+void swampCoreListRange(void)
 {
 
 }
@@ -342,7 +342,7 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
 }
 
 // unzip : List (a, b) -> (List a, List b)
-void swampCoreListUnzip()
+void swampCoreListUnzip(void)
 {
 
 }

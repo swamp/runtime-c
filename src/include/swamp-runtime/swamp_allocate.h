@@ -18,6 +18,8 @@ struct SwampCurryFunc * swampCurryFuncAllocate( SwampDynamicMemory* self, uint16
 
 const  SwampList* swampListEmptyAllocate( SwampDynamicMemory* self);
 const  SwampList* swampListAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize, size_t itemAlign);
+const SwampArray* swampArrayAllocate(SwampDynamicMemory* self, const void* items, size_t itemCount, size_t itemSize,
+                                   size_t itemAlign);
 SwampList* swampListAllocatePrepare( SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t itemAlign);
 const  SwampList* swampListAllocateNoCopy( SwampDynamicMemory* self, const void* itemMemory, size_t itemCount, size_t itemSize, size_t itemAlign);
 const  SwampList* swampAllocateListAppendNoCopy( SwampDynamicMemory* self, const SwampList* a, const SwampList* b);

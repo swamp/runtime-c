@@ -354,6 +354,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     case 4:
                         externalFunction->function4(basePointer, context, params[1], params[2], params[3], params[4]);
                         break;
+                    case 5:
+                        externalFunction->function5(basePointer, context, params[1], params[2], params[3], params[4], params[5]);
+                        break;
                     default:
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");
                 }
@@ -385,6 +388,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     case 4:
                         externalFunction->function4(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4]);
                         break;
+                    case 5:
+                        externalFunction->function5(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4], &unknownTypes[5]);
+                        break;
                     default:
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");
                 }
@@ -409,8 +415,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     MonotonicTimeNanoseconds beforeTimeNs = monotonicTimeNanosecondsNow();
 #endif
                     const SwampFunctionExternal* externalFunction = (const SwampFunctionExternal*) func;
-                   // CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%d", externalFunction->fullyQualifiedName, pc,
-                     //            bp - context->stackMemory.memory)
+                    //CLOG_VERBOSE("Callexternal '%s' pc:%p bp:%d", externalFunction->fullyQualifiedName, pc,
+                      //          bp - context->stackMemory.memory)
                     switch (func->parameterCount) {
                         case 0:
                             externalFunction->function0(basePointer, context);
@@ -437,6 +443,14 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                                                         basePointer + externalFunction->parameters[2].pos,
                                                         basePointer + externalFunction->parameters[3].pos);
                             break;
+                        case 5:
+                            externalFunction->function5(basePointer, context,
+                                                        basePointer + externalFunction->parameters[0].pos,
+                                                        basePointer + externalFunction->parameters[1].pos,
+                                                        basePointer + externalFunction->parameters[2].pos,
+                                                        basePointer + externalFunction->parameters[3].pos,
+                                                        basePointer + externalFunction->parameters[4].pos);
+                                                        break;
                         default:
                             SWAMP_LOG_ERROR("strange parameter count in external");
                     }

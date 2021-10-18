@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <swamp-runtime/log.h>
 struct SwampMachineContext;
 
 typedef uint8_t SwampBool;
@@ -160,6 +160,9 @@ typedef void (*SwampExternalFunction1)(void* result, struct SwampMachineContext*
 typedef void (*SwampExternalFunction2)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2);
 typedef void (*SwampExternalFunction3)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3);
 typedef void (*SwampExternalFunction4)(void* result, struct SwampMachineContext* context, const void* argument1, const void* argument2, const void* argument3, const void* argument4);
+typedef void (*SwampExternalFunction5)(void* result, struct SwampMachineContext* context, const void* argument1,
+                                       const void* argument2, const void* argument3, const void* argument4,
+                                       const void* argument5);
 
 
 
@@ -179,6 +182,7 @@ typedef struct SwampFunctionExternal {
     SwampExternalFunction4 function4;
     const char* fullyQualifiedName;
     SwampExternalFunction0 function0;
+    SwampExternalFunction5 function5;
 } SwampFunctionExternal;
 
 struct SwampMachineContext;

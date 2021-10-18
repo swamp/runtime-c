@@ -156,8 +156,8 @@ void swampCoreMathRnd(SwampInt32* result, SwampMachineContext* context, const Sw
 
 void swampCoreMathATan(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* y, const SwampFixed32* x)
 {
-    SwampInt32 yInt = fixedAngleToDegree(y);
-    SwampInt32 xInt = fixedAngleToDegree(x);
+    SwampInt32 yInt = fixedAngleToDegree(*y);
+    SwampInt32 xInt = fixedAngleToDegree(*x);
 
     int fast_degrees = fastAtan2(yInt, xInt);
 
@@ -218,7 +218,7 @@ void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, c
 {
     int span = (*randomMaxDelta * 2) + 1;
     int delta = ((int) pseudoRandom(*t, span)) - *randomMaxDelta;
-    *result = value + delta;
+    *result = 0; // TODO:  value + delta;
 }
 
 static int mod(int v, int div)

@@ -46,6 +46,7 @@ typedef struct SwampCallStackEntry {
 typedef struct SwampCallStack {
     SwampCallStackEntry entries[MAX_CALL_STACK_COUNT];
     size_t count;
+    size_t maxCount;
 } SwampCallStack;
 
 #define DEBUGLOG_PARAMS 0
@@ -185,6 +186,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
 
     SwampCallStack temp_stack;
     temp_stack.count = 0;
+    temp_stack.maxCount = MAX_CALL_STACK_COUNT;
     SwampCallStack* stack = &temp_stack;
     SwampCallStackEntry* call_stack_entry = &stack->entries[0];
     call_stack_entry->func = f;
@@ -395,6 +397,9 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");
                 }
             } break;
+            case SwampOpcodeTailCall: {
+                pc = call_stack_entry->func->opcodes;
+            } break;
             case SwampOpcodeCall:
             case SwampOpcodeCallExternal: {
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
@@ -469,8 +474,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     call_stack_entry->pc = pc;
                     call_stack_entry->basePointer = bp;
 
+                    stack->count++;
+                    if (stack->count == stack->maxCount) {
+                        CLOG_ERROR("out of stack space");
+                    }
                     // Set new stack entry
-                    call_stack_entry = &stack->entries[++stack->count];
+                    call_stack_entry = &stack->entries[stack->count];
                     call_stack_entry->func = func;
                     call_stack_entry->pc = func->opcodes;
                     call_stack_entry->basePointer = basePointer;
@@ -664,12 +673,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 *targetRegister = *a != *b;
             } break;
 
-            case SwampOpcodeTailCall: {
-                // Arguments are not altered during the function execution
-                // so just set the PC.
-                pc = call_stack_entry->func->opcodes;
 
-            } break;
 
             case SwampOpcodeIntAdd: {
                 GET_OPERATOR_INT();

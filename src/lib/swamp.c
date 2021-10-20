@@ -41,7 +41,7 @@ typedef struct SwampCallStackEntry {
     MonotonicTimeNanoseconds debugBeforeTimeNs;
 } SwampCallStackEntry;
 
-#define MAX_CALL_STACK_COUNT (24)
+#define MAX_CALL_STACK_COUNT (16)
 
 typedef struct SwampCallStack {
     SwampCallStackEntry entries[MAX_CALL_STACK_COUNT];

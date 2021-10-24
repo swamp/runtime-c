@@ -8,8 +8,24 @@
 #include <swamp-runtime/dynamic_memory.h>
 #include <swamp-runtime/stack_memory.h>
 #include <swamp-runtime/static_memory.h>
+#include <monotonic-time/monotonic_time.h>
 
 struct SwtiChunk;
+struct SwampFunc;
+
+typedef struct SwampCallStackEntry {
+    const uint8_t* pc;
+    const uint8_t* basePointer;
+    const struct SwampFunc* func;
+    MonotonicTimeNanoseconds debugBeforeTimeNs;
+} SwampCallStackEntry;
+
+typedef struct SwampCallStack {
+    SwampCallStackEntry* entries;
+    size_t count;
+    size_t maxCount;
+} SwampCallStack;
+
 
 typedef struct SwampMachineContext {
     SwampStackMemory stackMemory;
@@ -19,6 +35,7 @@ typedef struct SwampMachineContext {
     uint8_t* tempResult;
     const struct SwtiChunk* typeInfo;
     void* userData;
+    SwampCallStack callStack;
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory, const struct SwtiChunk* typeInfo);

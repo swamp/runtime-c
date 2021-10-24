@@ -452,7 +452,7 @@ void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampC
     swampMaybeJust(result, 4, &v, sizeof(SwampInt32));
 }
 
-// __externalfn fill2d : { x : Int, y : Int } -> { width : Int, height : Int } -> Int -> { width : Int, height : Int }
+// __externalfn fill2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> Int -> { width : Int, height : Int }
 // -> Blob -> Blob
 void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                          SwampCoreSize2i* size, const SwampInt32* fillValue, const SwampCoreSize2i* fillSize,
@@ -486,7 +486,7 @@ void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, Swamp
         CLOG_ERROR("fill size is wrong");
     }
 
-    SwampBlob* newBlob = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
 
     tc_memcpy_octets(newBlob->octets, blob->octets, blob->octetCount);
     uint8_t* targetOctets = newBlob->octets + position->y * size->width + position->x;
@@ -496,7 +496,7 @@ void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, Swamp
         targetOctets += size->width;
     }
 
-    *result == newBlob;
+    *result = newBlob;
 }
 
 // __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
@@ -517,6 +517,9 @@ void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context,
         tempString[index++] = '\n';
         for (size_t x = 0; x < size->width; ++x) {
             uint8_t ch = blob->octets[size->width * y + x];
+            if (ch < 32) {
+                ch = '?';
+            }
             tempString[index++] = ch;
         }
     }

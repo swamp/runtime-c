@@ -34,20 +34,7 @@ typedef uint16_t SwampJumpOffset;
 // Stack
 // -------------------------------------------------------------
 
-typedef struct SwampCallStackEntry {
-    const uint8_t* pc;
-    const uint8_t* basePointer;
-    const SwampFunc* func;
-    MonotonicTimeNanoseconds debugBeforeTimeNs;
-} SwampCallStackEntry;
 
-#define MAX_CALL_STACK_COUNT (16)
-
-typedef struct SwampCallStack {
-    SwampCallStackEntry entries[MAX_CALL_STACK_COUNT];
-    size_t count;
-    size_t maxCount;
-} SwampCallStack;
 
 #define DEBUGLOG_PARAMS 0
 
@@ -184,10 +171,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     const uint8_t* pc = f->opcodes;
     const uint8_t* bp = context->bp;
 
-    SwampCallStack temp_stack;
-    temp_stack.count = 0;
-    temp_stack.maxCount = MAX_CALL_STACK_COUNT;
-    SwampCallStack* stack = &temp_stack;
+    SwampCallStack* stack = &context->callStack;
     SwampCallStackEntry* call_stack_entry = &stack->entries[0];
     call_stack_entry->func = f;
     call_stack_entry->pc = pc;

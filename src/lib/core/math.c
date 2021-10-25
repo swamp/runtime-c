@@ -82,11 +82,13 @@ static int fastAtan2(signed int x, signed int y)
     return degree;
 }
 
-static unsigned int pseudoRandom(unsigned int start, unsigned int modulus)
+static uint32_t pseudoRandom(uint64_t x)
 {
-    unsigned int value = (214013 * start + 2531011);
-    value = (value >> 16) & 0x7FFF;
-    return value % modulus;
+    x ^= x << 13;
+    x ^= x >> 7;
+    x ^= x << 17;
+
+    return (x >> 32) & 0x7FFFFFFF;
 }
 
 #define SWAMP_CORE_SIN_TABLE_MAX (256)
@@ -151,7 +153,7 @@ void swampCoreMathCos(SwampInt32* result, SwampMachineContext* context, const Sw
 
 void swampCoreMathRnd(SwampInt32* result, SwampMachineContext* context, const SwampInt32* basis, const SwampInt32* modulus)
 {
-    *result = (int) pseudoRandom(*basis, *modulus + 1);
+    *result = (int) pseudoRandom(*basis + *modulus * 5303);
 }
 
 void swampCoreMathATan(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* y, const SwampFixed32* x)
@@ -217,7 +219,7 @@ void swampCoreMathMetronome(SwampBool* result, SwampMachineContext* context, con
 void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* value, const SwampInt32* randomMaxDelta)
 {
     int span = (*randomMaxDelta * 2) + 1;
-    int delta = ((int) pseudoRandom(*t, span)) - *randomMaxDelta;
+    int delta = ((int) pseudoRandom(*t) % span) - *randomMaxDelta;
     *result = 0; // TODO:  value + delta;
 }
 

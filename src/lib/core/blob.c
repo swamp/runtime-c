@@ -499,6 +499,70 @@ void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, Swamp
     *result = newBlob;
 }
 
+
+// __externalfn drawWindow2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int }
+// -> Blob -> Blob
+void swampCoreBlobDrawWindow2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+                         SwampCoreSize2i* size, const SwampCoreSize2i* fillSize,
+                         const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+
+    // These checks are not really needed. You can just check the index, but this
+    // gives more valuable information about what went wrong.
+    if (position->x < 0 || position->x >= size->width) {
+        SWAMP_ERROR("position X is out of bounds %d %d", position->x, size->width);
+        return;
+    }
+
+    if (position->y < 0 || position->y >= size->height) {
+        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, size->height);
+        return;
+    }
+
+    int index = position->y * size->width + position->x;
+    if (index < 0 || index >= blob->octetCount) {
+        SWAMP_ERROR("position is out of octet count bounds %d %d", index, blob->octetCount);
+        return;
+    }
+
+    if (position->x + fillSize->width > size->width) {
+        CLOG_ERROR("fill size is wrong");
+    }
+
+    if (position->y + fillSize->height > size->height) {
+        CLOG_ERROR("fill size is wrong");
+    }
+
+    SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+
+    tc_memcpy_octets(newBlob->octets, blob->octets, blob->octetCount);
+    uint8_t* targetOctets = newBlob->octets + position->y * size->width + position->x;
+    *targetOctets = '+';
+    targetOctets = newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x;
+    *targetOctets = '+';
+    targetOctets = newBlob->octets + ( position->y  ) * size->width + position->x + fillSize->width - 1;
+    *targetOctets = '+';
+    targetOctets = newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x + fillSize->width - 1;
+    *targetOctets = '+';
+
+    for (size_t x = position->x+1; x < position->x + fillSize->width - 1; ++x) {
+        uint8_t* above = newBlob->octets + position->y * size->width + x;
+        *above = '-';
+        uint8_t* below = newBlob->octets + (position->y + fillSize->height - 1) * size->width + x;
+        *below = '-';
+    }
+
+    for (size_t y = position->y+1; y < position->y + fillSize->height -1; ++y) {
+        uint8_t* above = newBlob->octets + y * size->width + position->x;
+        *above = '|';
+        uint8_t* below = newBlob->octets + y * size->width + position->x + fillSize->width - 1;
+        *below = '|';
+    }
+
+    *result = newBlob;
+}
+
 // __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
 void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
                              const SwampBlob** _blob)
@@ -518,7 +582,7 @@ void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context,
         for (size_t x = 0; x < size->width; ++x) {
             uint8_t ch = blob->octets[size->width * y + x];
             if (ch < 32) {
-                ch = '?';
+                ch = '.';
             }
             tempString[index++] = ch;
         }
@@ -553,7 +617,8 @@ void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
         {"Blob.get2d", swampCoreBlobGet2d},           {"Blob.fromArray", swampCoreBlobFromArray},
         {"Blob.member", swampCoreBlobMember},
         {"Blob.any", swampCoreBlobAny},
-        {"Blob.fill2d", swampCoreBlobFill2d},
+        {"Blob.fill2d!", swampCoreBlobFill2d},
+        {"Blob.drawWindow2d!", swampCoreBlobDrawWindow2d},
         {"Blob.slice2d", swampCoreBlobSlice2d},
         {"Blob.make", swampCoreBlobMake},
     };

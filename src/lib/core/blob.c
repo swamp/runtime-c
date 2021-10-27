@@ -21,6 +21,29 @@ typedef struct BlobRect {
     SwampCorePosition2i position;
 } BlobRect;
 
+
+const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn)
+{
+    size_t typeIndex;
+    if (fn->type == SwampFunctionTypeCurry) {
+        const SwampCurryFunc* curry = (const SwampCurryFunc*) fn;
+        typeIndex = curry->typeIdIndex;
+    } else if (fn->type == SwampFunctionTypeInternal) {
+        const SwampFunc* internalFunc = (const SwampFunc*) fn;
+        typeIndex = internalFunc->typeIndex;
+    }
+
+    const SwtiType* functionType = swtiChunkTypeFromIndex(typeInfo, typeIndex);
+    if (functionType->type != SwtiTypeFunction) {
+        CLOG_ERROR("wrong type");
+    }
+    const SwtiFunctionType* funcType = (const SwtiFunctionType*) functionType;
+    const SwtiType* returnType = funcType->parameterTypes[funcType->parameterCount - 1];
+
+    return returnType;
+}
+
+
 void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
@@ -73,6 +96,26 @@ void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, co
     uint8_t* targetItemPointer = targetBlob->octets;
     for (size_t i = 0; i < array->count; ++i) {
         *targetItemPointer++ = *(const SwampInt32*) (((uint8_t*) array->value) + i * array->itemSize);
+    }
+
+    *result = targetBlob;
+}
+
+// __externalfn fromList : List Int -> Blob
+void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, const SwampList** _list)
+{
+    const SwampList* list = *_list;
+
+    if (list->itemSize != sizeof(SwampInt32)) {
+        CLOG_ERROR("must be swamp integer array for blob");
+    }
+
+    SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, list->count);
+    uint8_t* targetItemPointer = targetBlob->octets;
+    for (size_t i = 0; i < list->count; ++i) {
+        SwampInt32 v = *(const SwampInt32*) (((uint8_t*) list->value) + i * list->itemSize);
+        uint8_t clampedV = (uint8_t)v;
+        *targetItemPointer++ = clampedV;
     }
 
     *result = targetBlob;
@@ -172,6 +215,70 @@ void swampCoreBlobIndexedMap(SwampBlob** result, SwampMachineContext* context, S
     swampContextDestroyTemp(&ownContext);
 
     *result = target;
+}
+
+
+// __externalfn map2d : ({ x : Int, y : Int } -> Int -> a) -> { width : Int, height : Int } -> Blob -> List a
+void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+                        const SwampCoreSize2i* blobSize, const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = blob->octets;
+
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = 0;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 1;
+    parameters.octetSize = sizeof(SwampInt32);
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    if (blobSize->width <= 0) {
+        CLOG_ERROR("width must be greater than zero");
+    }
+
+    const SwtiType* returnType = getReturnType(context->typeInfo, fn);
+
+    SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
+    SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
+    SwampList* preparedList = swampListAllocatePrepare(context->dynamicMemory, blob->octetCount, returnSize, returnAlign);
+    uint8_t* targetPointer = (uint8_t *) preparedList->value;
+
+    size_t width = blobSize->width;
+
+    for (size_t i = 0; i < blob->octetCount; ++i) {
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+        fnResult.expectedOctetSize = internalFunction->returnOctetSize;
+
+        SwampCorePosition2i blobPosition;
+        blobPosition.x = i % width;
+        blobPosition.y = i / width;
+
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &blobPosition, sizeof(SwampCorePosition2i));
+        pos += sizeof(SwampCorePosition2i);
+
+        SwampInt32 v = *sourceItemPointer;
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &v, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        parameters.octetSize = pos;
+        parameters.parameterCount = internalFunction->parameterCount;
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+
+        sourceItemPointer++;
+        tc_memcpy_octets(targetPointer, ownContext.bp, returnSize);
+        targetPointer += returnSize;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = preparedList;
 }
 
 // any : (Int -> Bool) -> Blob -> Bool
@@ -290,21 +397,8 @@ void swampCoreBlobFilterIndexedMap(SwampList** result, SwampMachineContext* cont
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
 
-    size_t typeIndex;
-    if (fn->type == SwampFunctionTypeCurry) {
-        const SwampCurryFunc* curry = (const SwampCurryFunc*) fn;
-        typeIndex = curry->typeIdIndex;
-    } else if (fn->type == SwampFunctionTypeInternal) {
-        const SwampFunc* internalFunc = (const SwampFunc*) fn;
-        typeIndex = internalFunc->typeIndex;
-    }
+    const SwtiType* returnType = getReturnType(context->typeInfo, fn);
 
-    const SwtiType* functionType = swtiChunkTypeFromIndex(context->typeInfo, typeIndex);
-    if (functionType->type != SwtiTypeFunction) {
-        CLOG_ERROR("wrong type");
-    }
-    const SwtiFunctionType* funcType = (const SwtiFunctionType*) functionType;
-    const SwtiType* returnType = funcType->parameterTypes[funcType->parameterCount - 1];
     SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
     SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
     uint8_t* temp = tc_malloc(returnSize * blob->octetCount);
@@ -615,12 +709,14 @@ void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
         {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.map", swampCoreBlobMap},
         {"Blob.indexedMap", swampCoreBlobIndexedMap}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
         {"Blob.get2d", swampCoreBlobGet2d},           {"Blob.fromArray", swampCoreBlobFromArray},
+        {"Blob.fromList", swampCoreBlobFromList},
         {"Blob.member", swampCoreBlobMember},
         {"Blob.any", swampCoreBlobAny},
         {"Blob.fill2d!", swampCoreBlobFill2d},
         {"Blob.drawWindow2d!", swampCoreBlobDrawWindow2d},
         {"Blob.slice2d", swampCoreBlobSlice2d},
         {"Blob.make", swampCoreBlobMake},
+        {"Blob.map2d", swampCoreBlobMap2d},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

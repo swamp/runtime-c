@@ -74,9 +74,9 @@
 
 // -------------------------------------------------------------
 // -------------------------------------------------------------
-#define SwampOpcodeIntShiftLeft 0xf8
-#define SwampOpcodeIntShiftRight 0xf9
-#define SwampOpcodeIntMod 0xfA
+#define SwampOpcodeIntShiftLeft 0x2f
+#define SwampOpcodeIntShiftRight 0x30
+#define SwampOpcodeIntRemainder 0x31
 
 
 // -------------------------------------------------------------

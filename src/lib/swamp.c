@@ -728,7 +728,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a >> b);
             } break;
-            case SwampOpcodeIntMod: {
+            case SwampOpcodeIntRemainder: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a % b);
             } break;

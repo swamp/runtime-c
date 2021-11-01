@@ -160,9 +160,9 @@ SWAMP_INLINE SwampInt32 readSourceIntStackPointerPos(const uint8_t** pc, const u
 #define SET_OPERATOR_RESULT_INT(intValue) *targetRegister = intValue;
 #define SET_OPERATOR_RESULT_BOOL(boolValue) *((SwampBool*) targetRegister) = boolValue;
 
-#define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*) target, source, size)
+#define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*) (target), source, size)
 
-#define swampMemoryMove(target, source, size) tc_memmove_octets((void*) target, source, size)
+#define swampMemoryMove(target, source, size) tc_memmove_octets((void*)(target), source, size)
 
 #define SWAMP_RUN_MEASURE_PERFORMANCE (0)
 
@@ -302,7 +302,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     }
                 }
                 SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampList), 8);
-                void* dynamicItemMemory = swampDynamicMemoryAlloc(context->dynamicMemory, sourceList->count+1, itemSize, itemAlign);
+                uint8_t* dynamicItemMemory = (uint8_t*) swampDynamicMemoryAlloc(context->dynamicMemory, sourceList->count+1, itemSize, itemAlign);
                 swampMemoryCopy(dynamicItemMemory, sourceItem, itemSize);
                 swampMemoryCopy(dynamicItemMemory + itemSize, sourceList->value, sourceList->count * itemSize);
                 newList->value = dynamicItemMemory;

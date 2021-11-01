@@ -12,7 +12,7 @@
 
 void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
-    CLOG_INFO("log: %s", (*value)->characters);
+    CLOG_OUTPUT("log: %s", (*value)->characters);
 }
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
@@ -22,7 +22,7 @@ void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, co
 #define MaxBufSize (8*1024)
     char buf[MaxBufSize];
 
-    CLOG_INFO("log: %s", swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
+    CLOG_OUTPUT("log: %s", swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
 }
 
 

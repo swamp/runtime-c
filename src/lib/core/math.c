@@ -223,8 +223,11 @@ void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, c
     *result = 0; // TODO:  value + delta;
 }
 
-static int mod(int v, int div)
+// Euclidean Modulus
+// Modular arithmetic https://en.wikipedia.org/wiki/Modular_arithmetic
+static int modulus(int v, int div)
 {
+    /* Alternative implementation:
     if (div < 0) {
         div = -div;
     }
@@ -232,23 +235,29 @@ static int mod(int v, int div)
     if (ret < 0) {
         ret += div;
     }
+
     return ret;
+    */
+
+    return ((v % div) + div) % div;
+
 }
 
 
 // Same as in C99. Remainder, not euclidean mod. Negative numbers return negative results.
+// Sometimes referred to as 'Truncated'.
 void swampCoreMathRemainderBy(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value)
 {
     if (*divider == 0) {
         SWAMP_LOG_ERROR("Error remainderBy can not handle 0");
     }
 
-    int remainder = mod(*value, *divider);
+    int remainder = *value % *divider;
 
     *result = remainder;
 }
 
-// Euclidean mod. Always returns positive results.
+// Euclidean modulus. Always returns positive results. Sometimes referred to as 'Floored'.
 void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value)
 {
     if (*divider == 0) {
@@ -257,7 +266,7 @@ void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const Sw
         return;
     }
 
-    int remainder = mod(*value, *divider);
+    int remainder = modulus(*value, *divider);
 
     *result = remainder;
 }

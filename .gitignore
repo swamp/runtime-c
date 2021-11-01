@@ -7,3 +7,7 @@ bin/
 deps/
 .cmake/
 .idea/
+cmake-build-*/
+release*/
+debug/
+build/

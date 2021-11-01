@@ -141,7 +141,9 @@ const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const S
     SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampList), 8);
     uint8_t* itemArray = swampDynamicMemoryAlloc(self, a->count + b->count, a->itemSize, a->itemAlign);
     tc_memcpy_octets(itemArray, a->value, a->count * a->itemSize);
-    tc_memcpy_octets(itemArray + a->count * a->itemSize, b->value, b->count * b->itemSize);
+    uint8_t* nextPointer = itemArray + a->count * a->itemSize;
+    size_t bTotalSize = b->count * b->itemSize;
+    tc_memcpy_octets(nextPointer, b->value, bTotalSize);
 
     newList->itemSize = a->itemSize;
     newList->itemAlign = a->itemAlign;

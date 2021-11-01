@@ -291,18 +291,24 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             case SwampOpcodeListConj: {
-                SwampListReference* target = (SwampListReference*) readTargetStackPointerPos(&pc, bp);
-                const SwampListReference sourceList = (const SwampListReference) readSourceStackPointerPos(&pc, bp);
+                SwampListReferenceData target = (SwampListReferenceData) readTargetStackPointerPos(&pc, bp);
+                const SwampListReference sourceList = *(const SwampListReferenceData) readSourceStackPointerPos(&pc, bp);
                 const void* sourceItem = readSourceStackPointerPos(&pc, bp);
-                size_t range = readShortRange(&pc);
-
-                SwampList* newList = swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampList), 8);
-                void* dynamicItemMemory = swampDynamicMemoryAlloc(context->dynamicMemory, 1, range, sourceList->itemAlign);
-                swampMemoryCopy(dynamicItemMemory, sourceItem, range);
+                size_t itemSize = readShortRange(&pc); // This is needed since sourceList can be [] without specified itemSize
+                size_t itemAlign = readAlign(&pc);
+                if (sourceList->count != 0) {
+                    if (itemSize != sourceList->itemSize || itemAlign != sourceList->itemAlign) {
+                        CLOG_ERROR("wrong source list")
+                    }
+                }
+                SwampList* newList = (SwampList*) swampDynamicMemoryAlloc(context->dynamicMemory, 1, sizeof(SwampList), 8);
+                void* dynamicItemMemory = swampDynamicMemoryAlloc(context->dynamicMemory, sourceList->count+1, itemSize, itemAlign);
+                swampMemoryCopy(dynamicItemMemory, sourceItem, itemSize);
+                swampMemoryCopy(dynamicItemMemory + itemSize, sourceList->value, sourceList->count * itemSize);
                 newList->value = dynamicItemMemory;
                 newList->count = sourceList->count + 1;
-                newList->itemAlign = sourceList->itemAlign;
-                newList->itemSize = sourceList->itemSize;
+                newList->itemAlign = itemAlign;
+                newList->itemSize = itemSize;
 
                 *target = newList;
             } break;

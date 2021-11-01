@@ -28,3 +28,19 @@ SwampMemoryPosition swampExecutePrepare(const SwampFunction* func, const void* b
 
     CLOG_ERROR("unknown function");
 }
+
+
+int swampGetFunc(const SwampFunction* fn, const SwampFunc** outFn)
+{
+    if (fn->type == SwampFunctionTypeCurry) {
+        const SwampCurryFunc* curry = (SwampCurryFunc*) fn;
+        *outFn = curry->curryFunction;
+    } else if (fn->type == SwampFunctionTypeInternal) {
+        *outFn = (const SwampFunc*) fn;
+    } else {
+        CLOG_ERROR("unknown function type")
+        return -1;
+    }
+
+    return 0;
+}

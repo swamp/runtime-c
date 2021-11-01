@@ -53,29 +53,33 @@ void swampCoreListLength(SwampInt32 * result, SwampMachineContext* context, cons
 
 
 // (a -> b) -> List a -> List b
-void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFunc** _fn, const SwampList** _list)
+void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
-    const SwampFunc* fn = *_fn;
+    const SwampFunction* fn = *_fn;
     const uint8_t* sourceItemPointer = list->value;
 
     SwampResult fnResult;
-    fnResult.expectedOctetSize = fn->returnOctetSize;
 
     SwampParameters parameters;
-    parameters.parameterCount = 1;
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
     swampContextCreateTemp(&ownContext, context);
 
-    SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, fn->returnOctetSize, fn->returnAlign);
+    const SwampFunc* realFunc;
+    swampGetFunc(fn, &realFunc);
+    SwampList* target = swampListAllocatePrepare(context->dynamicMemory, list->count, realFunc->returnOctetSize, realFunc->returnAlign);
     uint8_t* targetItemPointer = (uint8_t*)target->value;
     for (size_t i = 0; i < list->count; ++i) {
         swampContextReset(&ownContext);
-        tc_memcpy_octets(ownContext.bp + fn->returnOctetSize, sourceItemPointer, list->itemSize);
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &realFunc);
+        fnResult.expectedOctetSize = realFunc->returnOctetSize;
+        parameters.parameterCount = realFunc->parameterCount;
+        swampMemoryPositionAlign(&pos, list->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
         //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
-        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        swampRun(&fnResult, &ownContext, realFunc, parameters, 1);
         tc_memcpy_octets(targetItemPointer, ownContext.bp, target->itemSize);
         sourceItemPointer += list->itemSize;
         targetItemPointer += target->itemSize;
@@ -101,14 +105,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
 
 
     const SwampFunc* swampFn = 0;
-    if (fn->type == SwampFunctionTypeCurry) {
-        const SwampCurryFunc* curry = (SwampCurryFunc*) fn;
-        swampFn = curry->curryFunction;
-    } else if (fn->type == SwampFunctionTypeInternal) {
-        swampFn = (const SwampFunc*) fn;
-    } else {
-        CLOG_ERROR("unknown function type")
-    }
+    swampGetFunc(fn, &swampFn);
 
     SwampResult fnResult;
     fnResult.expectedOctetSize = swampFn->returnOctetSize;

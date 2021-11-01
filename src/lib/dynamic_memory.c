@@ -65,6 +65,10 @@ size_t swampDynamicMemoryAllocatedSize(const SwampDynamicMemory* self)
 
 void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t itemSize, size_t align)
 {
+    if (align == 0 || align > 8) {
+        CLOG_ERROR("illegal align")
+    }
+
     size_t pos = (uintptr_t)self->p - (uintptr_t)self->memory;
     size_t rest = pos % align;
     if (rest != 0) {
@@ -72,11 +76,13 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
         //pos += align - rest;
     }
 
+
     size_t total = itemCount * itemSize;
     if (total > 256 * 1024) {
         CLOG_SOFT_ERROR("too large allocation %d", total);
     }
-    if (self->p + (int)total - self->memory > (long)self->maxAllocatedSize) {
+    size_t usedSize = (uintptr_t )self->p - (uintptr_t )self->memory;
+    if (usedSize + total > (long)self->maxAllocatedSize) {
         SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %d items of %d at %d of %d", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;
     }

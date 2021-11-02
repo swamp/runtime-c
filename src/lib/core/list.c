@@ -91,9 +91,58 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
 }
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
-void swampCoreListMap2(void)
+void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _lista, const SwampList** _listb)
 {
+    const SwampList* listA = *_lista;
+    const SwampList* listB = *_listb;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceAItemPointer = listA->value;
+    const uint8_t* sourceBItemPointer = listB->value;
 
+    size_t countToUse = listA->count;
+    if (listB->count < countToUse) {
+        countToUse = listB->count;
+    }
+
+    SwampResult fnResult;
+
+    SwampParameters parameters;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    const SwampFunc* realFunc;
+    swampGetFunc(fn, &realFunc);
+    parameters.octetSize = realFunc->returnOctetSize;
+    SwampList* target = swampListAllocatePrepare(context->dynamicMemory, countToUse, realFunc->returnOctetSize, realFunc->returnAlign);
+
+    uint8_t* targetItemPointer = (uint8_t*)target->value;
+    for (size_t i = 0; i < countToUse; ++i) {
+        swampContextReset(&ownContext);
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &realFunc);
+        fnResult.expectedOctetSize = realFunc->returnOctetSize;
+        parameters.parameterCount = realFunc->parameterCount;
+
+        swampMemoryPositionAlign(&pos, listA->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceAItemPointer, listA->itemSize);
+        pos += listA->itemSize;
+
+        swampMemoryPositionAlign(&pos, listB->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceBItemPointer, listB->itemSize);
+        pos += listB->itemSize;
+
+        //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, realFunc, parameters, 1);
+
+        tc_memcpy_octets(targetItemPointer, ownContext.bp, target->itemSize);
+        sourceAItemPointer += listA->itemSize;
+        sourceBItemPointer += listB->itemSize;
+        targetItemPointer += target->itemSize;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = target;
 }
 
 // indexedMap: (Int -> a -> b) -> List a -> List b
@@ -355,6 +404,7 @@ void* swampCoreListFindFunction(const char* fullyQualifiedName)
         {"List.isEmpty", swampCoreListIsEmpty},
         {"List.length", swampCoreListLength},
         {"List.map", swampCoreListMap},
+        {"List.map2", swampCoreListMap2},
         {"List.indexedMap", swampCoreListIndexedMap},
         {"List.filterMap", swampCoreListFilterMap},
         {"List.foldl", swampCoreListFoldl},

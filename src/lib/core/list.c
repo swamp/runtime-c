@@ -11,6 +11,7 @@
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/core/maybe.h>
 
 void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
@@ -192,21 +193,119 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
 }
 
 // any : (a -> Bool) -> List a -> Bool
-void swampCoreListAny(void)
+void swampCoreListAny(SwampBool* result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
+    const SwampList* list = *_list;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = list->value;
 
+    SwampResult fnResult;
+
+    SwampParameters parameters;
+    parameters.octetSize = list->itemSize;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    const SwampFunc* realFunc;
+    swampGetFunc(fn, &realFunc);
+
+    if (realFunc->returnOctetSize != sizeof(SwampBool)) {
+        CLOG_ERROR("List.any internal error sizeof");
+    }
+
+    SwampBool found = 0;
+
+    for (size_t i = 0; i < list->count; ++i) {
+        swampContextReset(&ownContext);
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &realFunc);
+        fnResult.expectedOctetSize = realFunc->returnOctetSize;
+        parameters.parameterCount = realFunc->parameterCount;
+        swampMemoryPositionAlign(&pos, list->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
+        //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, realFunc, parameters, 1);
+        SwampBool truthful = *(const SwampBool*) (ownContext.bp);
+        if (truthful) {
+            found = 1;
+            break;
+        }
+
+        sourceItemPointer += list->itemSize;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = found;
 }
 
-//find : (a -> Bool) -> List a -> Maybe a
-void swampCoreListFind(void)
+// find : (a -> Bool) -> List a -> Maybe a
+void swampCoreListFind(SwampMaybe * result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
+    const SwampList* list = *_list;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = list->value;
 
+    SwampResult fnResult;
+
+    SwampParameters parameters;
+    parameters.octetSize = list->itemSize;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    const SwampFunc* realFunc;
+    swampGetFunc(fn, &realFunc);
+
+    if (realFunc->returnOctetSize != sizeof(SwampBool)) {
+        CLOG_ERROR("List.any internal error sizeof");
+    }
+
+    SwampBool found = 0;
+
+    for (size_t i = 0; i < list->count; ++i) {
+        swampContextReset(&ownContext);
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &realFunc);
+        fnResult.expectedOctetSize = realFunc->returnOctetSize;
+        parameters.parameterCount = realFunc->parameterCount;
+        swampMemoryPositionAlign(&pos, list->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
+        //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, realFunc, parameters, 1);
+        SwampBool truthful = *(const SwampBool*) (ownContext.bp);
+        if (truthful) {
+            found = 1;
+            swampMaybeJust(result, list->itemAlign, sourceItemPointer, list->itemSize);
+            break;
+        }
+
+        sourceItemPointer += list->itemSize;
+    }
+
+    if (!found) {
+        swampMaybeNothing(result);
+    }
+
+    swampContextDestroyTemp(&ownContext);
 }
 
 //  member : a -> List a -> Bool
-void swampCoreListMember(void)
+void swampCoreListMember(SwampBool* result, SwampMachineContext* context, const void* data, const SwampList** _list)
 {
+    const SwampList* list = *_list;
+    const uint8_t* sourceItemPointer = list->value;
 
+    SwampBool found = 0;
+
+    for (size_t i = 0; i < list->count; ++i) {
+        if (tc_memcmp(sourceItemPointer, data, list->itemSize) == 0) {
+            found = 1;
+            break;
+        }
+        sourceItemPointer += list->itemSize;
+    }
+
+    *result = found;
 }
 
 // filterMap : (a -> Maybe b) -> List a -> List b
@@ -222,7 +321,7 @@ void swampCoreListFilterMap2(void)
 }
 
 // filter : (a -> Bool) -> List a -> List a
-void swampCoreListFiltervoid(void)
+void swampCoreListFilter(void)
 {
 
 }
@@ -409,6 +508,9 @@ void* swampCoreListFindFunction(const char* fullyQualifiedName)
         {"List.filterMap", swampCoreListFilterMap},
         {"List.foldl", swampCoreListFoldl},
         {"List.foldlstop", swampCoreListFoldlStop},
+        {"List.any", swampCoreListAny},
+        {"List.find", swampCoreListFind},
+        {"List.member", swampCoreListMember},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

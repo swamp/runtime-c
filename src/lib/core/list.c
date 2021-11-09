@@ -161,7 +161,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
     fnResult.expectedOctetSize = swampFn->returnOctetSize;
 
     SwampParameters parameters;
-    parameters.parameterCount = 2;
+    parameters.parameterCount = swampFn->parameterCount;
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
@@ -181,7 +181,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
         swampMemoryPositionAlign(&pos, list->itemAlign);
         tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
         //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
-        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         tc_memcpy_octets(targetItemPointer, ownContext.bp, targetListB->itemSize);
         sourceItemPointer += list->itemSize;
         targetItemPointer += targetListB->itemSize;

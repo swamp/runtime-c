@@ -15,6 +15,11 @@ void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const
     CLOG_OUTPUT("log: %s", (*value)->characters);
 }
 
+void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
+{
+    CLOG_ERROR("panic: %s", (*value)->characters);
+}
+
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
@@ -30,8 +35,8 @@ void swampCoreDebugToString(SwampString** result, SwampMachineContext* context, 
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
-#define MaxBufSize (8*1024)
-    char buf[MaxBufSize];
+#define MaxBufSize (128*1024)
+    static char buf[MaxBufSize];
 
     swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize);
 
@@ -44,6 +49,7 @@ void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
         {"Debug.log", swampCoreDebugLog},
         {"Debug.logAny", swampCoreDebugLogAny},
         {"Debug.toString", swampCoreDebugToString},
+        {"Debug.panic", swampCoreDebugPanic}
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

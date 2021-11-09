@@ -121,7 +121,7 @@ void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, con
     *result = targetBlob;
 }
 
-// map : (a -> b) -> List a -> List b
+// map : (Int -> Int) -> List a -> List b
 void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunc** _fn, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -657,6 +657,57 @@ void swampCoreBlobDrawWindow2d(SwampBlob** result, SwampMachineContext* context,
     *result = newBlob;
 }
 
+
+// __externalfn copy2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int } -> Blob -> Blob -> Blob
+void swampCoreBlobCopy2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+                               SwampCoreSize2i* targetBlobSize, const SwampCoreSize2i* sourceBlobSize, const SwampBlob** _sourceBlob,
+                               const SwampBlob** _blob)
+{
+    const SwampBlob* targetBlob = *_blob;
+    const SwampBlob* sourceBlob = *_sourceBlob;
+
+    BlobRect targetRect;
+    targetRect.position = *position;
+    targetRect.size = *sourceBlobSize;
+
+    // These checks are not really needed. You can just check the index, but this
+    // gives more valuable information about what went wrong.
+    if (position->x < 0 || position->x >= targetBlobSize->width) {
+        SWAMP_ERROR("position X is out of bounds %d %d", position->x, targetBlobSize->width);
+        return;
+    }
+
+    if (position->y < 0 || position->y >= targetBlobSize->height) {
+        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, targetBlobSize->height);
+        return;
+    }
+
+    int index = position->y * targetBlobSize->width + position->x;
+    if (index < 0 || index >= targetBlob->octetCount) {
+        SWAMP_ERROR("position is out of octet count bounds %d %d", index, sourceBlob->octetCount);
+        return;
+    }
+
+    if (position->x + sourceBlobSize->width > targetBlobSize->width) {
+        CLOG_ERROR("fill size is wrong");
+    }
+
+    if (position->y + sourceBlobSize->height > targetBlobSize->height) {
+        CLOG_ERROR("fill size is wrong");
+    }
+
+    SwampBlob* newBlob = targetBlob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+
+    for (size_t y = 0; y < sourceBlobSize->height; ++y) {
+        const uint8_t* sourceOctets = sourceBlob->octets + y * sourceBlobSize->width;
+        uint8_t* targetOctets = newBlob->octets + (y + targetRect.position.y) * targetBlobSize->width + targetRect.position.x;
+        tc_memcpy_octets(targetOctets, sourceOctets, sourceBlobSize->width);
+    }
+
+    *result = newBlob;
+}
+
+
 // __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
 void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
                              const SwampBlob** _blob)
@@ -714,6 +765,7 @@ void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
         {"Blob.any", swampCoreBlobAny},
         {"Blob.fill2d!", swampCoreBlobFill2d},
         {"Blob.drawWindow2d!", swampCoreBlobDrawWindow2d},
+        {"Blob.copy2d!", swampCoreBlobCopy2d},
         {"Blob.slice2d", swampCoreBlobSlice2d},
         {"Blob.make", swampCoreBlobMake},
         {"Blob.map2d", swampCoreBlobMap2d},

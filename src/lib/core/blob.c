@@ -121,15 +121,15 @@ void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, con
     *result = targetBlob;
 }
 
-// map : (Int -> Int) -> List a -> List b
-void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunc** _fn, const SwampBlob** _blob)
+// map : (a -> b) -> List a -> List b
+void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
-    const SwampFunc* fn = *_fn;
+    const SwampFunction* fn = *_fn;
     const uint8_t* sourceItemPointer = blob->octets;
 
     SwampResult fnResult;
-    fnResult.expectedOctetSize = fn->returnOctetSize;
+
 
     SwampParameters parameters;
     parameters.parameterCount = 1;
@@ -379,7 +379,7 @@ void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, cons
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory,
                                                      sliceRect.size.width * sliceRect.size.height);
 
-    uint8_t* targetOctets = targetBlob->octets;
+    uint8_t* targetOctets = (uint8_t*) targetBlob->octets;
 
     for (size_t y = sliceRect.position.y; y < lowerSide; ++y) {
         const uint8_t* source = blob->octets + y * blobSize->width + sliceRect.position.x;
@@ -391,7 +391,7 @@ void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, cons
 }
 
 // __externalfn filterIndexedMap : (Int -> Int -> Maybe a) -> Blob -> List a
-void swampCoreBlobFilterIndexedMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
                                    const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;

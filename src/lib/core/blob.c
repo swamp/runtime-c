@@ -44,6 +44,31 @@ const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn
 }
 
 
+const SwtiType * getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
+{
+    const SwtiType* maybeReturnType = getReturnType(typeInfo, fn);
+    if (maybeReturnType->type != SwtiTypeCustom) {
+        CLOG_ERROR("must be a maybe type to return");
+    }
+
+    const SwtiCustomType* customType = (const SwtiCustomType*) maybeReturnType;
+
+#if CONFIGURATION_DEBUG
+    if (!tc_str_equal(customType->internal.name, "Maybe")) {
+        CLOG_ERROR("must be a maybe type");
+    }
+#endif
+
+    const SwtiCustomTypeVariant* justType = &customType->variantTypes[1];
+#if CONFIGURATION_DEBUG
+    if (!tc_str_equal(justType->name, "Just")) {
+        CLOG_ERROR("must be a maybe type");
+    }
+#endif
+
+    return justType->fields[0].fieldType;
+}
+
 void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
@@ -121,8 +146,8 @@ void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, con
     *result = targetBlob;
 }
 
-// map : (a -> b) -> List a -> List b
-void swampCoreBlobMap(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
+// __externalfn mapToBlob : (Int -> Int) -> Blob -> Blob
+void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
@@ -168,8 +193,8 @@ void swampCoreBlobMap2(void)
 {
 }
 
-// __externalfn indexedMap : (Int -> Int -> Int) -> Blob -> Blob
-void swampCoreBlobIndexedMap(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
+// __externalfn indexedMapToBlob : (Int -> Int -> Int) -> Blob -> Blob
+void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
                              const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -397,7 +422,8 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
 
-    const SwtiType* returnType = getReturnType(context->typeInfo, fn);
+    const SwtiType* returnType = getReturnMaybeType(context->typeInfo, fn);
+    const SwtiType* maybeReturnType = getReturnType(context->typeInfo, fn);
 
     SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
     SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
@@ -409,7 +435,8 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
 
     swampContextCreateTemp(&ownContext, context);
     SwampResult fnResult;
-    fnResult.expectedOctetSize = returnSize;
+    SwtiMemorySize returnSizeWithMaybe = swtiGetMemorySize(maybeReturnType);
+    fnResult.expectedOctetSize = returnSizeWithMaybe;
 
     SwampParameters parameters;
 
@@ -424,6 +451,76 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
         swampMemoryPositionAlign(&pos, 4);
         SwampInt32 indexValue = i;
         tc_memcpy_octets(argumentPointer + pos, &indexValue, sizeof(SwampInt32));
+
+        SwampInt32 intValue = currentOctet;
+        swampMemoryPositionAlign(&pos, 4);
+        tc_memcpy_octets(argumentPointer + pos, &intValue, sizeof(SwampInt32));
+
+        parameters.parameterCount = internalFunction->parameterCount;
+        parameters.octetSize = sizeof(SwampInt32) + sizeof(SwampInt32);
+
+        int runErr = swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+        if (runErr < 0) {
+            CLOG_ERROR("couldn't run %d", runErr);
+            return;
+        }
+
+        if (swampMaybeIsJust(ownContext.bp)) {
+            const void* sourceData = swampMaybeJustGetValue(ownContext.bp, returnAlign);
+            tc_memcpy_octets(targetPointer, sourceData, returnSize);
+            targetPointer += returnSize;
+            resultCount++;
+        }
+    }
+
+    const SwampList* list = swampListAllocate(context->dynamicMemory, temp, resultCount, returnSize, returnAlign);
+
+    tc_free(temp);
+
+    *result = list;
+}
+
+
+// __externalvarfn filterIndexedMap2d : ({ x : Int, y : Int } -> Int -> Maybe a) -> { width : Int, height : Int } -> Blob -> List a
+void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+                                   const SwampCoreSize2i* blobSize, const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+    const SwampFunction* fn = *_fn;
+
+    const SwtiType* returnType = getReturnMaybeType(context->typeInfo, fn);
+    const SwtiType* maybeReturnType = getReturnType(context->typeInfo, fn);
+
+    SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
+    SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
+    uint8_t* temp = tc_malloc(returnSize * blob->octetCount);
+    size_t resultCount = 0;
+    uint8_t* targetPointer = temp;
+
+    SwampMachineContext ownContext;
+
+    swampContextCreateTemp(&ownContext, context);
+    SwampResult fnResult;
+
+    SwtiMemorySize returnSizeWithMaybe = swtiGetMemorySize(maybeReturnType);
+    fnResult.expectedOctetSize = returnSizeWithMaybe;
+
+    SwampParameters parameters;
+
+    for (size_t i = 0; i < blob->octetCount; ++i) {
+        uint8_t currentOctet = blob->octets[i];
+
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+
+        uint8_t* argumentPointer = ownContext.bp;
+
+        SwampCorePosition2i position;
+        position.x = i % blobSize->width;
+        position.y = i / blobSize->width;
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(argumentPointer + pos, &position, sizeof(SwampCorePosition2i));
+        pos += sizeof(SwampCorePosition2i);
 
         SwampInt32 intValue = currentOctet;
         swampMemoryPositionAlign(&pos, 4);
@@ -757,8 +854,9 @@ void swampCoreBlobMake(SwampBlob** result, SwampMachineContext* context, const S
 void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.map", swampCoreBlobMap},
-        {"Blob.indexedMap", swampCoreBlobIndexedMap}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
+        {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.mapToBlob", swampCoreBlobMapToBlob},
+        {"Blob.indexedMapToBlob", swampCoreBlobIndexedMapToBlob}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
+        {"Blob.filterIndexedMap2d", swampCoreBlobFilterIndexedMap2d},
         {"Blob.get2d", swampCoreBlobGet2d},           {"Blob.fromArray", swampCoreBlobFromArray},
         {"Blob.fromList", swampCoreBlobFromList},
         {"Blob.member", swampCoreBlobMember},

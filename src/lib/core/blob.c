@@ -243,6 +243,54 @@ void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* cont
 }
 
 
+void swampCoreBlobIndexedMapToBlobMutable(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
+                                   const SwampBlob** _blob)
+{
+    const SwampBlob* blob = *_blob;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = blob->octets;
+
+    SwampResult fnResult;
+    fnResult.expectedOctetSize = 0;
+
+    SwampParameters parameters;
+    parameters.parameterCount = 1;
+    parameters.octetSize = sizeof(SwampInt32);
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    uint8_t* targetItemPointer = blob->octets;
+    for (size_t i = 0; i < blob->octetCount; ++i) {
+        const SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+        fnResult.expectedOctetSize = internalFunction->returnOctetSize;
+        SwampInt32 index = i;
+
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &index, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        SwampInt32 v = *sourceItemPointer;
+        swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
+        tc_memcpy_octets(ownContext.bp + pos, &v, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
+
+        parameters.octetSize = pos;
+        parameters.parameterCount = internalFunction->parameterCount;
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+        *targetItemPointer = (uint8_t) (*(SwampInt32*) ownContext.bp);
+        sourceItemPointer++;
+        targetItemPointer++;
+    }
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = blob;
+}
+
+
+
 // __externalfn map2d : ({ x : Int, y : Int } -> Int -> a) -> { width : Int, height : Int } -> Blob -> List a
 void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
                         const SwampCoreSize2i* blobSize, const SwampBlob** _blob)
@@ -451,10 +499,12 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
         swampMemoryPositionAlign(&pos, 4);
         SwampInt32 indexValue = i;
         tc_memcpy_octets(argumentPointer + pos, &indexValue, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
 
         SwampInt32 intValue = currentOctet;
         swampMemoryPositionAlign(&pos, 4);
         tc_memcpy_octets(argumentPointer + pos, &intValue, sizeof(SwampInt32));
+        pos += sizeof(SwampInt32);
 
         parameters.parameterCount = internalFunction->parameterCount;
         parameters.octetSize = sizeof(SwampInt32) + sizeof(SwampInt32);
@@ -856,6 +906,7 @@ void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
     SwampBindingInfo info[] = {
         {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.mapToBlob", swampCoreBlobMapToBlob},
         {"Blob.indexedMapToBlob", swampCoreBlobIndexedMapToBlob}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
+        {"Blob.indexedMapToBlob!", swampCoreBlobIndexedMapToBlobMutable},
         {"Blob.filterIndexedMap2d", swampCoreBlobFilterIndexedMap2d},
         {"Blob.get2d", swampCoreBlobGet2d},           {"Blob.fromArray", swampCoreBlobFromArray},
         {"Blob.fromList", swampCoreBlobFromList},

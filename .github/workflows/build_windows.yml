@@ -3,10 +3,15 @@ on: [push]
 jobs:
   build:
     name: Build Windows
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: "Update windows SDK"
+        uses: fbactions/setup-winsdk@v1
+        with:
+          winsdk-build-version: 19041
 
       - name: install Go
         uses: actions/setup-go@v2
@@ -30,11 +35,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DEPS_PAT }}
 
       - name: build
-        run: cmake .
+        run: cmake . -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE="Release" -DCMAKE_SYSTEM_VERSION="10.0.19041.0"
         working-directory: src/
 
       - name: Build extension
         run: msbuild swamp-runtime.sln /property:Configuration=Release /t:Rebuild
+        working-directory: src/
 
       - uses: actions/upload-artifact@v2
         with:

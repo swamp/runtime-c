@@ -62,7 +62,7 @@ void swampCoreListRange(SwampList** result, SwampMachineContext* context, const 
     SwampList* mutable = swampListAllocatePrepare(context->dynamicMemory, length, sizeof(SwampInt32), sizeof(SwampInt32));
 
     SwampInt32* target = *(SwampInt32**) mutable->value;
-    for (size_t i=*start; i<=end; ++i) {
+    for (size_t i=*start; i<=*end; ++i) {
         *target = i;
         target++;
     }

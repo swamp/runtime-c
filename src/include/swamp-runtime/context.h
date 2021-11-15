@@ -33,6 +33,7 @@ typedef struct SwampMachineContext {
     SwampDynamicMemory* dynamicMemory;
     const SwampStaticMemory* constantStaticMemory;
     uint8_t* tempResult;
+    size_t tempResultSize;
     const struct SwtiChunk* typeInfo;
     void* userData;
     SwampCallStack callStack;

@@ -12,6 +12,8 @@
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/core/maybe.h>
+#include <swamp-typeinfo/typeinfo.h>
+#include <swamp-typeinfo/chunk.h>
 
 void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
@@ -52,6 +54,36 @@ void swampCoreListLength(SwampInt32 * result, SwampMachineContext* context, cons
     *result = (*_list)->count;
 }
 
+// range : Int -> Int -> List Int
+void swampCoreListRange(SwampList** result, SwampMachineContext* context, const SwampInt32* start, const SwampInt32* end)
+{
+    size_t length = *end - *start + 1;
+
+    SwampList* mutable = swampListAllocatePrepare(context->dynamicMemory, length, sizeof(SwampInt32), sizeof(SwampInt32));
+
+    SwampInt32* target = *(SwampInt32**) mutable->value;
+    for (size_t i=*start; i<=end; ++i) {
+        *target = i;
+        target++;
+    }
+
+    *result = mutable;
+}
+
+// range0 : Int -> List Int
+void swampCoreListRange0(SwampList** result, SwampMachineContext* context, const SwampInt32* length)
+{
+    SwampList* mutable = swampListAllocatePrepare(context->dynamicMemory, *length, sizeof(SwampInt32), sizeof(SwampInt32));
+
+    SwampInt32* target = (SwampInt32*) mutable->value;
+    for (size_t i = 0; i < *length; ++i) {
+        *target = i;
+        target++;
+    }
+
+    *result = mutable;
+}
+
 
 // (a -> b) -> List a -> List b
 void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
@@ -90,6 +122,86 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
 
     *result = target;
 }
+
+
+// concatMap : (a -> List b) -> List a -> List b
+void swampCoreListConcatMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+{
+    const SwampList* list = *_list;
+    const SwampFunction* fn = *_fn;
+    const uint8_t* sourceItemPointer = list->value;
+
+    SwampResult fnResult;
+
+    SwampParameters parameters;
+
+    parameters.octetSize = list->itemSize;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+
+    const SwampFunc* realFunc;
+    swampGetFunc(fn, &realFunc);
+
+    parameters.octetSize = realFunc->returnOctetSize;
+    const SwtiType* realFuncType_ = swtiChunkTypeFromIndex(context->typeInfo, realFunc->typeIndex);
+    if (realFuncType_->type != SwtiTypeFunction) {
+        CLOG_ERROR("wrong function type")
+    }
+    const SwtiFunctionType* realFuncType = (const SwtiFunctionType *) realFuncType_;
+
+    const SwtiType* realFuncReturnType = swtiUnalias(realFuncType->parameterTypes[realFuncType->parameterCount-1]);
+
+    if (realFuncReturnType->type != SwtiTypeList) {
+        CLOG_ERROR("wrong function item type")
+    }
+
+    const SwtiListType* realFuncReturnTypeList = (const SwtiListType*)realFuncReturnType;
+    const SwtiType* itemType = realFuncReturnTypeList->itemType;
+    size_t itemMemorySize = swtiGetMemorySize(itemType);
+    size_t itemMemoryAlign = swtiGetMemoryAlign(itemType);
+
+    uint8_t* target = context->tempResult;
+    size_t maxCount = context->tempResultSize / itemMemorySize;
+    size_t count = 0;
+
+//
+    uint8_t* targetItemPointer = (uint8_t*)target;
+    for (size_t i = 0; i < list->count; ++i) {
+        swampContextReset(&ownContext);
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &realFunc);
+        fnResult.expectedOctetSize = realFunc->returnOctetSize;
+        parameters.parameterCount = realFunc->parameterCount;
+        swampMemoryPositionAlign(&pos, list->itemAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, list->itemSize);
+        //CLOG_INFO("calling for index %d, value:%d", i, *(const SwampInt32*)sourceItemPointer);
+        swampRun(&fnResult, &ownContext, realFunc, parameters, 1);
+
+
+        const SwampList** returnedList_ = (const SwampList**) ownContext.bp;
+        const SwampList* returnedList = *returnedList_;
+
+        if (returnedList->count != 0) {
+            if (count + returnedList->count < maxCount) {
+                if (returnedList ->itemSize != itemMemorySize) {
+                    CLOG_ERROR("wrong item size returned")
+                }
+                tc_memcpy_octets(targetItemPointer, returnedList->value, returnedList->count * itemMemorySize);
+                count += returnedList->count;
+                targetItemPointer += returnedList->count * itemMemorySize;
+            }
+        }
+
+        sourceItemPointer += list->itemSize;
+    }
+
+    SwampList* newList = swampListAllocate(context->dynamicMemory, target, count, itemMemorySize, itemMemoryAlign);
+
+    swampContextDestroyTemp(&ownContext);
+
+    *result = newList;
+}
+
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
 void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _lista, const SwampList** _listb)
@@ -345,11 +457,7 @@ void swampCoreListRemove2(void)
 
 }
 
-// concatMap : (a -> List b) -> List a -> List b
-void swampCoreListConcatMap(void)
-{
 
-}
 
 // concat : List (List a) -> List a
 void swampCoreListConcat(void)
@@ -357,12 +465,6 @@ void swampCoreListConcat(void)
 
 }
 
-
-// range : Int -> Int -> List Int
-void swampCoreListRange(void)
-{
-
-}
 
 void align(size_t* pos, size_t align)
 {
@@ -511,6 +613,9 @@ void* swampCoreListFindFunction(const char* fullyQualifiedName)
         {"List.any", swampCoreListAny},
         {"List.find", swampCoreListFind},
         {"List.member", swampCoreListMember},
+        {"List.range", swampCoreListRange},
+        {"List.range0", swampCoreListRange0},
+        {"List.concatMap", swampCoreListConcatMap},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

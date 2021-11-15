@@ -10,23 +10,22 @@ jobs:
 
       - name: install Go
         uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.3
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.4
-        with:
-          cmake-version: "3.18.x"
+      #- name: Setup cmake
+      #  uses: jwlawson/actions-setup-cmake@v1.4
+      #  with:
+      #    cmake-version: "3.18.x"
 
       - name: Use cmake
         run: cmake --version
 
-      - name: install deps
-        run: go get github.com/piot/deps/src/deps
-
       - name: deps fetch dependencies
-        run: deps fetch -m clone
+        run: go run github.com/piot/deps/src/deps@main fetch -m clone
         env:
           GITHUB_TOKEN: ${{ secrets.DEPS_PAT }}
 
@@ -35,7 +34,7 @@ jobs:
         working-directory: src/
 
       - name: Build extension
-        run: msbuild swamp-runtime.sln /t:Rebuild
+        run: msbuild swamp-runtime.sln /property:Configuration=Release /t:Rebuild
 
       - uses: actions/upload-artifact@v2
         with:

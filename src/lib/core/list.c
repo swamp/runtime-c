@@ -534,6 +534,61 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
     swampContextDestroyTemp(&ownContext);
 }
 
+
+// reduce : (a -> a -> a) -> List a -> a
+void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFunction*** _fn, const SwampList*** _list)
+{
+    const SwampList* list = **_list;
+    const SwampFunction* fn = **_fn;
+
+    size_t aAlign = list->itemAlign;
+    size_t aSize = list->itemSize;
+    if (aSize == 0) {
+        CLOG_ERROR("size is zero");
+    }
+
+    if (list->count == 0) {
+        CLOG_ERROR("sorry reduce is not supported with zero length lists");
+    }
+
+    const uint8_t* sourceItemPointer = list->value;
+
+    SwampMachineContext ownContext;
+    swampContextCreateTemp(&ownContext, context);
+    tc_memcpy_octets(ownContext.bp, sourceItemPointer, list->itemSize);
+    sourceItemPointer += aSize;
+
+    for (size_t i = 1; i < list->count; ++i) {
+        SwampFunc* internalFunction;
+        SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
+
+        SwampResult fnResult;
+        fnResult.expectedOctetSize = aSize;
+
+        SwampParameters parameters;
+        parameters.parameterCount = internalFunction->parameterCount;
+        parameters.octetSize = aSize + aSize;
+
+        swampMemoryPositionAlign(&pos, aAlign);
+        tc_memcpy_octets(ownContext.bp + pos, sourceItemPointer, aSize);
+        pos += aSize;
+
+        swampMemoryPositionAlign(&pos, aAlign);
+        tc_memcpy_octets(ownContext.bp + pos, ownContext.bp, aSize);
+        pos += aSize;
+
+
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
+        sourceItemPointer += aSize;
+    }
+
+    tc_memcpy_octets(result, ownContext.bp, aSize);
+
+    swampContextDestroyTemp(&ownContext);
+}
+
+
+
 // foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
 void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFunc*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
 {
@@ -610,6 +665,7 @@ void* swampCoreListFindFunction(const char* fullyQualifiedName)
         {"List.filterMap", swampCoreListFilterMap},
         {"List.foldl", swampCoreListFoldl},
         {"List.foldlstop", swampCoreListFoldlStop},
+        {"List.reduce", swampCoreListReduce},
         {"List.any", swampCoreListAny},
         {"List.find", swampCoreListFind},
         {"List.member", swampCoreListMember},

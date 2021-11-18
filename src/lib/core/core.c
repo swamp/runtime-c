@@ -5,6 +5,7 @@
 #include <swamp-runtime/core/array.h>
 #include <swamp-runtime/core/blob.h>
 #include <swamp-runtime/core/char.h>
+#include <swamp-runtime/core/string.h>
 #include <swamp-runtime/core/debug.h>
 #include <swamp-runtime/core/int.h>
 #include <swamp-runtime/core/list.h>
@@ -44,6 +45,11 @@ void* swampCoreFindFunction(const char* fullyQualifiedName)
     }
 
     foundFn = swampCoreCharFindFunction(fullyQualifiedName);
+    if (foundFn) {
+        return foundFn;
+    }
+
+    foundFn = swampCoreStringFindFunction(fullyQualifiedName);
     if (foundFn) {
         return foundFn;
     }

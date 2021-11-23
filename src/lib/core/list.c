@@ -483,7 +483,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
 
     size_t aAlign = list->itemAlign;
     size_t aSize = list->itemSize;
-    if (aSize == 0) {
+    if (list->count != 0 && aSize == 0) {
         CLOG_ERROR("size is zero");
     }
 

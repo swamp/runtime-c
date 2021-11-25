@@ -15,9 +15,14 @@ void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const
     CLOG_OUTPUT("log: %s", (*value)->characters);
 }
 
+void swampPanic(SwampMachineContext* context, const char* value)
+{
+    CLOG_ERROR("panic: %s", value);
+}
+
 void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
-    CLOG_ERROR("panic: %s", (*value)->characters);
+    swampPanic(context, (*value)->characters);
 }
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)

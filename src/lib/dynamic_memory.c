@@ -78,7 +78,7 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
 
 
     size_t total = itemCount * itemSize;
-    if (total > 256 * 1024) {
+    if (total > 512 * 1024) {
         CLOG_SOFT_ERROR("too large allocation %d", total);
     }
     size_t usedSize = (uintptr_t )self->p - (uintptr_t )self->memory;

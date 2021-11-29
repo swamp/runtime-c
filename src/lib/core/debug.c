@@ -9,15 +9,22 @@
 #include <swamp-runtime/core/debug.h>
 #include <swamp-typeinfo/chunk.h>
 #include <swamp-runtime/swamp_allocate.h>
+#include <swamp-runtime/panic.h>
 
 void swampCoreDebugLog(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
     CLOG_OUTPUT("log: %s", (*value)->characters);
 }
 
-void swampPanic(SwampMachineContext* context, const char* value)
+void swampPanic(SwampMachineContext* context, const char* format, ...)
 {
-    CLOG_ERROR("panic: %s", value);
+    static char buf[512];
+    va_list argp;
+    va_start(argp, format);
+    vsnprintf(buf, 512, format, argp);
+
+    CLOG_ERROR("panic: %s", buf);
+    va_end(argp);
 }
 
 void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)

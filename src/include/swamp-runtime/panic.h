@@ -7,6 +7,6 @@
 
 struct SwampMachineContext;
 
-void swampPanic(struct SwampMachineContext* context, const char* message);
+void swampPanic(struct SwampMachineContext* context, const char* message, ...);
 
 #endif // TURMOIL_DEPS_SWAMP_RUNTIME_C_SRC_INCLUDE_SWAMP_RUNTIME_PANIC_H

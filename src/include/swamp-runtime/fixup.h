@@ -13,7 +13,7 @@ struct SwampFunc;
 #include <stdint.h>
 
 typedef struct SwampResourceNameChunkEntry {
-    char** resourceNames;
+    const char** resourceNames;
     size_t resourceCount;
 } SwampResourceNameChunkEntry;
 

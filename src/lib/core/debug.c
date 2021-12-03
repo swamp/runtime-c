@@ -50,7 +50,7 @@ void swampCoreDebugToString(const SwampString** result, SwampMachineContext* con
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
-#define MaxBufSizeToString (128*1024)
+#define MaxBufSizeToString (256*1024)
     static char buf[MaxBufSizeToString];
 
     swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize);

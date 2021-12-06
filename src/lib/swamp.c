@@ -20,7 +20,7 @@ static const char* g_swamp_opcode_names[] = {
     "muli", "divi",  "negi", "mulfx", "divfx", "cpeli",   "cpnei",  "cpli",    "cplei", "cpgi",   "cpgei",     "noti",
     "cpes", "cpnes", "andi", "ori",   "xori",  "noti",    "crlst",  "crarr",   "conjl", "addlst", "appendstr", "ldi",
     "ldb",  "ldr",   "ldz",  "cpy",   "lde",   "callvar", "cmpeeq", "cmpeneq", "jmppi", "jmpps", "callvaralign"
-, "shl", "shr", "rem"};
+, "shl", "shr", "rem", "cpeq", "cpne"};
 
 static const char* swamp_opcode_name(uint8_t opcode)
 {
@@ -30,12 +30,6 @@ static const char* swamp_opcode_name(uint8_t opcode)
 
 typedef uint16_t SwampJump;
 typedef uint16_t SwampJumpOffset;
-
-// -------------------------------------------------------------
-// Stack
-// -------------------------------------------------------------
-
-
 
 #define DEBUGLOG_PARAMS 0
 
@@ -404,8 +398,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                     func = curry->curryFunction;
                 }
 
-
-
                 if (func->func.type == SwampFunctionTypeExternal) {
 #if SWAMP_RUN_MEASURE_PERFORMANCE
                     MonotonicTimeNanoseconds beforeTimeNs = monotonicTimeNanosecondsNow();
@@ -664,56 +656,80 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 *targetRegister = *a != *b;
             } break;
 
-
-
             case SwampOpcodeIntAdd: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a + b);
             } break;
+
             case SwampOpcodeIntSub: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a - b);
             } break;
+
             case SwampOpcodeIntDiv: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a / b);
             } break;
+
             case SwampOpcodeIntMul: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a * b);
             } break;
+
             case SwampOpcodeFixedDiv: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a * SWAMP_FIXED_FACTOR / b);
             } break;
+
             case SwampOpcodeFixedMul: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a * b / SWAMP_FIXED_FACTOR);
             } break;
+
             case SwampOpcodeIntGreater: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a > b);
             } break;
+
             case SwampOpcodeIntGreaterOrEqual: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a >= b);
             } break;
+
             case SwampOpcodeIntLess: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a < b);
             } break;
+
             case SwampOpcodeIntLessEqual: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a <= b);
             } break;
+
             case SwampOpcodeIntEqual: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a == b);
             } break;
+
             case SwampOpcodeIntNotEqual: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_BOOL(a != b);
             } break;
+
+            case SwampOpcodeBooleanEqual: {
+                SwampBool* targetRegister = readTargetStackPointerPos(&pc, bp);
+                const SwampBool* a = readSourceStackPointerPos(&pc, bp);
+                const SwampBool* b = readSourceStackPointerPos(&pc, bp);
+                *targetRegister = *a == *b;
+            } break;
+
+            case SwampOpcodeBooleanNotEqual: {
+                SwampBool* targetRegister = readTargetStackPointerPos(&pc, bp);
+                const SwampBool* a = readSourceStackPointerPos(&pc, bp);
+                const SwampBool* b = readSourceStackPointerPos(&pc, bp);
+                *targetRegister = *a != *b;
+            } break;
+
             case SwampOpcodeIntAnd: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a & b);
@@ -723,37 +739,43 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a | b);
             } break;
+
             case SwampOpcodeIntXor: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a ^ b);
             } break;
+
             case SwampOpcodeIntShiftLeft: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a << b);
             } break;
+
             case SwampOpcodeIntShiftRight: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a >> b);
             } break;
+
             case SwampOpcodeIntRemainder: {
                 GET_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(a % b);
             } break;
 
-                // UNARY
             case SwampOpcodeIntNot: {
                 GET_UNARY_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(~a);
             } break;
+
             case SwampOpcodeIntNegate: {
                 GET_UNARY_OPERATOR_INT();
                 SET_OPERATOR_RESULT_INT(-a);
             } break;
+
             case SwampOpcodeBoolNot: {
                 SwampBool* target = (SwampBool*) readTargetStackPointerPos(&pc, bp);
                 SwampBool a = *((SwampBool*) readSourceStackPointerPos(&pc, bp));
                 *target = !a;
             } break;
+
             default:
                 SWAMP_ERROR("Unknown opcode: %02x", *(pc - 1));
                 return 0;

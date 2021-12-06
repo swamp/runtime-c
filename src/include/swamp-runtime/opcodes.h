@@ -40,15 +40,12 @@
 // -------------------------------------------------------------
 #define SwampOpcodeStringEqual 0x18
 #define SwampOpcodeStringNotEqual 0x19
-
-
-
+// -------------------------------------------------------------
 #define SwampOpcodeIntAnd 0x1a
 #define SwampOpcodeIntOr 0x1b
 #define SwampOpcodeIntXor 0x1c
 #define SwampOpcodeIntNot 0x1d
-    // -------------------------------------------------------------
-
+// -------------------------------------------------------------
 #define SwampOpcodeListCreate 0x1e
 #define SwampOpcodeArrayCreate 0x1f
 // -------------------------------------------------------------
@@ -69,17 +66,12 @@
 #define SwampOpcodePatternMatchingString 0x2d
 #define SwampOpcodeCallExternalWithExtendedSizes 0x2e
 // -------------------------------------------------------------
-
-// -------------------------------------------------------------
-
-// -------------------------------------------------------------
-// -------------------------------------------------------------
 #define SwampOpcodeIntShiftLeft 0x2f
 #define SwampOpcodeIntShiftRight 0x30
 #define SwampOpcodeIntRemainder 0x31
-
-
 // -------------------------------------------------------------
+#define SwampOpcodeBooleanEqual 0x32
+#define SwampOpcodeBooleanNotEqual 0x33
 // -------------------------------------------------------------
 
 #endif

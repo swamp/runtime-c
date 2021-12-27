@@ -7,6 +7,8 @@
 #include <swamp-runtime/fixup.h>
 #include <swamp-runtime/types.h>
 #include <swamp-runtime/swamp_unpack.h>
+#include <swamp-runtime/context.h>
+#include <swamp-runtime/debug.h>
 
 void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;
@@ -33,6 +35,9 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
             case LedgerTypeFunc: {
                 SwampFunc* func = (const SwampFunc*)p;
                 FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
+                FIXUP_DYNAMIC_POINTER(func->debugInfoLines, const SwampDebugInfoLines *);
+                FIXUP_DYNAMIC_POINTER(func->debugInfoLines->lines, const SwampDebugInfoLinesEntry *);
+                //swampDebugInfoLinesOutput(func->debugInfoLines);
                 FIXUP_DYNAMIC_STRING(func->debugName);
                 //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 if (tc_str_equal(func->debugName, "main")) {
@@ -98,8 +103,16 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
             case LedgerTypeResourceName: {
                 // Intentionally do nothing
             } break;
+            case LedgerTypeDebugInfoFiles: {
+                 SwampDebugInfoFiles *debugInfoFiles = (const SwampDebugInfoFiles*) p;
+                 FIXUP_DYNAMIC_POINTER(debugInfoFiles->filenames, char**);
+                for (size_t i=0; i<debugInfoFiles->count; ++i) {
+                    FIXUP_DYNAMIC_STRING(debugInfoFiles->filenames[i]);
+                }
+            } break;
+
             default: {
-                CLOG_ERROR("Unknown ledger fixup")
+                CLOG_ERROR("Unknown ledger fixup type %d", entry->constantType)
             }
         }
         entry++;

@@ -12,6 +12,7 @@
 
 struct SwtiChunk;
 struct SwampFunc;
+struct SwampDebugInfoFiles;
 
 typedef struct SwampCallStackEntry {
     const uint8_t* pc;
@@ -37,6 +38,7 @@ typedef struct SwampMachineContext {
     const struct SwtiChunk* typeInfo;
     void* userData;
     SwampCallStack callStack;
+    const struct SwampDebugInfoFiles* debugInfoFiles;
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory, const struct SwtiChunk* typeInfo);

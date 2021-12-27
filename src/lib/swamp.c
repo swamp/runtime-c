@@ -315,6 +315,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             case SwampOpcodeCallExternalWithSizes: {
+                call_stack_entry->pc = pc;
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunctionExternal* externalFunction = *(
                     (const SwampFunctionExternal**) readStackPointerPos(&pc, bp));
@@ -349,6 +350,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 }
             } break;
             case SwampOpcodeCallExternalWithExtendedSizes: {
+                call_stack_entry->pc = pc;
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunctionExternal* externalFunction = *(
                     (const SwampFunctionExternal**) readStackPointerPos(&pc, bp));
@@ -389,6 +391,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             case SwampOpcodeCallExternal: {
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunc* func = *((const SwampFunc**) readStackPointerPos(&pc, bp));
+                call_stack_entry->pc = pc;
 
                 if (func->func.type == SwampFunctionTypeCurry) {
                     //CLOG_VERBOSE("SwampFunctionTypeCurry pc:%p bp:%p", pc, bp)

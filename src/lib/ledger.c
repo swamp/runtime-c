@@ -6,6 +6,7 @@
 #include <swamp-runtime/types.h>
 #include <swamp-runtime/fixup.h>
 #include <clog/clog.h>
+#include <swamp-runtime/debug.h>
 
 void swampLedgerInit(SwampLedger* self, const uint8_t* ledgerOctets, size_t ledgerSize, const uint8_t* constantStaticMemory)
 {
@@ -28,6 +29,26 @@ const SwampFunc* swampLedgerFindFunction(const SwampLedger* self, const char* na
                 if (tc_str_equal(func->debugName, name)) {
                     return func;
                 }
+            }
+        }
+        entry++;
+    }
+
+    return 0;
+}
+
+const SwampDebugInfoFiles* swampLedgerGetDebugInfoFiles(const SwampLedger* self)
+{
+    const uint8_t* const constantStaticMemory = self->constantStaticMemory;
+    const SwampConstantLedgerEntry* entries = self->ledgerOctets;
+
+    const SwampConstantLedgerEntry* entry = entries;
+    while (entry->constantType != 0) {
+        const uint8_t* p = (constantStaticMemory + entry->offset);
+        switch (entry->constantType) {
+            case LedgerTypeDebugInfoFiles: {
+                const SwampDebugInfoFiles* debugInfoFiles = (const SwampDebugInfoFiles*) p;
+                    return debugInfoFiles;
             }
         }
         entry++;

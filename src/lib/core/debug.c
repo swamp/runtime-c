@@ -11,11 +11,17 @@
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/panic.h>
 #include <stdarg.h>
-
+#include <swamp-runtime/debug.h>
 
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
-    CLOG_OUTPUT("log: %s", (*value)->characters);
+    const char* filenameAndLocation;
+    int lookupErr = swampDebugInfoFindLinesInContextToStringSingleLine(context, &filenameAndLocation);
+    if (lookupErr < 0) {
+        filenameAndLocation = "";
+    }
+
+    CLOG_OUTPUT("%s log: %s", filenameAndLocation, (*value)->characters);
 }
 
 void swampPanic(SwampMachineContext* context, const char* format, ...)
@@ -26,23 +32,36 @@ void swampPanic(SwampMachineContext* context, const char* format, ...)
     va_start(argp, format);
     vsnprintf(buf, SWAMP_PANIC_BUF_SIZE, format, argp);
 
-    CLOG_ERROR("panic: %s", buf);
     va_end(argp);
+    CLOG_SOFT_ERROR("panic: %s", buf);
 }
 
 void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
     swampPanic(context, (*value)->characters);
+
+    const char* outString;
+    swampDebugInfoFindLinesInContextToString(context, &outString);
+
+    CLOG_SOFT_ERROR("raised from location:\n%s", outString);
+
+    CLOG_ERROR("panic");
 }
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
+    const char* filenameAndLocation;
+    int lookupErr = swampDebugInfoFindLinesInContextToStringSingleLine(context, &filenameAndLocation);
+    if (lookupErr < 0) {
+        filenameAndLocation = "";
+    }
+
 #define MaxBufSize (8*1024)
     char buf[MaxBufSize];
 
-    CLOG_OUTPUT("log: %s", swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
+    CLOG_OUTPUT("%s log: %s", filenameAndLocation, swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
 }
 
 
@@ -50,10 +69,10 @@ void swampCoreDebugToString(const SwampString** result, SwampMachineContext* con
 {
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
-#define MaxBufSizeToString (256*1024)
+#define MaxBufSizeToString (32*1024)
     static char buf[MaxBufSizeToString];
 
-    swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize);
+    swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSizeToString);
 
     *result = swampStringAllocate(context->dynamicMemory, buf);
 }

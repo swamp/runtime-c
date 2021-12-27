@@ -65,5 +65,6 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     target->typeInfo = context->typeInfo;
     target->constantStaticMemory = context->constantStaticMemory;
     target->userData = context->userData;
+    target->debugInfoFiles = context->debugInfoFiles;
     swampCallstackAlloc(&target->callStack);
 }

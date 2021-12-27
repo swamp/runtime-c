@@ -134,6 +134,8 @@ typedef struct SwampFunction {
     SwampFunctionType type;
 } SwampFunction;
 
+struct SwampDebugInfoLines;
+
 typedef struct SwampFunc {
     SwampFunction func;
     size_t parameterCount;
@@ -144,6 +146,7 @@ typedef struct SwampFunc {
     size_t returnAlign;
     const char* debugName;
     uint16_t typeIndex;
+    struct SwampDebugInfoLines* debugInfoLines;
 } SwampFunc;
 
 typedef struct SwampCurryFunc {

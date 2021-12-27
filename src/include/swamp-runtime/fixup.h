@@ -27,6 +27,7 @@ typedef struct SwampConstantLedgerEntry {
 #define LedgerTypeResourceName (2)
 #define LedgerTypeString (1)
 #define LedgerTypeResourceNameChunk (5)
+#define LedgerTypeDebugInfoFiles (6)
 
 const struct SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, SwampResolveExternalFunction fn, const struct SwampConstantLedgerEntry* entries);
 

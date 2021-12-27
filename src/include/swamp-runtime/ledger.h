@@ -11,6 +11,7 @@
 struct SwampConstantLedgerEntry;
 struct SwampFunc;
 struct SwampResourceNameChunkEntry;
+struct SwampDebugInfoFiles;
 
 typedef struct SwampLedger {
     const uint8_t* ledgerOctets;
@@ -20,6 +21,7 @@ typedef struct SwampLedger {
 
 void swampLedgerInit(SwampLedger* self, const uint8_t* ledgerOctets, size_t ledgerSize, const uint8_t* constantStaticMemory);
 const struct SwampFunc* swampLedgerFindFunction(const SwampLedger* self, const char* name);
+const struct SwampDebugInfoFiles* swampLedgerGetDebugInfoFiles(const SwampLedger* self);
 const struct SwampResourceNameChunkEntry* swampLedgerFindResourceNames(const SwampLedger* self);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_LEDGER_H

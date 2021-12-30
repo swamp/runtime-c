@@ -12,16 +12,40 @@
 #include <swamp-runtime/panic.h>
 #include <stdarg.h>
 #include <swamp-runtime/debug.h>
+#include <tinge/tinge.h>
+#include <flood/out_stream.h>
 
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
     const char* filenameAndLocation;
+
+#define SWAMP_LOG_BUF_SIZE (512)
+    static char buf[SWAMP_LOG_BUF_SIZE];
+
+    FldOutStream stream;
+
+    fldOutStreamInit(&stream, buf, SWAMP_LOG_BUF_SIZE);
+
+    TingeState tinge;
+
     int lookupErr = swampDebugInfoFindLinesInContextToStringSingleLine(context, &filenameAndLocation);
     if (lookupErr < 0) {
         filenameAndLocation = "";
     }
 
-    CLOG_OUTPUT("%s log: %s", filenameAndLocation, (*value)->characters);
+
+    tingeStateInit(&tinge, &stream);
+
+    tingeStateFgColor(&tinge, 91);
+    fldOutStreamWritef(&stream, "%s ", filenameAndLocation);
+
+    tingeStateFgColor(&tinge, 98);
+    fldOutStreamWrites(&stream, "log: ");
+
+    tingeStateReset(&tinge);
+    fldOutStreamWritef(&stream, "%s", (*value)->characters);
+
+    CLOG_OUTPUT(buf);
 }
 
 void swampPanic(SwampMachineContext* context, const char* format, ...)

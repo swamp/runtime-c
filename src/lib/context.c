@@ -20,7 +20,7 @@ void swampCallstackDestroy(SwampCallStack* self)
 }
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemory,
-                      const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo)
+                      const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo, const char* debugString)
 {
     self->dynamicMemory = dynamicMemory;
     uint8_t* stackMemory = tc_malloc(32*1024);
@@ -30,6 +30,8 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
     self->tempResult = malloc(self->tempResultSize);
     self->typeInfo = typeInfo;
     self->constantStaticMemory = staticMemory;
+    self->debugString = debugString;
+    self->parent = 0;
     swampCallstackAlloc(&self->callStack);
 }
 
@@ -55,7 +57,7 @@ void swampContextDestroyTemp(SwampMachineContext* self)
     swampCallstackDestroy(&self->callStack);
 }
 
-void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context)
+void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context, const char* debugString)
 {
     uint8_t* stackMemory = tc_malloc(32*1024);
     swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
@@ -66,5 +68,7 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     target->constantStaticMemory = context->constantStaticMemory;
     target->userData = context->userData;
     target->debugInfoFiles = context->debugInfoFiles;
+    target->parent = context;
+    target->debugString = debugString;
     swampCallstackAlloc(&target->callStack);
 }

@@ -98,7 +98,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.map()");
 
     const SwampFunc* realFunc;
     swampGetFunc(fn, &realFunc);
@@ -138,7 +138,7 @@ void swampCoreListConcatMap(SwampList** result, SwampMachineContext* context, Sw
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.concatMap");
 
     const SwampFunc* realFunc;
     swampGetFunc(fn, &realFunc);
@@ -222,7 +222,7 @@ void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFu
     SwampParameters parameters;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.map2");
 
     const SwampFunc* realFunc;
     swampGetFunc(fn, &realFunc);
@@ -277,7 +277,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.indexedMap");
 
     SwampList* targetListB = swampListAllocatePrepare(context->dynamicMemory, list->count, swampFn->returnOctetSize, swampFn->returnAlign);
     uint8_t* targetItemPointer = (uint8_t*)targetListB->value;
@@ -317,7 +317,7 @@ void swampCoreListAny(SwampBool* result, SwampMachineContext* context, SwampFunc
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.any");
 
     const SwampFunc* realFunc;
     swampGetFunc(fn, &realFunc);
@@ -364,7 +364,7 @@ void swampCoreListFind(SwampMaybe * result, SwampMachineContext* context, SwampF
     parameters.octetSize = list->itemSize;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.find");
 
     const SwampFunc* realFunc;
     swampGetFunc(fn, &realFunc);
@@ -493,7 +493,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
     size_t bSize = initialValue->size;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.foldl");
 
     size_t bAlign = initialValue->align;
 
@@ -554,7 +554,7 @@ void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFuncti
     const uint8_t* sourceItemPointer = list->value;
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.reduce");
     tc_memcpy_octets(ownContext.bp, sourceItemPointer, list->itemSize);
     sourceItemPointer += aSize;
 
@@ -611,7 +611,7 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
 
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "List.foldlstop");
 
     uint8_t tempBuf[32];
     uint8_t lastKnownGoodValue[32];

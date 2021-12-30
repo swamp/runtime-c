@@ -161,7 +161,7 @@ void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, Sw
     parameters.octetSize = sizeof(SwampInt32);
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "mapToBlob()");
     // , fn->returnOctetSize,
     //                                                 fn->returnAlign
     SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -209,7 +209,7 @@ void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* cont
     parameters.octetSize = sizeof(SwampInt32);
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.indexedMapToBlob");
     // , fn->returnOctetSize,
     //                                                 fn->returnAlign
     SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -258,7 +258,7 @@ void swampCoreBlobIndexedMapToBlobMutable(SwampBlob** result, SwampMachineContex
     parameters.octetSize = sizeof(SwampInt32);
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.indexedMapToBlob!()");
 
     uint8_t* targetItemPointer = blob->octets;
     for (size_t i = 0; i < blob->octetCount; ++i) {
@@ -307,7 +307,7 @@ void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampF
     parameters.octetSize = sizeof(SwampInt32);
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.map2d");
 
     if (blobSize->width <= 0) {
         CLOG_ERROR("width must be greater than zero");
@@ -367,7 +367,7 @@ void swampCoreBlobAny(SwampBool* result, SwampMachineContext* context, SwampFunc
     parameters.octetSize = sizeof(SwampInt32);
 
     SwampMachineContext ownContext;
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.any");
 
     const uint8_t* sourceItemPointer = blob->octets;
     SwampBool foundAny = 0;
@@ -481,7 +481,7 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
 
     SwampMachineContext ownContext;
 
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.filterIndexedMap");
     SwampResult fnResult;
     SwtiMemorySize returnSizeWithMaybe = swtiGetMemorySize(maybeReturnType);
     fnResult.expectedOctetSize = returnSizeWithMaybe;
@@ -549,7 +549,7 @@ void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachineConte
 
     SwampMachineContext ownContext;
 
-    swampContextCreateTemp(&ownContext, context);
+    swampContextCreateTemp(&ownContext, context, "Blob.filterIndexedMap2d");
     SwampResult fnResult;
 
     SwtiMemorySize returnSizeWithMaybe = swtiGetMemorySize(maybeReturnType);

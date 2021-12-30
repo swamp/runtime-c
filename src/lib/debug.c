@@ -87,18 +87,12 @@ int swampDebugInfoFindLinesInContextToStringSingleLine(const SwampMachineContext
     fldOutStreamWriteInt8(&stream, 0);
 }
 
-int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineContext, const char** outString)
+int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineContext* machineContext)
 {
-    static char temp[32 * 1024];
-
-    FldOutStream stream;
-    fldOutStreamInit(&stream, temp, 32*1024);
-    *outString = temp;
-
     const SwampDebugInfoLinesEntry* entry = swampDebugInfoFindLinesInContext(machineContext);
     if (!entry) {
-        fldOutStreamWritef(&stream, "no information found");
-        fldOutStreamWriteInt8(&stream, 0);
+        fldOutStreamWritef(stream, "no information found");
+        fldOutStreamWriteInt8(stream, 0);
         return -1;
     }
 
@@ -109,7 +103,28 @@ int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineC
         return fileErr;
     }
 
-    fldOutStreamWritef(&stream, "%s:%d:%d", fileName, entry->startLocation.line+1, entry->startLocation.column+1);
+    fldOutStreamWritef(stream, "%s:%d:%d", fileName, entry->startLocation.line+1, entry->startLocation.column+1);
+    return 1;
+}
+
+int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineContext, const char** outString)
+{
+    static char temp[32 * 1024];
+
+    FldOutStream stream;
+    fldOutStreamInit(&stream, temp, 32*1024);
+    *outString = temp;
+
+    for (const SwampMachineContext* context = machineContext; context; context = context->parent) {
+        swampDebugInfoWriteLineFromContext(&stream, context);
+        if (context->debugString) {
+            fldOutStreamWritef(&stream, "\nengine: %s", context->debugString);
+        }
+        if (context->parent) {
+            fldOutStreamWriteInt8(&stream, '\n');
+        }
+    }
+
     fldOutStreamWriteInt8(&stream, 0);
 
     return stream.pos - 1;

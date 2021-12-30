@@ -39,12 +39,15 @@ typedef struct SwampMachineContext {
     void* userData;
     SwampCallStack callStack;
     const struct SwampDebugInfoFiles* debugInfoFiles;
+    const struct SwampMachineContext* parent;
+    const char* debugString;
 } SwampMachineContext;
 
-void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory, const struct SwtiChunk* typeInfo);
+void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory,
+                      const struct SwtiChunk* typeInfo, const char* debugStringddddd);
 void swampContextReset(SwampMachineContext* self);
 void swampContextDestroy(SwampMachineContext* self);
-void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context);
+void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context, const char* debugString);
 void swampContextDestroyTemp(SwampMachineContext* self);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CONTEXT_H

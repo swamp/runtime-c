@@ -19,7 +19,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 {
     const char* filenameAndLocation;
 
-#define SWAMP_LOG_BUF_SIZE (512)
+#define SWAMP_LOG_BUF_SIZE (64*1024)
     static char buf[SWAMP_LOG_BUF_SIZE];
 
     FldOutStream stream;

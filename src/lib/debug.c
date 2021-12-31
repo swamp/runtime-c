@@ -15,14 +15,6 @@ void swampDebugInfoLinesOutput(const SwampDebugInfoLines* lines)
 }
 
 
-void swampDebugInfoVariablesOutput(const SwampDebugInfoVariables* variables, const char* description)
-{
-    CLOG_OUTPUT("%s debug variables count %d", description, variables->count);
-    for (size_t i=0; i<variables->count;++i) {
-        const SwampDebugInfoVariablesEntry* entry = &variables->variables[i];
-        CLOG_OUTPUT(".. %d '%s' %04X-%04X typeId:%d scopeId:%d", i, entry->name, entry->startOpcodePosition, entry->endOpcodePosition, entry->typeId, entry->scopeId);
-    }
-}
 
 
 

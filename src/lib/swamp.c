@@ -389,9 +389,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
             case SwampOpcodeCall:
             case SwampOpcodeCallExternal: {
+                call_stack_entry->pc = pc-1;
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunc* func = *((const SwampFunc**) readStackPointerPos(&pc, bp));
-                call_stack_entry->pc = pc;
+
+                call_stack_entry->basePointer = bp;
+
 
                 if (func->func.type == SwampFunctionTypeCurry) {
                     //CLOG_VERBOSE("SwampFunctionTypeCurry pc:%p bp:%p", pc, bp)

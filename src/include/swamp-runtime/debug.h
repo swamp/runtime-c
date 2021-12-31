@@ -26,18 +26,7 @@ typedef struct SwampDebugInfoLines {
     const SwampDebugInfoLinesEntry* lines;
 } SwampDebugInfoLines;
 
-typedef struct SwampDebugInfoVariablesEntry {
-    uint16_t startOpcodePosition;
-    uint16_t endOpcodePosition;
-    uint16_t typeId;
-    uint16_t scopeId;
-    const char* name;
-} SwampDebugInfoVariablesEntry;
 
-typedef struct SwampDebugInfoVariables {
-    uint32_t count;
-    const SwampDebugInfoVariablesEntry* variables;
-} SwampDebugInfoVariables;
 
 typedef struct SwampDebugInfoFiles{
     uint32_t count;
@@ -51,7 +40,7 @@ int swampDebugInfoFindLinesInContextToString(const struct SwampMachineContext* m
 int swampDebugInfoFindLinesInContextToStringSingleLine(const struct SwampMachineContext* machineContext, const char** outString);
 int swampDebugInfoFilesFindFile(const SwampDebugInfoFiles* files, uint16_t fileIndex, const char** outFilename);
 
-void swampDebugInfoVariablesOutput(const SwampDebugInfoVariables* variables, const char* description);
+
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_DEBUG_H
 

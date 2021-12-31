@@ -12,6 +12,7 @@
 #include <swamp-runtime/panic.h>
 #include <stdarg.h>
 #include <swamp-runtime/debug.h>
+#include <swamp-runtime/debug_variables.h>
 #include <tinge/tinge.h>
 #include <flood/out_stream.h>
 
@@ -44,6 +45,17 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 
     tingeStateReset(&tinge);
     fldOutStreamWritef(&stream, "%s", (*value)->characters);
+
+    fldOutStreamWritef(&stream, "\n");
+
+    const char* variableString;
+    //int variablesErr = swampDebugInfoFindVariablesInContextToString(context, &variableString);
+    //if (variablesErr < 0) {
+        variableString = "";
+//    }
+
+    fldOutStreamWritef(&stream, "%s", variableString);
+
 
     CLOG_OUTPUT(buf);
 }

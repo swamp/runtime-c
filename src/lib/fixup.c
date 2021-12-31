@@ -9,6 +9,7 @@
 #include <swamp-runtime/swamp_unpack.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/debug.h>
+#include <swamp-runtime/debug_variables.h>
 
 void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;

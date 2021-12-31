@@ -147,6 +147,9 @@ typedef struct SwampFunc {
     const char* debugName;
     uint16_t typeIndex;
     struct SwampDebugInfoLines* debugInfoLines;
+    size_t debugInfoLinesOctetCount;
+    struct SwampDebugInfoVariables* debugInfoVariables;
+    size_t debugInfoVariablesOctetCount;
 } SwampFunc;
 
 typedef struct SwampCurryFunc {

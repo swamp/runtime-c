@@ -130,7 +130,10 @@ int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verbose
         SWAMP_LOG_INFO("done!\n");
     }
 
-    self->constantStaticMemoryMaxSize = 128 * 1024;
+    self->constantStaticMemoryMaxSize = 256 * 1024;
+    if (upcomingOctetsInChunk > self->constantStaticMemoryMaxSize) {
+        SWAMP_ERROR("too much static memory")
+    }
     self->constantStaticMemoryOctets = malloc(self->constantStaticMemoryMaxSize);
     tc_memcpy_octets(self->constantStaticMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
     self->constantStaticMemorySize = upcomingOctetsInChunk;

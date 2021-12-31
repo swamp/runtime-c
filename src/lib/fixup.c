@@ -34,11 +34,19 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
         switch (entry->constantType) {
             case LedgerTypeFunc: {
                 SwampFunc* func = (const SwampFunc*)p;
+                FIXUP_DYNAMIC_STRING(func->debugName);
                 FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
                 FIXUP_DYNAMIC_POINTER(func->debugInfoLines, const SwampDebugInfoLines *);
                 FIXUP_DYNAMIC_POINTER(func->debugInfoLines->lines, const SwampDebugInfoLinesEntry *);
                 //swampDebugInfoLinesOutput(func->debugInfoLines);
-                FIXUP_DYNAMIC_STRING(func->debugName);
+
+                FIXUP_DYNAMIC_POINTER(func->debugInfoVariables, const SwampDebugInfoVariables *);
+                FIXUP_DYNAMIC_POINTER(func->debugInfoVariables->variables, const SwampDebugInfoVariablesEntry *);
+                for (size_t i=0; i<func->debugInfoVariables->count; ++i) {
+                    SwampDebugInfoVariablesEntry* entry = &func->debugInfoVariables->variables[i];
+                    FIXUP_DYNAMIC_POINTER(entry->name, const char*);
+                }
+                swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
                 //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 if (tc_str_equal(func->debugName, "main")) {
                     entryFunc = func;

@@ -7,16 +7,12 @@
 
 void swampDebugInfoLinesOutput(const SwampDebugInfoLines* lines)
 {
-    CLOG_OUTPUT("debug lines count %d %zu %zu", lines->count, sizeof(SwampDebugInfoLinesEntry), offsetof(SwampDebugInfoLines, lines));
+    CLOG_INFO("debug lines count %d %zu %zu", lines->count, sizeof(SwampDebugInfoLinesEntry), offsetof(SwampDebugInfoLines, lines));
     for (size_t i=0; i<lines->count;++i) {
         const SwampDebugInfoLinesEntry* entry = &lines->lines[i];
-        CLOG_OUTPUT(" %d entry %04X file:%d ", i, entry->opcodePosition, entry->sourceFileId);
+        CLOG_INFO(" %d entry %04X file:%d ", i, entry->opcodePosition, entry->sourceFileId);
     }
 }
-
-
-
-
 
 const SwampDebugInfoLinesEntry* swampDebugInfoFindLinesDebugLines(const SwampDebugInfoLines* lines, uint16_t opcodePosition)
 {
@@ -66,17 +62,17 @@ int swampDebugInfoFilesFindFile(const SwampDebugInfoFiles* files, uint16_t fileI
 
 int swampDebugInfoFindLinesInContextToStringSingleLine(const SwampMachineContext* machineContext, const char** outString)
 {
-    static char temp[32 * 1024];
+#define LINES_DEBUG_SIZE (32*1024)
+    static char temp[LINES_DEBUG_SIZE];
 
     FldOutStream stream;
-    fldOutStreamInit(&stream, temp, 32*1024);
+    fldOutStreamInit(&stream, temp, LINES_DEBUG_SIZE);
     *outString = temp;
 
     const SwampDebugInfoLinesEntry* entry = swampDebugInfoFindLinesInContext(machineContext);
     if (!entry) {
         fldOutStreamWritef(&stream, "no information found");
-        fldOutStreamWriteInt8(&stream, 0);
-        return -1;
+        return fldOutStreamWriteInt8(&stream, 0);
     }
 
     const char* fileName;
@@ -87,7 +83,8 @@ int swampDebugInfoFindLinesInContextToStringSingleLine(const SwampMachineContext
     }
 
     fldOutStreamWritef(&stream, "%s:%d:%d", fileName, entry->startLocation.line+1, entry->startLocation.column+1);
-    fldOutStreamWriteInt8(&stream, 0);
+
+    return fldOutStreamWriteInt8(&stream, 0);
 }
 
 int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineContext* machineContext)
@@ -106,8 +103,7 @@ int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineC
         return fileErr;
     }
 
-    fldOutStreamWritef(stream, "%s:%d:%d", fileName, entry->startLocation.line+1, entry->startLocation.column+1);
-    return 1;
+    return fldOutStreamWritef(stream, "%s:%d:%d", fileName, entry->startLocation.line+1, entry->startLocation.column+1);
 }
 
 int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineContext, const char** outString)
@@ -128,8 +124,6 @@ int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineC
         }
     }
 
-    fldOutStreamWriteInt8(&stream, 0);
-
-    return stream.pos - 1;
+    return fldOutStreamWriteInt8(&stream, 0);
 }
 

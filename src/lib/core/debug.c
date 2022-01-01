@@ -49,15 +49,16 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
     fldOutStreamWritef(&stream, "\n");
 
     const char* variableString;
-    //int variablesErr = swampDebugInfoFindVariablesInContextToString(context, &variableString);
-    //if (variablesErr < 0) {
+    int variablesErr = swampDebugInfoFindVariablesInContextToString(context, &variableString);
+    if (variablesErr < 0) {
         variableString = "";
-//    }
+    }
 
     fldOutStreamWritef(&stream, "%s", variableString);
 
 
     CLOG_OUTPUT(buf);
+    *result = *value;
 }
 
 void swampPanic(SwampMachineContext* context, const char* format, ...)

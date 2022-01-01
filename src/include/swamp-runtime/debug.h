@@ -39,7 +39,7 @@ const SwampDebugInfoLinesEntry* swampDebugInfoFindLinesCallstack(const struct Sw
 int swampDebugInfoFindLinesInContextToString(const struct SwampMachineContext* machineContext, const char** outString);
 int swampDebugInfoFindLinesInContextToStringSingleLine(const struct SwampMachineContext* machineContext, const char** outString);
 int swampDebugInfoFilesFindFile(const SwampDebugInfoFiles* files, uint16_t fileIndex, const char** outFilename);
-
+void swampDebugInfoLinesOutput(const SwampDebugInfoLines* lines);
 
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_DEBUG_H

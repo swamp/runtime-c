@@ -24,7 +24,7 @@ static size_t swampDebugInfoFindVariablesDebugVariables(const SwampDebugInfoVari
 
     for (size_t i=0; i<variables->count; ++i) {
         const SwampDebugInfoVariablesEntry* entry = &variables->variables[i];
-        if (opcodePosition >= entry->startOpcodePosition && opcodePosition <= entry->endOpcodePosition) {
+        if (opcodePosition > entry->startOpcodePosition && opcodePosition <= entry->endOpcodePosition) {
             if (foundCount >= maxCount) {
                 CLOG_SOFT_ERROR("out of buffer")
                 return -1;
@@ -46,7 +46,7 @@ static int swampDebugInfoWriteLineFromEntry(FldOutStream* stream, const SwtiChun
 
     const void* ptr = bp + entry->stackPosition;
 
-    fldOutStreamWritef(stream, "%s ", entry->name);
+    fldOutStreamWritef(stream, "  %s = ", entry->name);
 
     int dumpErr = swampDumpToAscii(ptr, type, 0, 0, stream);
     if (dumpErr < 0) {
@@ -63,7 +63,7 @@ int swampDebugInfoVariablesInCallStackEntryToString(const SwampCallStackEntry* c
 
     const SwampFunc* func = callStackEntry->func;
 
-    uint16_t opcodePosition = callStackEntry->pc - callStackEntry->func->opcodes;
+    uint16_t opcodePosition = callStackEntry->pc - func->opcodes;
 
     int count = swampDebugInfoFindVariablesDebugVariables(func->debugInfoVariables, opcodePosition, entries, MAX_ENTRIES);
     if (count < 0) {
@@ -81,13 +81,14 @@ int swampDebugInfoVariablesInCallStackEntryToString(const SwampCallStackEntry* c
 }
 
 static int swampDebugInfoFindVariablesInCallStackToString(const SwampCallStack* callStack, const SwtiChunk* typeInformation, const char** outString) {
-#define TEMP_SIZE (64 * 1024)
+#define TEMP_SIZE (128 * 1024)
     static char temp[TEMP_SIZE];
 
     FldOutStream stream;
     fldOutStreamInit(&stream, temp, TEMP_SIZE);
     *outString = temp;
 
+    fldOutStreamWritef(&stream, "==== variables ===\n");
     for (int i=callStack->count; i>=0; --i) {
         const SwampCallStackEntry* entry = &callStack->entries[i];
         fldOutStreamWritef(&stream, "stack %d:\n", i);
@@ -97,7 +98,12 @@ static int swampDebugInfoFindVariablesInCallStackToString(const SwampCallStack* 
         }
     }
 
-    fldOutStreamWriteInt8(&stream, 0);
+    fldOutStreamWritef(&stream, "---- variables done---\n");
+
+    int endOfStringError = fldOutStreamWriteInt8(&stream, 0);
+    if (endOfStringError < 0) {
+        return endOfStringError;
+    }
 
     return stream.pos -1;
 }

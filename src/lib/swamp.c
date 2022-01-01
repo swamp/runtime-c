@@ -170,6 +170,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     SwampCallStackEntry* call_stack_entry = &stack->entries[0];
     call_stack_entry->func = f;
     call_stack_entry->pc = pc;
+    call_stack_entry->basePointer = bp;
 
     //CLOG_VERBOSE("SAVE start '%s' pc:%p bp:%p", f->debugName, pc, bp)
 
@@ -216,7 +217,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 SWAMP_LOG_SOFT_ERROR("pc is null");
             }
             //            SWAMP_LOG_INFO("--- %04X  [0x%02x]", addr, *pc);
-            SWAMP_LOG_INFO("--- %04X %s [0x%02x]", addr, swamp_opcode_name(*pc), *pc);
+            SWAMP_LOG_INFO("--- %d:'%s' %04X %s [0x%02x]", context->callStack.count, call_stack_entry->func->debugName, addr, swamp_opcode_name(*pc), *pc);
         }
 #endif
 
@@ -386,15 +387,12 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
             case SwampOpcodeTailCall: {
                 pc = call_stack_entry->func->opcodes;
+                call_stack_entry->pc = pc;
             } break;
             case SwampOpcodeCall:
             case SwampOpcodeCallExternal: {
-                call_stack_entry->pc = pc-1;
                 const uint8_t* basePointer = readSourceStackPointerPos(&pc, bp);
                 const SwampFunc* func = *((const SwampFunc**) readStackPointerPos(&pc, bp));
-
-                call_stack_entry->basePointer = bp;
-
 
                 if (func->func.type == SwampFunctionTypeCurry) {
                     //CLOG_VERBOSE("SwampFunctionTypeCurry pc:%p bp:%p", pc, bp)

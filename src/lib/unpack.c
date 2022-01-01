@@ -117,7 +117,7 @@ int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verbose
 {
     int errorCode;
 
-    RaffTag expectedPacketName = {'d', 'm', 'e', '0'};
+    RaffTag expectedPacketName = {'d', 'm', 'e', '1'};
     RaffTag expectedPacketIcon = {0xF0, 0x9F, 0x92, 0xBB};
 
     int upcomingOctetsInChunk = readAndVerifyRaffChunkHeader(s, expectedPacketIcon, expectedPacketName);

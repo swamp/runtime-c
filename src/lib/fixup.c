@@ -47,7 +47,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     SwampDebugInfoVariablesEntry* entry = &func->debugInfoVariables->variables[i];
                     FIXUP_DYNAMIC_POINTER(entry->name, const char*);
                 }
-                swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
+                //swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
                 //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 if (tc_str_equal(func->debugName, "main")) {
                     entryFunc = func;
@@ -117,6 +117,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                  FIXUP_DYNAMIC_POINTER(debugInfoFiles->filenames, char**);
                 for (size_t i=0; i<debugInfoFiles->count; ++i) {
                     FIXUP_DYNAMIC_STRING(debugInfoFiles->filenames[i]);
+                    //CLOG_INFO("file:%s", debugInfoFiles->filenames[i]);
                 }
             } break;
 

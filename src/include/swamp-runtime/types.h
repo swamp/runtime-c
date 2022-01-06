@@ -121,6 +121,15 @@ typedef struct SwampList##type { \
 
 #define SWAMP_LIST_TYPE(type) SwampList##type
 
+#if _MSC_VER
+#define SWAMP_INLINE __forceinline
+#else
+#define SWAMP_INLINE __attribute__ ((__always_inline__))
+#endif
+
+
+SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index);
+
 typedef const SwampList* SwampListReference;
 typedef const SwampList** SwampListReferenceData;
 

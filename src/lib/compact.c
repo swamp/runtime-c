@@ -164,7 +164,9 @@ int swampCompact(void* state, const SwtiType* stateType, const SwampDynamicMemor
 
     void* compactedStateMemory = swampDynamicMemoryAllocDebug(targetMemory, 1, size, align, "state");
     tc_memcpy_octets(compactedStateMemory, state, size);
-    *compactedState = compactedStateMemory;
+    if (compactedState) {
+        *compactedState = compactedStateMemory;
+    }
 
     return compactOrClone(compactedStateMemory, stateType, 0, targetMemory);
 }

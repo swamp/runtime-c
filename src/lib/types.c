@@ -25,3 +25,13 @@ void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align)
         *position = *position + (align - rest);
     }
 }
+
+SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index)
+{
+    if (index >= list->count) {
+        CLOG_ERROR("index in list doesnt exist");
+        return 0;
+    }
+
+    return (const uint8_t *)list->value + list->itemSize * index;
+}

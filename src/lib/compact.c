@@ -8,6 +8,7 @@
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/types.h>
 #include <swamp-typeinfo/typeinfo.h>
+#include <swamp-dump/dump_ascii.h>
 #include <tiny-libc/tiny_libc.h>
 
 static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynamicMemory* targetMemory)
@@ -153,11 +154,14 @@ int swampCompact(void* state, const SwtiType* stateType, const SwampDynamicMemor
     #if 1
     if (!swampIsBlittableOrEcs(stateType)) {
         CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted %s", stateType->name);
+        return -3;
     }
     #endif
     if (targetMemory->p != targetMemory->memory) {
         CLOG_ERROR("target memory must be reset");
+        return -2;
     }
+
 
     SwtiMemorySize size = swtiGetMemorySize(stateType);
     SwtiMemoryAlign align = swtiGetMemoryAlign(stateType);
@@ -186,7 +190,9 @@ int swampClone(void* state, const SwtiType* stateType, const SwampDynamicMemory*
 
     void* clonedStateMemory = swampDynamicMemoryAllocDebug(targetMemory, 1, size, align, "state");
     tc_memcpy_octets(clonedStateMemory, state, size);
-    *clonedState = clonedStateMemory;
+    if (clonedState) {
+        *clonedState = clonedStateMemory;
+    }
 
     return compactOrClone(clonedStateMemory, stateType, 1, targetMemory);
 }

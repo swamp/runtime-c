@@ -42,7 +42,8 @@ struct SwampUnmanaged;
 
 void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
 
-typedef size_t (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
+typedef int (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
+typedef int (*SwampUnmanagedDeSerialize)(const void* self, const uint8_t* target, size_t maxSize);
 typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
 typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
@@ -52,6 +53,7 @@ typedef struct SwampUnmanaged {
     const void* ptr;
     const char* debugName;
     SwampUnmanagedSerialize serialize;
+    SwampUnmanagedDeSerialize deSerialize;
     SwampUnmanagedToString toString;
     SwampUnmanagedCompact compact;
     SwampUnmanagedClone clone;

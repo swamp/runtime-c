@@ -9,16 +9,21 @@
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
 
-const SwampString* swampStringAllocate(SwampDynamicMemory* self, const char* s)
+const SwampString* swampStringAllocateWithSize(SwampDynamicMemory* self, const char* s, size_t stringLength)
 {
     SwampString* const string = (SwampString*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampString), 8);
-    size_t stringLength = tc_strlen(s);
     const char* characters = (char*) swampDynamicMemoryAlloc(self, 1, stringLength + 1, 1);
     tc_memcpy_octets((void*) characters, s, stringLength + 1);
     string->characters = characters;
     string->characterCount = stringLength;
 
     return string;
+}
+
+const SwampString* swampStringAllocate(SwampDynamicMemory* self, const char* s)
+{
+    size_t stringLength = tc_strlen(s);
+    return swampStringAllocateWithSize(self, s, stringLength);
 }
 
 const SwampList* swampListEmptyAllocate(SwampDynamicMemory* self)
@@ -120,6 +125,10 @@ const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* i
     newNode->value = itemMemory;
     newNode->itemSize = itemSize;
     newNode->itemAlign = itemAlign;
+    if (itemAlign == 0 || itemAlign > 8) {
+        CLOG_ERROR("itemAlign can not be zero or more than eight");
+    }
+
     newNode->count = itemCount;
 
     return newNode;
@@ -147,6 +156,11 @@ const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const S
 
     newList->itemSize = a->itemSize;
     newList->itemAlign = a->itemAlign;
+
+    if (a->itemAlign == 0 || a->itemAlign > 8) {
+        CLOG_ERROR("itemAlign can not be zero or more than eight");
+    }
+
     newList->count = a->count + b->count;
     newList->value = itemArray;
 

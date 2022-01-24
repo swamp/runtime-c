@@ -8,7 +8,7 @@
 struct SwampDynamicMemory;
 struct SwtiType;
 
-int swampCompact(void* state, const struct SwtiType* stateType, const struct SwampDynamicMemory* targetMemory,
+int swampCompact(const void* state, const struct SwtiType* stateType, const struct SwampDynamicMemory* targetMemory,
                  void** compactedState);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_COMPACT_H

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 #include <clog/clog.h>
 #include <swamp-runtime/context.h>
+#include <swamp-runtime/panic.h>
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-runtime/types.h>
@@ -62,8 +63,13 @@ void swampCoreArrayGrab(void* result, SwampMachineContext* context, const SwampI
 {
     const SwampArray* array = *_array;
 
+    if (array->count > 2048) {
+        swampPanic(context, "suspicious array count %zu", array->count );
+        return;
+    }
+
     if (*index < 0 || *index >= (SwampInt32) array->count) {
-        CLOG_ERROR("illegal array index %d", *index);
+        swampPanic(context, "illegal array index %d", *index);
         return;
     }
 
@@ -78,7 +84,7 @@ void swampCoreArraySet(void* result, SwampMachineContext* context, const SwampIn
     const SwampArray* array = *_array;
 
     if (*index < 0 || *index >= (SwampInt32) array->count) {
-        CLOG_ERROR("illegal")
+        swampPanic(context, "array set: illegal array index");
         return;
     }
 
@@ -91,7 +97,7 @@ void swampCoreArraySlice(void* result, SwampMachineContext* context, const Swamp
     const SwampArray* array = *_array;
 
     if (*index < 0 || *index >= (SwampInt32) array->count) {
-        CLOG_ERROR("illegal")
+        swampPanic(context, "array slice: illegal array index");
         return;
     }
 

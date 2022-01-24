@@ -44,7 +44,7 @@ typedef struct SwampMachineContext {
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory,
-                      const struct SwtiChunk* typeInfo, const char* debugStringddddd);
+                      const struct SwtiChunk* typeInfo, const char* debugString);
 void swampContextReset(SwampMachineContext* self);
 void swampContextDestroy(SwampMachineContext* self);
 void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context, const char* debugString);

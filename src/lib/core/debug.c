@@ -47,7 +47,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
     fldOutStreamWritef(&stream, "%s", (*value)->characters);
 
     fldOutStreamWritef(&stream, "\n");
-
+#if 0
     const char* variableString;
     int variablesErr = swampDebugInfoFindVariablesInContextToString(context, &variableString);
     if (variablesErr < 0) {
@@ -56,6 +56,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 
     fldOutStreamWritef(&stream, "%s", variableString);
 
+#endif
 
     CLOG_OUTPUT(buf);
     *result = *value;
@@ -71,18 +72,18 @@ void swampPanic(SwampMachineContext* context, const char* format, ...)
 
     va_end(argp);
     CLOG_SOFT_ERROR("panic: %s", buf);
+
+    const char* outString;
+    swampDebugInfoFindLinesInContextToString(context, &outString);
+
+    CLOG_ERROR("raised from location:\n%s", outString);
 }
 
 void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
     swampPanic(context, (*value)->characters);
 
-    const char* outString;
-    swampDebugInfoFindLinesInContextToString(context, &outString);
-
-    CLOG_SOFT_ERROR("raised from location:\n%s", outString);
-
-    CLOG_ERROR("panic");
+    *result = 0;
 }
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)

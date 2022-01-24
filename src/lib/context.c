@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/context.h>
 #include <tiny-libc/tiny_libc.h>
+#include <clog/clog.h>
 
 void swampCallstackAlloc(SwampCallStack * self)
 {
@@ -61,6 +62,11 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
 {
     uint8_t* stackMemory = tc_malloc(32*1024);
     swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
+
+    if (!context->debugInfoFiles) {
+        CLOG_ERROR("Must have debug info");
+    }
+
     target->bp = target->stackMemory.memory;
     target->tempResult = context->tempResult;
     target->dynamicMemory = context->dynamicMemory;

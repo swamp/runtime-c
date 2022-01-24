@@ -47,7 +47,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
         } break;
         case SwtiTypeArray: {
             const SwtiArrayType* arrayType = ((const SwtiArrayType*) type);
-            SwampArray** _array = (const SwampArray**) v;
+            SwampArray** _array = (SwampArray**) v;
             const SwampArray* array = *_array;
             SwampArray* newArrayStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampArray), 8,
                                                                       "SwampArray");
@@ -71,7 +71,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
         } break;
         case SwtiTypeList: {
             const SwtiListType* listType = ((const SwtiListType*) type);
-            SwampList** _list = (const SwampList**) v;
+            SwampList** _list = (SwampList**) v;
             const SwampList* list = *_list;
             SwampList* newArrayStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampList), 8,
                                                                       "SwampList");
@@ -112,7 +112,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             CLOG_ERROR("not supported in this version");
             break;
         case SwtiTypeUnmanaged: {
-            const SwampUnmanaged** _unmanaged = (const SwampUnmanaged**) v;
+            SwampUnmanaged** _unmanaged = (SwampUnmanaged**) v;
             const SwampUnmanaged* unmanaged = *_unmanaged;
 
             if (doClone) {
@@ -149,7 +149,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
     return 0;
 }
 
-int swampCompact(void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** compactedState)
+int swampCompact(const void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** compactedState)
 {
     #if 1
     if (!swampIsBlittableOrEcs(stateType)) {
@@ -175,7 +175,7 @@ int swampCompact(void* state, const SwtiType* stateType, const SwampDynamicMemor
     return compactOrClone(compactedStateMemory, stateType, 0, targetMemory);
 }
 
-int swampClone(void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** clonedState)
+int swampClone(const void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** clonedState)
 {
     if (!swampIsBlittableOrEcs(stateType)) {
         CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted");

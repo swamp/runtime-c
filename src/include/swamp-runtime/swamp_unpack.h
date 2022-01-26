@@ -36,6 +36,6 @@ void swampUnpackInit(SwampUnpack* self, int verboseFlag);
 void swampUnpackFree(SwampUnpack* self);
 int swampUnpackFilename(SwampUnpack* self, const char* packFilename, SwampResolveExternalFunction bindFn, int verboseFlag);
 int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag);
-struct SwampFunc* swampUnpackEntryPoint(SwampUnpack* self);
+const struct SwampFunc* swampUnpackEntryPoint(SwampUnpack* self);
 
 #endif

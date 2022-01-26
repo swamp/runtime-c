@@ -39,7 +39,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             p++;
             for (size_t i = 0; i < variant->paramCount; ++i) {
                 const SwtiCustomTypeVariantField* field = &variant->fields[i];
-                int errorCode = compactOrClone(p + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)(p + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -52,14 +52,14 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             SwampArray* newArrayStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampArray), 8,
                                                                       "SwampArray");
 
-            const void* newItems = swampDynamicMemoryAllocDebug(targetMemory, array->count, array->itemSize,
+            void* newItems = swampDynamicMemoryAllocDebug(targetMemory, array->count, array->itemSize,
                                                                 array->itemAlign, "array items");
             tc_memcpy_octets(newItems, array->value, array->count * array->itemSize);
             *newArrayStruct = *array;
             newArrayStruct->value = newItems;
-            const uint8_t* p = newArrayStruct->value;
+            uint8_t* p = (uint8_t* ) newArrayStruct->value;
             for (size_t i = 0; i < newArrayStruct->count; i++) {
-                int errorCode = compactOrClone(p, arrayType->itemType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)p, arrayType->itemType, doClone, targetMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -76,14 +76,14 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             SwampList* newArrayStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampList), 8,
                                                                       "SwampList");
 
-            const void* newItems = swampDynamicMemoryAllocDebug(targetMemory, list->count, list->itemSize,
+            void* newItems = swampDynamicMemoryAllocDebug(targetMemory, list->count, list->itemSize,
                                                                 list->itemAlign, "list items");
             tc_memcpy_octets(newItems, list->value, list->count * list->itemSize);
             *newArrayStruct = *list;
             newArrayStruct->value = newItems;
-            const uint8_t* p = newArrayStruct->value;
+            uint8_t* p = (uint8_t*) newArrayStruct->value;
             for (size_t i = 0; i < newArrayStruct->count; i++) {
-                int errorCode = compactOrClone(p, listType->itemType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)p, listType->itemType, doClone, targetMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -96,7 +96,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
         case SwtiTypeFunction:
             return -1;
         case SwtiTypeString: {
-            SwampString** _str = (const SwampString**) v;
+            const SwampString** _str = (const SwampString**) v;
             const SwampString* str = *_str;
             SwampString* newStrStruct = swampDynamicMemoryAllocDebug(targetMemory, 1, sizeof(SwampString), 8,
                                                                      "SwampString");
@@ -149,7 +149,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
     return 0;
 }
 
-int swampCompact(const void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** compactedState)
+int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, void** compactedState)
 {
     #if 1
     if (!swampIsBlittableOrEcs(stateType)) {
@@ -175,7 +175,7 @@ int swampCompact(const void* state, const SwtiType* stateType, const SwampDynami
     return compactOrClone(compactedStateMemory, stateType, 0, targetMemory);
 }
 
-int swampClone(const void* state, const SwtiType* stateType, const SwampDynamicMemory* targetMemory, void** clonedState)
+int swampClone(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, void** clonedState)
 {
     if (!swampIsBlittableOrEcs(stateType)) {
         CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted");

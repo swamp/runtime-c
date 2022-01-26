@@ -34,17 +34,18 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
         const uint8_t* p = (dynamicMemoryOctets + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
-                SwampFunc* func = (const SwampFunc*)p;
+                SwampFunc* func = (SwampFunc*)p;
                 FIXUP_DYNAMIC_STRING(func->debugName);
                 FIXUP_DYNAMIC_POINTER(func->opcodes, const uint8_t *);
                 FIXUP_DYNAMIC_POINTER(func->debugInfoLines, const SwampDebugInfoLines *);
-                FIXUP_DYNAMIC_POINTER(func->debugInfoLines->lines, const SwampDebugInfoLinesEntry *);
+
+                FIXUP_DYNAMIC_POINTER(((SwampDebugInfoLines *)func->debugInfoLines)->lines, SwampDebugInfoLinesEntry *);
                 //swampDebugInfoLinesOutput(func->debugInfoLines);
 
                 FIXUP_DYNAMIC_POINTER(func->debugInfoVariables, const SwampDebugInfoVariables *);
-                FIXUP_DYNAMIC_POINTER(func->debugInfoVariables->variables, const SwampDebugInfoVariablesEntry *);
+                FIXUP_DYNAMIC_POINTER(((SwampDebugInfoVariables *)func->debugInfoVariables)->variables, const SwampDebugInfoVariablesEntry *);
                 for (size_t i=0; i<func->debugInfoVariables->count; ++i) {
-                    SwampDebugInfoVariablesEntry* entry = &func->debugInfoVariables->variables[i];
+                    SwampDebugInfoVariablesEntry* entry = (SwampDebugInfoVariablesEntry*) &func->debugInfoVariables->variables[i];
                     FIXUP_DYNAMIC_POINTER(entry->name, const char*);
                 }
                 //swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
@@ -54,7 +55,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 }
             } break;
             case LedgerTypeExternalFunc: {
-                SwampFunctionExternal* func = (const SwampFunctionExternal *)p;
+                SwampFunctionExternal* func = (SwampFunctionExternal *)p;
                 FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
                 //CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
                 void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
@@ -96,15 +97,15 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
 
             } break;
             case LedgerTypeString: {
-                SwampString* str = (const SwampString *)p;
+                SwampString* str = (SwampString *)p;
                 FIXUP_DYNAMIC_STRING(str->characters);
                 //CLOG_INFO("  str: characters: %s (%d)", str->characters, str->characterCount);
             } break;
             case LedgerTypeResourceNameChunk: {
-                SwampResourceNameChunkEntry* resourceNameChunk = (const SwampResourceNameChunkEntry*) p;
-                FIXUP_DYNAMIC_POINTER(resourceNameChunk->resourceNames, char**);
+                SwampResourceNameChunkEntry* resourceNameChunk = (SwampResourceNameChunkEntry*) p;
+                FIXUP_DYNAMIC_POINTER(resourceNameChunk->resourceNames, const char**);
                 for (size_t i=0; i<resourceNameChunk->resourceCount; ++i) {
-                    char* str = resourceNameChunk->resourceNames[i];
+                    const char* str = resourceNameChunk->resourceNames[i];
                     FIXUP_DYNAMIC_STRING(resourceNameChunk->resourceNames[i]);
                 }
                 //CLOG_INFO("first resource name is '%s'", *resourceNameChunk->resourceNames);
@@ -113,8 +114,8 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 // Intentionally do nothing
             } break;
             case LedgerTypeDebugInfoFiles: {
-                 SwampDebugInfoFiles *debugInfoFiles = (const SwampDebugInfoFiles*) p;
-                 FIXUP_DYNAMIC_POINTER(debugInfoFiles->filenames, char**);
+                 SwampDebugInfoFiles *debugInfoFiles = (SwampDebugInfoFiles*) p;
+                 FIXUP_DYNAMIC_POINTER(debugInfoFiles->filenames, const char**);
                 for (size_t i=0; i<debugInfoFiles->count; ++i) {
                     FIXUP_DYNAMIC_STRING(debugInfoFiles->filenames[i]);
                     //CLOG_INFO("file:%s", debugInfoFiles->filenames[i]);

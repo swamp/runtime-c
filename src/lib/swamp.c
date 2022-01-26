@@ -248,7 +248,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             case SwampOpcodeLoadZeroMemory: {
-                void** target = readTargetStackPointerPos(&pc, bp);
+                const void** target = readTargetStackPointerPos(&pc, bp);
                 *target = readSourceStaticMemoryPointerPos(&pc, context->constantStaticMemory);
             } break;
 
@@ -324,22 +324,22 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 }
                 switch (count - 1) { // externalfunction->paramCOunt
                     case 0:
-                        externalFunction->function0(basePointer, context);
+                        externalFunction->function0((void*)basePointer, context);
                         break;
                     case 1:
-                        externalFunction->function1(basePointer, context, params[1]);
+                        externalFunction->function1((void*)basePointer, context, params[1]);
                         break;
                     case 2:
-                        externalFunction->function2(basePointer, context, params[1], params[2]);
+                        externalFunction->function2((void*)basePointer, context, params[1], params[2]);
                         break;
                     case 3:
-                        externalFunction->function3(basePointer, context, params[1], params[2], params[3]);
+                        externalFunction->function3((void*)basePointer, context, params[1], params[2], params[3]);
                         break;
                     case 4:
-                        externalFunction->function4(basePointer, context, params[1], params[2], params[3], params[4]);
+                        externalFunction->function4((void*)basePointer, context, params[1], params[2], params[3], params[4]);
                         break;
                     case 5:
-                        externalFunction->function5(basePointer, context, params[1], params[2], params[3], params[4], params[5]);
+                        externalFunction->function5((void*)basePointer, context, params[1], params[2], params[3], params[4], params[5]);
                         break;
                     default:
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");
@@ -362,19 +362,19 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 }
                 switch (count - 1) { // externalfunction->paramCOunt
                     case 1:
-                        externalFunction->function1(basePointer, context, &unknownTypes[1]);
+                        externalFunction->function1((void*)basePointer, context, &unknownTypes[1]);
                         break;
                     case 2:
-                        externalFunction->function2(basePointer, context, &unknownTypes[1], &unknownTypes[2]);
+                        externalFunction->function2((void*)basePointer, context, &unknownTypes[1], &unknownTypes[2]);
                         break;
                     case 3:
-                        externalFunction->function3(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3]);
+                        externalFunction->function3((void*)basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3]);
                         break;
                     case 4:
-                        externalFunction->function4(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4]);
+                        externalFunction->function4((void*)basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4]);
                         break;
                     case 5:
-                        externalFunction->function5(basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4], &unknownTypes[5]);
+                        externalFunction->function5((void*)basePointer, context, &unknownTypes[1], &unknownTypes[2], &unknownTypes[3], &unknownTypes[4], &unknownTypes[5]);
                         break;
                     default:
                         SWAMP_LOG_ERROR("strange parameter count in external with sizes");
@@ -406,32 +406,32 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                       //          bp - context->stackMemory.memory)
                     switch (func->parameterCount) {
                         case 0:
-                            externalFunction->function0(basePointer, context);
+                            externalFunction->function0((void*)basePointer, context);
                             break;
                         case 1:
-                            externalFunction->function1(basePointer, context,
+                            externalFunction->function1((void*)basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos);
                             break;
                         case 2:
-                            externalFunction->function2(basePointer, context,
+                            externalFunction->function2((void*)basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos,
                                                         basePointer + externalFunction->parameters[1].pos);
                             break;
                         case 3:
-                            externalFunction->function3(basePointer, context,
+                            externalFunction->function3((void*)basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos,
                                                         basePointer + externalFunction->parameters[1].pos,
                                                         basePointer + externalFunction->parameters[2].pos);
                             break;
                         case 4:
-                            externalFunction->function4(basePointer, context,
+                            externalFunction->function4((void*)basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos,
                                                         basePointer + externalFunction->parameters[1].pos,
                                                         basePointer + externalFunction->parameters[2].pos,
                                                         basePointer + externalFunction->parameters[3].pos);
                             break;
                         case 5:
-                            externalFunction->function5(basePointer, context,
+                            externalFunction->function5((void*)basePointer, context,
                                                         basePointer + externalFunction->parameters[0].pos,
                                                         basePointer + externalFunction->parameters[1].pos,
                                                         basePointer + externalFunction->parameters[2].pos,
@@ -478,13 +478,13 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             case SwampOpcodeCurry: {
-                SwampFunc** targetFunc = (SwampFunc**) readTargetStackPointerPos(&pc, bp);
+                const SwampFunction** targetFunc = (const SwampFunction**) readTargetStackPointerPos(&pc, bp);
                 uint16_t typeIdIndex = readU16(&pc);
                 uint8_t align = readU8(&pc);
                 const SwampFunc* sourceFunc = *(const SwampFunc**) readSourceStackPointerPos(&pc, bp);
                 const void* argumentsStartPointer = readSourceStackPointerPos(&pc, bp);
                 size_t argumentsRange = readShortRange(&pc);
-                *targetFunc = swampCurryFuncAllocate(context->dynamicMemory, typeIdIndex, align, sourceFunc, argumentsStartPointer,
+                *targetFunc = (const SwampFunction*) swampCurryFuncAllocate(context->dynamicMemory, typeIdIndex, align, sourceFunc, argumentsStartPointer,
                                                      argumentsRange);
             } break;
 

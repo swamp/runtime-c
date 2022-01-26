@@ -7,7 +7,7 @@
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/swamp_allocate.h>
 
-void swampCoreStringFromInt(SwampString** result, SwampMachineContext* context, const SwampInt32* intValue)
+void swampCoreStringFromInt(const SwampString** result, SwampMachineContext* context, const SwampInt32* intValue)
 {
     static char temp[64];
 

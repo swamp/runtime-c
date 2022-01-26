@@ -135,7 +135,7 @@ int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verbose
         SWAMP_ERROR("too much static memory")
     }
     self->constantStaticMemoryOctets = malloc(self->constantStaticMemoryMaxSize);
-    tc_memcpy_octets(self->constantStaticMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
+    tc_memcpy_octets((void*)self->constantStaticMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
     self->constantStaticMemorySize = upcomingOctetsInChunk;
 
     s->position += upcomingOctetsInChunk;
@@ -161,7 +161,7 @@ int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunct
     }
 
     self->ledger.ledgerOctets = malloc(upcomingOctetsInChunk);
-    tc_memcpy_octets(self->ledger.ledgerOctets, &s->octets[s->position], upcomingOctetsInChunk);
+    tc_memcpy_octets((void*)self->ledger.ledgerOctets, &s->octets[s->position], upcomingOctetsInChunk);
     self->ledger.ledgerSize = upcomingOctetsInChunk;
     self->ledger.constantStaticMemory = self->constantStaticMemoryOctets;
 
@@ -249,8 +249,8 @@ void swampUnpackInit(SwampUnpack* self, int verbose_flag)
 
 void swampUnpackFree(SwampUnpack* self)
 {
-    free(self->constantStaticMemoryOctets);
-    free(self->ledger.ledgerOctets);
+    free((void*)self->constantStaticMemoryOctets);
+    free((void*)self->ledger.ledgerOctets);
     swtiChunkDestroy(&self->typeInfoChunk);
 }
 
@@ -264,7 +264,7 @@ int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, SwampResol
     return result;
 }
 
-SwampFunc* swampUnpackEntryPoint(SwampUnpack* self)
+const SwampFunc* swampUnpackEntryPoint(SwampUnpack* self)
 {
     return self->entry;
 }

@@ -33,9 +33,9 @@ void swampDynamicMemoryReset(SwampDynamicMemory* self)
 {
     self->p = self->memory;
     self->ledgerCount = 0;
-#if SWAMP_DYNAMIC_MEMORY_DEBUG
+#if SWAMP_DYNAMIC_MEMORY_DEBUG || 1
     tc_memset_octets(self->memory, 0xce, self->maxAllocatedSize);
-    #endif
+#endif
 }
 
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self)

@@ -118,7 +118,7 @@ void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, co
     }
 
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, array->count);
-    uint8_t* targetItemPointer = targetBlob->octets;
+    uint8_t* targetItemPointer = (uint8_t*)targetBlob->octets;
     for (size_t i = 0; i < array->count; ++i) {
         *targetItemPointer++ = *(const SwampInt32*) (((uint8_t*) array->value) + i * array->itemSize);
     }
@@ -136,7 +136,7 @@ void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, con
     }
 
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, list->count);
-    uint8_t* targetItemPointer = targetBlob->octets;
+    uint8_t* targetItemPointer = (uint8_t *) targetBlob->octets;
     for (size_t i = 0; i < list->count; ++i) {
         SwampInt32 v = *(const SwampInt32*) (((uint8_t*) list->value) + i * list->itemSize);
         uint8_t clampedV = (uint8_t)v;
@@ -165,7 +165,7 @@ void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, Sw
     // , fn->returnOctetSize,
     //                                                 fn->returnAlign
     SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
-    uint8_t* targetItemPointer = target->octets;
+    uint8_t* targetItemPointer = (uint8_t *)target->octets;
     for (size_t i = 0; i < blob->octetCount; ++i) {
         const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
@@ -175,7 +175,7 @@ void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, Sw
         swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
 
         tc_memcpy_octets(ownContext.bp + pos, &v, parameters.octetSize);
-        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         SwampInt32 returnValue = *(SwampInt32*) ownContext.bp;
 
         *targetItemPointer = (uint8_t) returnValue;
@@ -213,7 +213,7 @@ void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* cont
     // , fn->returnOctetSize,
     //                                                 fn->returnAlign
     SwampBlob* target = swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
-    uint8_t* targetItemPointer = target->octets;
+    uint8_t* targetItemPointer = (uint8_t *)target->octets;
     for (size_t i = 0; i < blob->octetCount; ++i) {
         const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
@@ -243,7 +243,7 @@ void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* cont
 }
 
 
-void swampCoreBlobIndexedMapToBlobMutable(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
+void swampCoreBlobIndexedMapToBlobMutable(const SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
                                    const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -260,7 +260,7 @@ void swampCoreBlobIndexedMapToBlobMutable(SwampBlob** result, SwampMachineContex
     SwampMachineContext ownContext;
     swampContextCreateTemp(&ownContext, context, "Blob.indexedMapToBlob!()");
 
-    uint8_t* targetItemPointer = blob->octets;
+    uint8_t* targetItemPointer = (uint8_t *)blob->octets;
     for (size_t i = 0; i < blob->octetCount; ++i) {
         const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
@@ -381,7 +381,7 @@ void swampCoreBlobAny(SwampBool* result, SwampMachineContext* context, SwampFunc
         swampMemoryPositionAlign(&pos, sizeof(SwampInt32));
         tc_memcpy_octets(ownContext.bp + pos, &v, parameters.octetSize);
 
-        swampRun(&fnResult, &ownContext, fn, parameters, 1);
+        swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         SwampBool returnValue = *(SwampBool*) ownContext.bp;
         if (returnValue) {
             foundAny = 1;
@@ -695,7 +695,7 @@ void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampC
 
 // __externalfn fill2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> Int -> { width : Int, height : Int }
 // -> Blob -> Blob
-void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                          SwampCoreSize2i* blobDimensions, const SwampInt32* fillValue, const SwampCoreSize2i* fillSize,
                          const SwampBlob** _blob)
 {
@@ -727,10 +727,10 @@ void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, Swamp
         CLOG_ERROR("fill blobDimensions is wrong");
     }
 
-    SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
     //tc_memcpy_octets(newBlob->octets, blob->octets, blob->octetCount);
 
-    uint8_t* targetOctets = newBlob->octets + position->y * blobDimensions->width + position->x;
+    uint8_t* targetOctets = (uint8_t *)newBlob->octets + position->y * blobDimensions->width + position->x;
     uint8_t fillValueOctet = *fillValue;
     for (size_t y = position->y; y < position->y + fillSize->height; ++y) {
         tc_memset_octets(targetOctets, fillValueOctet, fillSize->width);
@@ -743,7 +743,7 @@ void swampCoreBlobFill2d(SwampBlob** result, SwampMachineContext* context, Swamp
 
 // __externalfn drawWindow2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int }
 // -> Blob -> Blob
-void swampCoreBlobDrawWindow2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                          SwampCoreSize2i* size, const SwampCoreSize2i* fillSize,
                          const SwampBlob** _blob)
 {
@@ -775,29 +775,29 @@ void swampCoreBlobDrawWindow2d(SwampBlob** result, SwampMachineContext* context,
         CLOG_ERROR("fill size is wrong");
     }
 
-    SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
 
-    tc_memcpy_octets(newBlob->octets, blob->octets, blob->octetCount);
-    uint8_t* targetOctets = newBlob->octets + position->y * size->width + position->x;
+    tc_memcpy_octets((void*)newBlob->octets, blob->octets, blob->octetCount);
+    uint8_t* targetOctets = (uint8_t *)newBlob->octets + position->y * size->width + position->x;
     *targetOctets = '+';
-    targetOctets = newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x;
+    targetOctets = (uint8_t *)newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x;
     *targetOctets = '+';
-    targetOctets = newBlob->octets + ( position->y  ) * size->width + position->x + fillSize->width - 1;
+    targetOctets = (uint8_t *)newBlob->octets + ( position->y  ) * size->width + position->x + fillSize->width - 1;
     *targetOctets = '+';
-    targetOctets = newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x + fillSize->width - 1;
+    targetOctets = (uint8_t *)newBlob->octets + ( position->y + fillSize->height - 1 ) * size->width + position->x + fillSize->width - 1;
     *targetOctets = '+';
 
     for (size_t x = position->x+1; x < position->x + fillSize->width - 1; ++x) {
-        uint8_t* above = newBlob->octets + position->y * size->width + x;
+        uint8_t* above = (uint8_t *)newBlob->octets + position->y * size->width + x;
         *above = '-';
-        uint8_t* below = newBlob->octets + (position->y + fillSize->height - 1) * size->width + x;
+        uint8_t* below = (uint8_t *)newBlob->octets + (position->y + fillSize->height - 1) * size->width + x;
         *below = '-';
     }
 
     for (size_t y = position->y+1; y < position->y + fillSize->height -1; ++y) {
-        uint8_t* above = newBlob->octets + y * size->width + position->x;
+        uint8_t* above = (uint8_t *)newBlob->octets + y * size->width + position->x;
         *above = '|';
-        uint8_t* below = newBlob->octets + y * size->width + position->x + fillSize->width - 1;
+        uint8_t* below =(uint8_t *) newBlob->octets + y * size->width + position->x + fillSize->width - 1;
         *below = '|';
     }
 
@@ -806,7 +806,7 @@ void swampCoreBlobDrawWindow2d(SwampBlob** result, SwampMachineContext* context,
 
 
 // __externalfn copy2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int } -> Blob -> Blob -> Blob
-void swampCoreBlobCopy2d(SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                                SwampCoreSize2i* targetBlobSize, const SwampCoreSize2i* sourceBlobSize, const SwampBlob** _sourceBlob,
                                const SwampBlob** _blob)
 {
@@ -843,11 +843,11 @@ void swampCoreBlobCopy2d(SwampBlob** result, SwampMachineContext* context, Swamp
         CLOG_ERROR("fill size is wrong");
     }
 
-    SwampBlob* newBlob = targetBlob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
+    const SwampBlob* newBlob = targetBlob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
 
     for (size_t y = 0; y < sourceBlobSize->height; ++y) {
         const uint8_t* sourceOctets = sourceBlob->octets + y * sourceBlobSize->width;
-        uint8_t* targetOctets = newBlob->octets + (y + targetRect.position.y) * targetBlobSize->width + targetRect.position.x;
+        uint8_t* targetOctets = (uint8_t *) newBlob->octets + (y + targetRect.position.y) * targetBlobSize->width + targetRect.position.x;
         tc_memcpy_octets(targetOctets, sourceOctets, sourceBlobSize->width);
     }
 
@@ -856,7 +856,7 @@ void swampCoreBlobCopy2d(SwampBlob** result, SwampMachineContext* context, Swamp
 
 
 // __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
-void swampCoreBlobToString2d(SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
+void swampCoreBlobToString2d(const SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
                              const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -893,7 +893,7 @@ void swampCoreBlobMake(SwampBlob** result, SwampMachineContext* context, const S
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory,
                                                      *octetCount);
 
-    uint8_t* targetOctets = targetBlob->octets;
+    uint8_t* targetOctets = (uint8_t *)targetBlob->octets;
 
     tc_memset_octets(targetOctets, 0, *octetCount);
 

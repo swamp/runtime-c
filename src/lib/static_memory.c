@@ -8,7 +8,7 @@
 
 void swampStaticMemoryInit(SwampStaticMemory* self, const void* memory, size_t maxOctetSize)
 {
-   self->memory = memory;
+   self->memory = (uint8_t *) memory;
    self->maxAllocatedSize = maxOctetSize;
 }
 

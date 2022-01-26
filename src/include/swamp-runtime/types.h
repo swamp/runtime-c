@@ -43,14 +43,14 @@ struct SwampUnmanaged;
 void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
 
 typedef int (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t maxSize);
-typedef int (*SwampUnmanagedDeSerialize)(const void* self, const uint8_t* target, size_t maxSize);
-typedef size_t (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
+typedef int (*SwampUnmanagedDeSerialize)(void* self, const uint8_t* source, size_t maxSize);
+typedef int (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
 typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
 typedef int (*SwampUnmanagedClone)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
 
 typedef struct SwampUnmanaged {
-    const void* ptr;
+    void* ptr;
     const char* debugName;
     SwampUnmanagedSerialize serialize;
     SwampUnmanagedDeSerialize deSerialize;
@@ -157,9 +157,9 @@ typedef struct SwampFunc {
     size_t returnAlign;
     const char* debugName;
     uint16_t typeIndex;
-    struct SwampDebugInfoLines* debugInfoLines;
+    const struct SwampDebugInfoLines* debugInfoLines;
     size_t debugInfoLinesOctetCount;
-    struct SwampDebugInfoVariables* debugInfoVariables;
+    const struct SwampDebugInfoVariables* debugInfoVariables;
     size_t debugInfoVariablesOctetCount;
 } SwampFunc;
 

@@ -125,7 +125,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
 
 
 // concatMap : (a -> List b) -> List a -> List b
-void swampCoreListConcatMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+void swampCoreListConcatMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const SwampFunction* fn = *_fn;
@@ -195,7 +195,7 @@ void swampCoreListConcatMap(SwampList** result, SwampMachineContext* context, Sw
         sourceItemPointer += list->itemSize;
     }
 
-    SwampList* newList = swampListAllocate(context->dynamicMemory, target, count, itemMemorySize, itemMemoryAlign);
+    const SwampList* newList = swampListAllocate(context->dynamicMemory, target, count, itemMemorySize, itemMemoryAlign);
 
     swampContextDestroyTemp(&ownContext);
 
@@ -502,7 +502,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
     }
     const uint8_t* sourceItemPointer = list->value;
     for (size_t i = 0; i < list->count; ++i) {
-        SwampFunc* internalFunction;
+        const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
 
         SwampResult fnResult;
@@ -559,7 +559,7 @@ void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFuncti
     sourceItemPointer += aSize;
 
     for (size_t i = 1; i < list->count; ++i) {
-        SwampFunc* internalFunction;
+        const SwampFunc* internalFunction;
         SwampMemoryPosition pos = swampExecutePrepare(fn, ownContext.bp, &internalFunction);
 
         SwampResult fnResult;

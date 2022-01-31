@@ -38,6 +38,7 @@ typedef uint32_t SwampResourceNameId;
 typedef uint32_t SwampMemoryPosition;
 
 struct SwampDynamicMemory;
+struct SwampUnmanagedMemory;
 struct SwampUnmanaged;
 
 void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align);
@@ -46,18 +47,26 @@ typedef int (*SwampUnmanagedSerialize)(const void* self, uint8_t* target, size_t
 typedef int (*SwampUnmanagedDeSerialize)(void* self, const uint8_t* source, size_t maxSize);
 typedef int (*SwampUnmanagedToString)(const void* self, int flags, char* target, size_t maxSize);
 
-typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
-typedef int (*SwampUnmanagedClone)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory);
+typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory, struct SwampUnmanagedMemory* unmanagedMemory);
+typedef int (*SwampUnmanagedClone)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory, struct SwampUnmanagedMemory* unmanagedMemory);
+typedef int (*SwampUnmanagedDestroy)(void* self);
+
+
+#define SWAMP_UNMANAGED_PTR(type, unmanaged) (type) ((unmanaged)->ptr)
 
 typedef struct SwampUnmanaged {
-    void* ptr;
+    void* ptr; // Must be first
     const char* debugName;
     SwampUnmanagedSerialize serialize;
     SwampUnmanagedDeSerialize deSerialize;
     SwampUnmanagedToString toString;
     SwampUnmanagedCompact compact;
     SwampUnmanagedClone clone;
+    SwampUnmanagedDestroy destroy;
 } SwampUnmanaged;
+
+int swampUnmanagedVerifyWithName(const SwampUnmanaged* unmanaged, const char* debugName);
+
 
 typedef struct SwampUnknownType {
     const void* ptr; // Must be first!

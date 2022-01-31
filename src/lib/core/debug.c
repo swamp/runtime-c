@@ -58,7 +58,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 
 #endif
 
-    CLOG_OUTPUT(buf);
+    CLOG_OUTPUT("%s", buf);
     *result = *value;
 }
 

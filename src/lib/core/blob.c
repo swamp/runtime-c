@@ -525,6 +525,8 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
 
     const SwampList* list = swampListAllocate(context->dynamicMemory, temp, resultCount, returnSize, returnAlign);
 
+    swampContextDestroyTemp(&ownContext);
+
     tc_free(temp);
 
     *result = list;

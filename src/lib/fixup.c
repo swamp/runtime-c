@@ -45,8 +45,8 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 FIXUP_DYNAMIC_POINTER(func->debugInfoVariables, const SwampDebugInfoVariables *);
                 FIXUP_DYNAMIC_POINTER(((SwampDebugInfoVariables *)func->debugInfoVariables)->variables, const SwampDebugInfoVariablesEntry *);
                 for (size_t i=0; i<func->debugInfoVariables->count; ++i) {
-                    SwampDebugInfoVariablesEntry* entry = (SwampDebugInfoVariablesEntry*) &func->debugInfoVariables->variables[i];
-                    FIXUP_DYNAMIC_POINTER(entry->name, const char*);
+                    SwampDebugInfoVariablesEntry* variablesEntry = (SwampDebugInfoVariablesEntry*) &func->debugInfoVariables->variables[i];
+                    FIXUP_DYNAMIC_POINTER(variablesEntry->name, const char*);
                 }
                 //swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
                 //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)

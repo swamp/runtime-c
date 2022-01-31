@@ -6,10 +6,11 @@
 #define SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_COMPACT_H
 
 struct SwampDynamicMemory;
+struct SwampUnmanagedMemory;
 struct SwtiType;
 
 int swampCompact(const void* state, const struct SwtiType* stateType, struct SwampDynamicMemory* targetMemory,
-                 void** compactedState);
+                 struct SwampUnmanagedMemory* targetUnmanagedMemory,struct SwampUnmanagedMemory* sourceUnmanagedMemory, void** compactedState);
 
 
 

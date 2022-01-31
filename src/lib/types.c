@@ -35,3 +35,17 @@ SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index)
 
     return (const uint8_t *)list->value + list->itemSize * index;
 }
+
+
+int swampUnmanagedVerifyWithName(const SwampUnmanaged* unmanaged, const char* debugName)
+{
+    if (!unmanaged->ptr) {
+        return -2;
+    }
+
+    if (!tc_str_equal(unmanaged->debugName, debugName)) {
+        return -1;
+    }
+
+    return 0;
+}

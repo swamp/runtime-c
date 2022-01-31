@@ -11,7 +11,7 @@
 #include <swamp-dump/dump_ascii.h>
 #include <tiny-libc/tiny_libc.h>
 
-static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynamicMemory* targetMemory)
+static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynamicMemory* targetMemory, SwampUnmanagedMemory* targetUnmanagedMemory, SwampUnmanagedMemory* sourceUnmanagedMemory)
 {
     switch (type->type) {
         case SwtiTypeBoolean:
@@ -23,7 +23,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwtiRecordType* record = (const SwtiRecordType*) type;
             for (size_t i = 0; i < record->fieldCount; i++) {
                 const SwtiRecordTypeField* field = &record->fields[i];
-                int errorCode = compactOrClone((uint8_t*)v + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory);
+                int errorCode = compactOrClone((uint8_t*)v + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -39,7 +39,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             p++;
             for (size_t i = 0; i < variant->paramCount; ++i) {
                 const SwtiCustomTypeVariantField* field = &variant->fields[i];
-                int errorCode = compactOrClone((void*)(p + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)(p + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -59,7 +59,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             newArrayStruct->value = newItems;
             uint8_t* p = (uint8_t* ) newArrayStruct->value;
             for (size_t i = 0; i < newArrayStruct->count; i++) {
-                int errorCode = compactOrClone((void*)p, arrayType->itemType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)p, arrayType->itemType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -83,7 +83,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             newArrayStruct->value = newItems;
             uint8_t* p = (uint8_t*) newArrayStruct->value;
             for (size_t i = 0; i < newArrayStruct->count; i++) {
-                int errorCode = compactOrClone((void*)p, listType->itemType, doClone, targetMemory);
+                int errorCode = compactOrClone((void*)p, listType->itemType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }
@@ -116,14 +116,29 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwampUnmanaged* unmanaged = *_unmanaged;
 
             if (doClone) {
-                return unmanaged->clone(_unmanaged, targetMemory);
+                CLOG_VERBOSE("attempting to clone unmanaged  (%p)", unmanaged);
+                CLOG_VERBOSE("attempting to clone unmanaged '%s' (%p)", unmanaged->debugName, unmanaged);
+                int result = unmanaged->clone(_unmanaged, targetMemory, targetUnmanagedMemory);
+                if (*_unmanaged == 0) {
+                    CLOG_ERROR("what happened");
+                }
+                if (result < 0) {
+                    return result;
+                }
             } else {
-                return unmanaged->compact(_unmanaged, targetMemory);
+#if 0
+            CLOG_VERBOSE("attempting to compact unmanaged '%s' (%p)", unmanaged->debugName, unmanaged);
+#endif
+                swampUnmanagedMemoryMove(targetUnmanagedMemory, sourceUnmanagedMemory, unmanaged);
+                if (*_unmanaged == 0) {
+                    CLOG_ERROR("what happened");
+                }
+                return 0; // unmanaged->compact(_unmanaged, targetMemory, unmanagedMemory);
             }
         } break;
         case SwtiTypeAlias: {
             const SwtiAliasType* alias = (const SwtiAliasType*) type;
-            int errorCode = compactOrClone(v, alias->targetType, doClone, targetMemory);
+            int errorCode = compactOrClone(v, alias->targetType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
             if (errorCode != 0) {
                 return errorCode;
             }
@@ -149,7 +164,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
     return 0;
 }
 
-int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, void** compactedState)
+int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, SwampUnmanagedMemory* targetUnmanagedMemory,  SwampUnmanagedMemory* sourceUnmanagedMemory, void** compactedState)
 {
     #if 1
     if (!swampIsBlittableOrEcs(stateType)) {
@@ -172,10 +187,13 @@ int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemor
         *compactedState = compactedStateMemory;
     }
 
-    return compactOrClone(compactedStateMemory, stateType, 0, targetMemory);
+    int result = compactOrClone(compactedStateMemory, stateType, 0, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
+
+
+    return result;
 }
 
-int swampClone(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, void** clonedState)
+int swampClone(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, SwampUnmanagedMemory* targetUnmanagedMemory, SwampUnmanagedMemory* sourceUnmanagedMemory, void** clonedState)
 {
     if (!swampIsBlittableOrEcs(stateType)) {
         CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted");
@@ -194,5 +212,7 @@ int swampClone(const void* state, const SwtiType* stateType, SwampDynamicMemory*
         *clonedState = clonedStateMemory;
     }
 
-    return compactOrClone(clonedStateMemory, stateType, 1, targetMemory);
+    int result = compactOrClone(clonedStateMemory, stateType, 1, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
+
+    return result;
 }

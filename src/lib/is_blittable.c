@@ -77,6 +77,8 @@ int swampIsBlittableOrEcs(const SwtiType* maybeBlittableType)
         case SwtiTypeString:
         case SwtiTypeBlob:
             return 1;
+        default:
+            return 0;
     }
 
     return 0;

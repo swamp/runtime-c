@@ -27,6 +27,24 @@ typedef struct SwampCallStack {
     size_t maxCount;
 } SwampCallStack;
 
+typedef struct SwampUnmanagedMemoryEntry {
+    const struct SwampUnmanaged* unmanaged;
+} SwampUnmanagedMemoryEntry;
+
+
+#define SWAMP_MACHINE_CONTEXT_UNMANAGED_CONTAINER_COUNT (32)
+
+typedef struct SwampUnmanagedMemory {
+    struct SwampUnmanagedMemoryEntry unmanaged[SWAMP_MACHINE_CONTEXT_UNMANAGED_CONTAINER_COUNT];
+    size_t count;
+    size_t capacity;
+} SwampUnmanagedMemory;
+
+void swampUnmanagedMemoryInit(SwampUnmanagedMemory* self);
+struct SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const char* debugName);
+void swampUnmanagedMemoryReset(SwampUnmanagedMemory* self);
+int swampUnmanagedMemoryOwns(const SwampUnmanagedMemory* self, const struct SwampUnmanaged* unmanaged);
+void swampUnmanagedMemoryMove(SwampUnmanagedMemory* target, SwampUnmanagedMemory* source, const struct SwampUnmanaged* unmanaged);
 
 typedef struct SwampMachineContext {
     SwampStackMemory stackMemory;
@@ -41,10 +59,11 @@ typedef struct SwampMachineContext {
     const struct SwampDebugInfoFiles* debugInfoFiles;
     const struct SwampMachineContext* parent;
     const char* debugString;
+    SwampUnmanagedMemory* unmanagedMemory;
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory,
-                      const struct SwtiChunk* typeInfo, const char* debugString);
+                      const struct SwtiChunk* typeInfo, SwampUnmanagedMemory* container, const char* debugString);
 void swampContextReset(SwampMachineContext* self);
 void swampContextDestroy(SwampMachineContext* self);
 void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context, const char* debugString);

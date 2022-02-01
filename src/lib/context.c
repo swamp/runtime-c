@@ -146,6 +146,12 @@ void swampUnmanagedMemoryReset(SwampUnmanagedMemory* self)
     self->count = 0;
 }
 
+
+void swampUnmanagedMemoryDestroy(SwampUnmanagedMemory* self)
+{
+    swampUnmanagedMemoryReset(self);
+}
+
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemory,
                       const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo, SwampUnmanagedMemory* unmanagedMemory, const char* debugString)
 {

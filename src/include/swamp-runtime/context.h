@@ -31,7 +31,6 @@ typedef struct SwampUnmanagedMemoryEntry {
     const struct SwampUnmanaged* unmanaged;
 } SwampUnmanagedMemoryEntry;
 
-
 #define SWAMP_MACHINE_CONTEXT_UNMANAGED_CONTAINER_COUNT (32)
 
 typedef struct SwampUnmanagedMemory {
@@ -43,6 +42,7 @@ typedef struct SwampUnmanagedMemory {
 void swampUnmanagedMemoryInit(SwampUnmanagedMemory* self);
 struct SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const char* debugName);
 void swampUnmanagedMemoryReset(SwampUnmanagedMemory* self);
+void swampUnmanagedMemoryDestroy(SwampUnmanagedMemory* self);
 int swampUnmanagedMemoryOwns(const SwampUnmanagedMemory* self, const struct SwampUnmanaged* unmanaged);
 void swampUnmanagedMemoryMove(SwampUnmanagedMemory* target, SwampUnmanagedMemory* source, const struct SwampUnmanaged* unmanaged);
 

@@ -116,7 +116,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwampUnmanaged* unmanaged = *_unmanaged;
 
             if (doClone) {
-                CLOG_VERBOSE("attempting to clone unmanaged  (%p)", unmanaged);
+                //CLOG_VERBOSE("attempting to clone unmanaged  (%p)", unmanaged);
                 CLOG_VERBOSE("attempting to clone unmanaged '%s' (%p)", unmanaged->debugName, unmanaged);
                 int result = unmanaged->clone(_unmanaged, targetMemory, targetUnmanagedMemory);
                 if (*_unmanaged == 0) {

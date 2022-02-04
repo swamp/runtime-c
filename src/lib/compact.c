@@ -29,17 +29,26 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
                 }
             }
         } break;
+        case SwtiTypeTuple: {
+            const SwtiTupleType * record = (const SwtiTupleType*) type;
+            for (size_t i = 0; i < record->fieldCount; i++) {
+                const SwtiTupleTypeField * field = &record->fields[i];
+                int errorCode = compactOrClone((uint8_t*)v + field->memoryOffsetInfo.memoryOffset, field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
+                if (errorCode != 0) {
+                    return errorCode;
+                }
+            }
+        } break;
         case SwtiTypeCustom: {
             const SwtiCustomType* custom = (const SwtiCustomType*) type;
-            const uint8_t* p = (const uint8_t*) v;
-            if (*p >= custom->variantCount) {
-                CLOG_ERROR("illegal variant index %d", *p);
+            const uint8_t enumIndex = *(const uint8_t*) v;
+            if (enumIndex >= custom->variantCount) {
+                CLOG_ERROR("illegal variant index %d", enumIndex);
             }
-            const SwtiCustomTypeVariant* variant = &custom->variantTypes[*p];
-            p++;
+            const SwtiCustomTypeVariant* variant = &custom->variantTypes[enumIndex];
             for (size_t i = 0; i < variant->paramCount; ++i) {
                 const SwtiCustomTypeVariantField* field = &variant->fields[i];
-                int errorCode = compactOrClone((void*)(p + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
+                int errorCode = compactOrClone((void*)(v + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }

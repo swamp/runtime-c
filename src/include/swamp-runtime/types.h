@@ -138,8 +138,17 @@ typedef struct SwampList##type { \
 #define SWAMP_INLINE __attribute__ ((__always_inline__))
 #endif
 
+#include <clog/clog.h>
 
-SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index);
+SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index)
+{
+    if (index >= list->count) {
+        CLOG_ERROR("index in list doesnt exist");
+        return 0;
+    }
+
+    return (const uint8_t*) list->value + list->itemSize * index;
+}
 
 typedef const SwampList* SwampListReference;
 typedef const SwampList** SwampListReferenceData;

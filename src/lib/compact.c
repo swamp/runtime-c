@@ -48,7 +48,8 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwtiCustomTypeVariant* variant = &custom->variantTypes[enumIndex];
             for (size_t i = 0; i < variant->paramCount; ++i) {
                 const SwtiCustomTypeVariantField* field = &variant->fields[i];
-                int errorCode = compactOrClone((void*)(v + field->memoryOffsetInfo.memoryOffset), field->fieldType, doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
+                int errorCode = compactOrClone(((uint8_t*) v + field->memoryOffsetInfo.memoryOffset), field->fieldType,
+                                               doClone, targetMemory, targetUnmanagedMemory, sourceUnmanagedMemory);
                 if (errorCode != 0) {
                     return errorCode;
                 }

@@ -135,8 +135,10 @@ typedef struct SwampList##type { \
 #if _MSC_VER
 #define SWAMP_INLINE __forceinline
 #else
-#define SWAMP_INLINE __attribute__ ((__always_inline__))
+#define SWAMP_INLINE inline __attribute__ ((__always_inline__))
 #endif
+
+#define SWAMP_ENUM uint8_t
 
 #include <clog/clog.h>
 

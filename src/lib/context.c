@@ -207,6 +207,7 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     target->typeInfo = context->typeInfo;
     target->constantStaticMemory = context->constantStaticMemory;
     target->userData = context->userData;
+    target->userData2 = context->userData2;
     target->debugInfoFiles = context->debugInfoFiles;
     target->parent = context;
     target->debugString = debugString;

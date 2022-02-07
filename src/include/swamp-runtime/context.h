@@ -55,6 +55,7 @@ typedef struct SwampMachineContext {
     size_t tempResultSize;
     const struct SwtiChunk* typeInfo;
     void* userData;
+    void* userData2;
     SwampCallStack callStack;
     const struct SwampDebugInfoFiles* debugInfoFiles;
     const struct SwampMachineContext* parent;

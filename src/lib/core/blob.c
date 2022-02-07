@@ -442,7 +442,7 @@ void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, cons
 
     SwampInt32 lowerSide = sliceRect.position.y + sliceRect.size.height;
     if (lowerSide > calculatedHeight) {
-        CLOG_ERROR("wrong slice2d height %d of %d", lowerSide)
+        CLOG_ERROR("wrong slice2d height %d of %d", lowerSide, calculatedHeight)
     }
 
     if (sliceRect.position.x < 0 || sliceRect.position.y < 0) {

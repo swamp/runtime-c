@@ -16,8 +16,12 @@
 #include <tinge/tinge.h>
 #include <flood/out_stream.h>
 
+
+#define SWAMP_LOG_ENABLED (CONFIGURATION_DEBUG)
+
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
+#if SWAMP_LOG_ENABLED
     const char* filenameAndLocation;
 
 #define SWAMP_LOG_BUF_SIZE (64*1024)
@@ -60,6 +64,9 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 
     CLOG_OUTPUT("%s", buf);
     *result = *value;
+#else
+    *result = 0;
+#endif
 }
 
 void swampPanic(SwampMachineContext* context, const char* format, ...)
@@ -88,6 +95,7 @@ void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, con
 
 void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
+#if SWAMP_LOG_ENABLED
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 
     const char* filenameAndLocation;
@@ -100,6 +108,9 @@ void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, co
     char buf[MaxBufSize];
 
     CLOG_OUTPUT("%s log: %s", filenameAndLocation, swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
+#else
+#endif
+    *result = 0;
 }
 
 

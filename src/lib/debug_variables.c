@@ -13,7 +13,7 @@ void swampDebugInfoVariablesOutput(const SwampDebugInfoVariables* variables, con
     CLOG_OUTPUT("%s debug variables count %d", description, variables->count);
     for (size_t i=0; i<variables->count;++i) {
         const SwampDebugInfoVariablesEntry* entry = &variables->variables[i];
-        CLOG_OUTPUT(".. %d '%s' %04X-%04X address:%04X typeId:%d scopeId:%d", i, entry->name, entry->startOpcodePosition, entry->endOpcodePosition, entry->stackPosition, entry->typeId, entry->scopeId);
+        CLOG_OUTPUT(".. %zu '%s' %04X-%04X address:%04X typeId:%d scopeId:%d", i, entry->name, entry->startOpcodePosition, entry->endOpcodePosition, entry->stackPosition, entry->typeId, entry->scopeId);
     }
 }
 

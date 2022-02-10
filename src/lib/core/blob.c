@@ -719,7 +719,7 @@ void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* context,
 
     int index = position->y * blobDimensions->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %d", index, blob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount);
         return;
     }
 
@@ -767,7 +767,7 @@ void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineContext* co
 
     int index = position->y * size->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %d", index, blob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount);
         return;
     }
 
@@ -835,7 +835,7 @@ void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* context,
 
     int index = position->y * targetBlobSize->width + position->x;
     if (index < 0 || index >= targetBlob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %d", index, sourceBlob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, sourceBlob->octetCount);
         return;
     }
 

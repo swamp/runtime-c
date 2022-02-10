@@ -153,7 +153,7 @@ void swampUnmanagedMemoryDestroy(SwampUnmanagedMemory* self)
 }
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemory,
-                      const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo, SwampUnmanagedMemory* unmanagedMemory, const char* debugString)
+                      const SwampStaticMemory* staticMemory, const struct SwtiChunk* typeInfo, SwampUnmanagedMemory* unmanagedMemory, const struct SwampDebugInfoFiles* debugInfoFiles, const char* debugString)
 {
     self->dynamicMemory = dynamicMemory;
     self->unmanagedMemory = unmanagedMemory;
@@ -166,10 +166,9 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
     self->constantStaticMemory = staticMemory;
     self->debugString = debugString;
     self->parent = 0;
+    self->debugInfoFiles = debugInfoFiles;
     swampCallstackAlloc(&self->callStack);
 }
-
-
 
 void swampContextReset(SwampMachineContext* self)
 {
@@ -194,6 +193,7 @@ void swampContextDestroyTemp(SwampMachineContext* self)
 void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineContext* context, const char* debugString)
 {
     uint8_t* stackMemory = tc_malloc(32*1024);
+
     swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
 
     if (!context->debugInfoFiles) {

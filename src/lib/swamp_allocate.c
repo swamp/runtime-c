@@ -117,6 +117,15 @@ SwampBlob* swampBlobAllocate(SwampDynamicMemory* self, const uint8_t* octets, si
     return blob;
 }
 
+SwampUnmanaged* swampUnmanagedAllocate(SwampDynamicMemory* self)
+{
+    SwampUnmanaged* newUnmanaged = (SwampUnmanaged*) swampDynamicMemoryAlloc(self, 1, sizeof(SwampUnmanaged), 8);
+    newUnmanaged->ptr = 0;
+
+    return newUnmanaged;
+}
+
+
 const SwampList* swampListAllocateNoCopy(SwampDynamicMemory* self, const void* itemMemory, size_t itemCount,
                                          size_t itemSize, size_t itemAlign)
 {

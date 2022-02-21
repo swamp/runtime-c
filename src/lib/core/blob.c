@@ -31,6 +31,8 @@ const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn
     } else if (fn->type == SwampFunctionTypeInternal) {
         const SwampFunc* internalFunc = (const SwampFunc*) fn;
         typeIndex = internalFunc->typeIndex;
+    } else {
+        CLOG_ERROR("Not supported");
     }
 
     const SwtiType* functionType = swtiChunkTypeFromIndex(typeInfo, typeIndex);

@@ -634,7 +634,7 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
             tc_memcpy_octets(lastKnownGoodValue, justValue, bSize);
             tc_memmove_octets(ownContext.bp, justValue, bSize);
         }
-        CLOG_INFO("foldlstop: accumulator is now for index %d, value:%d", i, *(const SwampInt32*)ownContext.bp);
+        CLOG_INFO("foldlstop: accumulator is now for index %zu, value:%d", i, *(const SwampInt32*)ownContext.bp);
         sourceItemPointer += aSize;
     }
 

@@ -10,7 +10,7 @@ void swampDebugInfoLinesOutput(const SwampDebugInfoLines* lines)
     CLOG_INFO("debug lines count %d %zu %zu", lines->count, sizeof(SwampDebugInfoLinesEntry), offsetof(SwampDebugInfoLines, lines));
     for (size_t i=0; i<lines->count;++i) {
         const SwampDebugInfoLinesEntry* entry = &lines->lines[i];
-        CLOG_INFO(" %d entry %04X file:%d ", i, entry->opcodePosition, entry->sourceFileId);
+        CLOG_INFO(" %zu entry %04X file:%d ", i, entry->opcodePosition, entry->sourceFileId);
     }
 }
 

@@ -54,7 +54,7 @@ void swampDynamicMemoryDebugOutput(const SwampDynamicMemory* self)
 {
     for (size_t i=0; i<self->ledgerCount; ++i) {
         const SwampDynamicMemoryLedgerEntry* entry = &self->ledgerEntries[i];
-        CLOG_INFO("ledger %d: %d '%s' (%dx%d align: %d)", i, entry->itemCount*entry->itemSize, entry->debugName, entry->itemCount, entry->itemSize,  entry->itemAlign);
+        CLOG_INFO("ledger %zu: %zu '%s' (%zux%zu align: %zu)", i, entry->itemCount*entry->itemSize, entry->debugName, entry->itemCount, entry->itemSize,  entry->itemAlign);
     }
 }
 

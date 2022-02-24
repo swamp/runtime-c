@@ -9,9 +9,9 @@
 
 typedef struct SwampBindingInfo {
     const char* name;
-    void* fn;
+    const void* fn;
 } SwampBindingInfo;
 
-void* swampCoreFindFunction(const char* function_name);
+const void* swampCoreFindFunction(const char* function_name);
 
 #endif

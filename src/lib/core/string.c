@@ -3,11 +3,12 @@
 *  Licensed under the MIT License. See LICENSE in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/string.h>
 #include <swamp-runtime/context.h>
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/swamp_allocate.h>
 
-void swampCoreStringFromInt(const SwampString** result, SwampMachineContext* context, const SwampInt32* intValue)
+static void swampCoreStringFromInt(const SwampString** result, SwampMachineContext* context, const SwampInt32* intValue)
 {
     static char temp[64];
 
@@ -18,10 +19,10 @@ void swampCoreStringFromInt(const SwampString** result, SwampMachineContext* con
     *result = s;
 }
 
-void* swampCoreStringFindFunction(const char* fullyQualifiedName)
+const void* swampCoreStringFindFunction(const char* fullyQualifiedName)
 {
    SwampBindingInfo info[] = {
-       {"String.fromInt", swampCoreStringFromInt},
+       {"String.fromInt", SWAMP_C_FN(swampCoreStringFromInt)},
    };
 
    for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

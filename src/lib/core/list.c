@@ -5,13 +5,13 @@
 #include <clog/clog.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/list.h>
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-runtime/execute.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
-#include <swamp-runtime/core/maybe.h>
 #include <swamp-typeinfo/typeinfo.h>
 #include <swamp-typeinfo/chunk.h>
 
@@ -29,7 +29,7 @@ void swampCoreListHead(SwampMaybe* result, SwampMachineContext* context, const S
 #define SwampCollectionIndex(coll, index) (((const uint8_t*)coll->value) + (index) * coll->itemSize)
 
 // tail : List a -> Maybe (List a)
-void swampCoreListTail(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreListTail(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -41,7 +41,7 @@ void swampCoreListTail(SwampMaybe* result, SwampMachineContext* context, const S
 }
 
 // isEmpty : List a -> Bool
-void swampCoreListIsEmpty(SwampBool* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreListIsEmpty(SwampBool* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -49,13 +49,13 @@ void swampCoreListIsEmpty(SwampBool* result, SwampMachineContext* context, const
 }
 
 // length : List a -> Int
-void swampCoreListLength(SwampInt32 * result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreListLength(SwampInt32 * result, SwampMachineContext* context, const SwampList** _list)
 {
     *result = (*_list)->count;
 }
 
 // range : Int -> Int -> List Int
-void swampCoreListRange(SwampList** result, SwampMachineContext* context, const SwampInt32* start, const SwampInt32* end)
+static void swampCoreListRange(SwampList** result, SwampMachineContext* context, const SwampInt32* start, const SwampInt32* end)
 {
     size_t length = *end - *start + 1;
 
@@ -71,7 +71,7 @@ void swampCoreListRange(SwampList** result, SwampMachineContext* context, const 
 }
 
 // range0 : Int -> List Int
-void swampCoreListRange0(SwampList** result, SwampMachineContext* context, const SwampInt32* length)
+static void swampCoreListRange0(SwampList** result, SwampMachineContext* context, const SwampInt32* length)
 {
     SwampList* mutable = swampListAllocatePrepare(context->dynamicMemory, *length, sizeof(SwampInt32), sizeof(SwampInt32));
 
@@ -86,7 +86,7 @@ void swampCoreListRange0(SwampList** result, SwampMachineContext* context, const
 
 
 // (a -> b) -> List a -> List b
-void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+static void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const SwampFunction* fn = *_fn;
@@ -125,7 +125,7 @@ void swampCoreListMap(SwampList** result, SwampMachineContext* context, SwampFun
 
 
 // concatMap : (a -> List b) -> List a -> List b
-void swampCoreListConcatMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+static void swampCoreListConcatMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const SwampFunction* fn = *_fn;
@@ -204,7 +204,7 @@ void swampCoreListConcatMap(const SwampList** result, SwampMachineContext* conte
 
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
-void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _lista, const SwampList** _listb)
+static void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _lista, const SwampList** _listb)
 {
     const SwampList* listA = *_lista;
     const SwampList* listB = *_listb;
@@ -259,7 +259,7 @@ void swampCoreListMap2(SwampList** result, SwampMachineContext* context, SwampFu
 }
 
 // indexedMap: (Int -> a -> b) -> List a -> List b
-void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+static void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const uint8_t* sourceItemPointer = list->value;
@@ -305,7 +305,7 @@ void swampCoreListIndexedMap(SwampList** result, SwampMachineContext* context, S
 }
 
 // any : (a -> Bool) -> List a -> Bool
-void swampCoreListAny(SwampBool* result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+static void swampCoreListAny(SwampBool* result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const SwampFunction* fn = *_fn;
@@ -352,7 +352,7 @@ void swampCoreListAny(SwampBool* result, SwampMachineContext* context, SwampFunc
 }
 
 // find : (a -> Bool) -> List a -> Maybe a
-void swampCoreListFind(SwampMaybe * result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
+static void swampCoreListFind(SwampMaybe * result, SwampMachineContext* context, SwampFunction** _fn, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const SwampFunction* fn = *_fn;
@@ -402,7 +402,7 @@ void swampCoreListFind(SwampMaybe * result, SwampMachineContext* context, SwampF
 }
 
 //  member : a -> List a -> Bool
-void swampCoreListMember(SwampBool* result, SwampMachineContext* context, const void* data, const SwampList** _list)
+static void swampCoreListMember(SwampBool* result, SwampMachineContext* context, const void* data, const SwampList** _list)
 {
     const SwampList* list = *_list;
     const uint8_t* sourceItemPointer = list->value;
@@ -421,38 +421,38 @@ void swampCoreListMember(SwampBool* result, SwampMachineContext* context, const 
 }
 
 // filterMap : (a -> Maybe b) -> List a -> List b
-void swampCoreListFilterMap(void)
+static void swampCoreListFilterMap(void)
 {
     CLOG_ERROR("Not implemented")
 }
 
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
-void swampCoreListFilterMap2(void)
+static void swampCoreListFilterMap2(void)
 {
 
 }
 
 // filter : (a -> Bool) -> List a -> List a
-void swampCoreListFilter(void)
+static void swampCoreListFilter(void)
 {
 
 }
 
 
 // filter2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreListFilter2(void)
+static void swampCoreListFilter2(void)
 {
 
 }
 
 //remove : (a -> Bool) -> List a -> List a
-void swampCoreListRemove(void)
+static void swampCoreListRemove(void)
 {
 
 }
 
 // remove2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreListRemove2(void)
+static void swampCoreListRemove2(void)
 {
 
 }
@@ -460,13 +460,13 @@ void swampCoreListRemove2(void)
 
 
 // concat : List (List a) -> List a
-void swampCoreListConcat(void)
+static void swampCoreListConcat(void)
 {
 
 }
 
 
-void align(size_t* pos, size_t align)
+static void align(size_t* pos, size_t align)
 {
     size_t rest = *pos % align;
     if (rest != 0) {
@@ -476,7 +476,7 @@ void align(size_t* pos, size_t align)
 
 
 // foldl : (a -> b -> b) -> b -> List a -> b
-void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunction*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
+static void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunction*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
 {
     const SwampList* list = **_list;
     const SwampFunction* fn = **_fn;
@@ -536,7 +536,7 @@ void swampCoreListFoldl(void* result, SwampMachineContext* context, SwampFunctio
 
 
 // reduce : (a -> a -> a) -> List a -> a
-void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFunction*** _fn, const SwampList*** _list)
+static void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFunction*** _fn, const SwampList*** _list)
 {
     const SwampList* list = **_list;
     const SwampFunction* fn = **_fn;
@@ -590,7 +590,7 @@ void swampCoreListReduce(void* result, SwampMachineContext* context, SwampFuncti
 
 
 // foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
-void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFunc*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
+static void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFunc*** _fn, const SwampUnknownType* initialValue, const SwampList*** _list)
 {
     const SwampList* list = **_list;
     const SwampFunc* fn = **_fn;
@@ -625,7 +625,7 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
         tc_memcpy_octets(tempBuf + bOffset, ownContext.bp, bSize);
         swampContextReset(&ownContext);
         tc_memcpy_octets(ownContext.bp +bSize, tempBuf, aSize + bSize);
-        CLOG_INFO("foldlstop:  for index %d, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
+        CLOG_INFO("foldlstop:  for index %zu, list item:%d", i, *(const SwampInt32*)sourceItemPointer);
         swampRun(&fnResult, &ownContext, fn, parameters, 1);
         if (swampMaybeIsNothing(ownContext.bp)) {
             break;
@@ -644,7 +644,7 @@ void swampCoreListFoldlStop(void* result, SwampMachineContext* context, SwampFun
 }
 
 // unzip : List (a, b) -> (List a, List b)
-void swampCoreListUnzip(void)
+static void swampCoreListUnzip(void)
 {
 
 }
@@ -652,26 +652,26 @@ void swampCoreListUnzip(void)
 
 
 
-void* swampCoreListFindFunction(const char* fullyQualifiedName)
+const void* swampCoreListFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"List.head", swampCoreListHead},
-        {"List.tail", swampCoreListTail},
-        {"List.isEmpty", swampCoreListIsEmpty},
-        {"List.length", swampCoreListLength},
-        {"List.map", swampCoreListMap},
-        {"List.map2", swampCoreListMap2},
-        {"List.indexedMap", swampCoreListIndexedMap},
-        {"List.filterMap", swampCoreListFilterMap},
-        {"List.foldl", swampCoreListFoldl},
-        {"List.foldlstop", swampCoreListFoldlStop},
-        {"List.reduce", swampCoreListReduce},
-        {"List.any", swampCoreListAny},
-        {"List.find", swampCoreListFind},
-        {"List.member", swampCoreListMember},
-        {"List.range", swampCoreListRange},
-        {"List.range0", swampCoreListRange0},
-        {"List.concatMap", swampCoreListConcatMap},
+        {"List.head", SWAMP_C_FN(swampCoreListHead)},
+        {"List.tail", SWAMP_C_FN(swampCoreListTail)},
+        {"List.isEmpty", SWAMP_C_FN(swampCoreListIsEmpty)},
+        {"List.length", SWAMP_C_FN(swampCoreListLength)},
+        {"List.map", SWAMP_C_FN(swampCoreListMap)},
+        {"List.map2", SWAMP_C_FN(swampCoreListMap2)},
+        {"List.indexedMap", SWAMP_C_FN(swampCoreListIndexedMap)},
+        {"List.filterMap", SWAMP_C_FN(swampCoreListFilterMap)},
+        {"List.foldl", SWAMP_C_FN(swampCoreListFoldl)},
+        {"List.foldlstop", SWAMP_C_FN(swampCoreListFoldlStop)},
+        {"List.reduce", SWAMP_C_FN(swampCoreListReduce)},
+        {"List.any", SWAMP_C_FN(swampCoreListAny)},
+        {"List.find", SWAMP_C_FN(swampCoreListFind)},
+        {"List.member", SWAMP_C_FN(swampCoreListMember)},
+        {"List.range", SWAMP_C_FN(swampCoreListRange)},
+        {"List.range0", SWAMP_C_FN(swampCoreListRange0)},
+        {"List.concatMap", SWAMP_C_FN(swampCoreListConcatMap)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

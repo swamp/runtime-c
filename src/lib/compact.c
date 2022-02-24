@@ -5,6 +5,7 @@
 #include <clog/clog.h>
 #include <swamp-runtime/blittable.h>
 #include <swamp-runtime/compact.h>
+#include <swamp-runtime/clone.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/types.h>
 #include <swamp-typeinfo/typeinfo.h>
@@ -43,7 +44,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwtiCustomType* custom = (const SwtiCustomType*) type;
             const uint8_t enumIndex = *(const uint8_t*) v;
             if (enumIndex >= custom->variantCount) {
-                CLOG_ERROR("illegal variant index %d", enumIndex);
+                CLOG_ERROR("illegal variant index %d", enumIndex)
             }
             const SwtiCustomTypeVariant* variant = &custom->variantTypes[enumIndex];
             for (size_t i = 0; i < variant->paramCount; ++i) {
@@ -119,7 +120,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
         case SwtiTypeAny:
         case SwtiTypeAnyMatchingTypes:
         case SwtiTypeResourceName:
-            CLOG_ERROR("not supported in this version");
+            CLOG_ERROR("not supported in this version")
             break;
         case SwtiTypeUnmanaged: {
             SwampUnmanaged** _unmanaged = (SwampUnmanaged**) v;
@@ -127,10 +128,10 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
 
             if (doClone) {
                 //CLOG_VERBOSE("attempting to clone unmanaged  (%p)", unmanaged);
-                CLOG_VERBOSE("attempting to clone unmanaged '%s' (%p)", unmanaged->debugName, unmanaged);
+                CLOG_VERBOSE("attempting to clone unmanaged '%s' (%p)", unmanaged->debugName, (const void*) unmanaged)
                 int result = unmanaged->clone(_unmanaged, targetMemory, targetUnmanagedMemory);
                 if (*_unmanaged == 0) {
-                    CLOG_ERROR("what happened");
+                    CLOG_ERROR("what happened")
                 }
                 if (result < 0) {
                     return result;
@@ -141,7 +142,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
 #endif
                 swampUnmanagedMemoryMove(targetUnmanagedMemory, sourceUnmanagedMemory, unmanaged);
                 if (*_unmanaged == 0) {
-                    CLOG_ERROR("what happened");
+                    CLOG_ERROR("what happened")
                 }
                 return 0; // unmanaged->compact(_unmanaged, targetMemory, unmanagedMemory);
             }
@@ -167,7 +168,7 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
         } break;
 
         default: {
-            CLOG_ERROR("unknown type %d", type->type);
+            CLOG_ERROR("unknown type %d", type->type)
         }
     }
 
@@ -178,12 +179,12 @@ int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemor
 {
     #if 1
     if (!swampIsBlittableOrEcs(stateType)) {
-        CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted %s", stateType->name);
+        CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted %s", stateType->name)
         return -3;
     }
     #endif
     if (targetMemory->p != targetMemory->memory) {
-        CLOG_ERROR("target memory must be reset");
+        CLOG_ERROR("target memory must be reset")
         return -2;
     }
 
@@ -206,7 +207,7 @@ int swampCompact(const void* state, const SwtiType* stateType, SwampDynamicMemor
 int swampClone(const void* state, const SwtiType* stateType, SwampDynamicMemory* targetMemory, SwampUnmanagedMemory* targetUnmanagedMemory, SwampUnmanagedMemory* sourceUnmanagedMemory, void** clonedState)
 {
     if (!swampIsBlittableOrEcs(stateType)) {
-        CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted");
+        CLOG_ERROR("in this version, only blittable states and Ecs.World can be compacted")
     }
 
     if (targetMemory->p != targetMemory->memory) {

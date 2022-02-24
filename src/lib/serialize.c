@@ -68,7 +68,7 @@ static int copyDynamicMemory(const void* v, const SwtiType* type, SwampDynamicMe
 }
 */
 
-int swampSerialize(const void* v, const SwtiType* type, uint8_t* stackMemory, size_t maxStackMemorySize, SwampDynamicMemory* dynamic)
+static int swampSerialize(const void* v, const SwtiType* type, uint8_t* stackMemory, size_t maxStackMemorySize, SwampDynamicMemory* dynamic)
 {
     /*
    uint8_t* p = *target;

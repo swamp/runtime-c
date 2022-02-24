@@ -11,6 +11,6 @@
 
 struct SwampMachineContext;
 
-void* swampCoreBlobFindFunction(const char* fullyQualifiedName);
+const void* swampCoreBlobFindFunction(const char* fullyQualifiedName);
 
 #endif

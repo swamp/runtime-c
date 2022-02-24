@@ -15,7 +15,7 @@
 #include <swamp-runtime/fixup.h>
 #include <swamp-runtime/swamp_unpack.h>
 
-int readAndVerifyRaffHeader(SwampOctetStream* s)
+static int readAndVerifyRaffHeader(SwampOctetStream* s)
 {
     const uint8_t* p = &s->octets[s->position];
 
@@ -29,7 +29,7 @@ int readAndVerifyRaffHeader(SwampOctetStream* s)
     return 0;
 }
 
-int readAndVerifyRaffChunkHeader(SwampOctetStream* s, RaffTag icon, RaffTag name)
+static int readAndVerifyRaffChunkHeader(SwampOctetStream* s, RaffTag icon, RaffTag name)
 {
     const uint8_t* p = &s->octets[s->position];
 
@@ -57,7 +57,7 @@ int readAndVerifyRaffChunkHeader(SwampOctetStream* s, RaffTag icon, RaffTag name
     return chunkSize;
 }
 
-int readRaffMarker(SwampOctetStream* s, RaffTag tag, int verboseLevel)
+static int readRaffMarker(SwampOctetStream* s, RaffTag tag, int verboseLevel)
 {
     int count = raffReadMarker(&s->octets[s->position], s->octetCount - s->position, tag);
     if (count < 0) {
@@ -75,7 +75,7 @@ int readRaffMarker(SwampOctetStream* s, RaffTag tag, int verboseLevel)
     return count;
 }
 
-int verifyMarker(SwampOctetStream* s, RaffTag expectedMarker, int verboseFlag)
+static int verifyMarker(SwampOctetStream* s, RaffTag expectedMarker, int verboseFlag)
 {
     RaffTag marker;
 
@@ -88,7 +88,7 @@ int verifyMarker(SwampOctetStream* s, RaffTag expectedMarker, int verboseFlag)
     return 0;
 }
 
-int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
 {
     RaffTag expectedPacketName = {'s', 't', 'i', '0'};
     RaffTag expectedPacketIcon = {0xF0, 0x9F, 0x93, 0x9C};
@@ -113,7 +113,7 @@ int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
     return 0;
 }
 
-int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+static int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
 {
     int errorCode;
 
@@ -143,7 +143,7 @@ int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verbose
     return 0;
 }
 
-int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
+static int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
 {
     int errorCode;
 

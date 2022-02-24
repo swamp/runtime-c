@@ -3,25 +3,26 @@
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/int.h>
 
 #include <tiny-libc/tiny_libc.h>
 #include <swamp-runtime/context.h>
 
-void swampCoreIntRound(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* fixed)
+static void swampCoreIntRound(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* fixed)
 {
     *result = *fixed / SWAMP_FIXED_FACTOR;
 }
 
-void swampCoreIntToFixed(SwampFixed32* result, SwampMachineContext* context, const SwampInt32 * intValue)
+static void swampCoreIntToFixed(SwampFixed32* result, SwampMachineContext* context, const SwampInt32 * intValue)
 {
     *result = *intValue * SWAMP_FIXED_FACTOR;
 }
 
-void* swampCoreIntFindFunction(const char* fullyQualifiedName)
+const void* swampCoreIntFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Int.round", swampCoreIntRound},
-        {"Int.toFixed", swampCoreIntToFixed},
+        {"Int.round", SWAMP_C_FN(swampCoreIntRound)},
+        {"Int.toFixed", SWAMP_C_FN(swampCoreIntToFixed)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

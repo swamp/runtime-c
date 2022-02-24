@@ -10,6 +10,6 @@
 
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const struct SwampString** value);
 void swampCoreDebugToString(const SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value);
-void* swampCoreDebugFindFunction(const char* fullyQualifiedName);
+const void* swampCoreDebugFindFunction(const char* fullyQualifiedName);
 
 #endif

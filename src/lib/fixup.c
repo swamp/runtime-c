@@ -11,7 +11,7 @@
 #include <swamp-runtime/debug.h>
 #include <swamp-runtime/debug_variables.h>
 
-void logMemory(const uint8_t* octets, size_t count) {
+static void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;
     for (size_t i=0; i<count; ++i) {
         uint8_t data = *p;
@@ -58,7 +58,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 SwampFunctionExternal* func = (SwampFunctionExternal *)p;
                 FIXUP_DYNAMIC_STRING(func->fullyQualifiedName);
                 //CLOG_INFO("looking up external function '%s'", func->fullyQualifiedName);
-                void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
+                const void* resolvedFunctionPointer = bindFn(func->fullyQualifiedName);
                 if (resolvedFunctionPointer == 0) {
                     CLOG_SOFT_ERROR("you must provide pointer for function '%s'", func->fullyQualifiedName);
                     detectedError = 1;
@@ -67,22 +67,22 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 }
                 switch (func->parameterCount) {
                     case 0:
-                        func->function0 = resolvedFunctionPointer;
+                        func->function0 = (SwampExternalFunction0) resolvedFunctionPointer;
                         break;
                     case 1:
-                        func->function1 = resolvedFunctionPointer;
+                        func->function1 = (SwampExternalFunction1) resolvedFunctionPointer;
                         break;
                     case 2:
-                        func->function2 = resolvedFunctionPointer;
+                        func->function2 = (SwampExternalFunction2) resolvedFunctionPointer;
                         break;
                     case 3:
-                        func->function3 = resolvedFunctionPointer;
+                        func->function3 = (SwampExternalFunction3) resolvedFunctionPointer;
                         break;
                     case 4:
-                        func->function4 = resolvedFunctionPointer;
+                        func->function4 = (SwampExternalFunction4) resolvedFunctionPointer;
                         break;
                     case 5:
-                        func->function5 = resolvedFunctionPointer;
+                        func->function5 = (SwampExternalFunction5) resolvedFunctionPointer;
                         break;
                     default:
                         CLOG_ERROR("paramcount above 5 or below 0 is not supported (%zu)", func->parameterCount)

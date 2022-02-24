@@ -11,10 +11,11 @@
 #include <swamp-runtime/core/list.h>
 #include <swamp-runtime/core/math.h>
 #include <swamp-runtime/core/maybe.h>
+#include <swamp-runtime/core/bind.h>
 
-void* swampCoreFindFunction(const char* fullyQualifiedName)
+const void* swampCoreFindFunction(const char* fullyQualifiedName)
 {
-    void * foundFn = swampCoreMathFindFunction(fullyQualifiedName);
+    const void* foundFn = swampCoreMathFindFunction(fullyQualifiedName);
     if (foundFn) {
         return foundFn;
     }

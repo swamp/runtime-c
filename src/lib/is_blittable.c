@@ -6,6 +6,7 @@
 #include <swamp-runtime/context.h>
 #include <swamp-typeinfo/typeinfo.h>
 #include <tiny-libc/tiny_libc.h>
+#include <swamp-runtime/blittable.h>
 
 int swampIsBlittableOrEcs(const SwtiType* maybeBlittableType)
 {

@@ -30,7 +30,7 @@ typedef struct SwampUnpack {
 
 } SwampUnpack;
 
-typedef void* (*SwampResolveExternalFunction)(const char* fullyQualifiedName);
+typedef const void* (*SwampResolveExternalFunction)(const char* fullyQualifiedName);
 
 void swampUnpackInit(SwampUnpack* self, int verboseFlag);
 void swampUnpackFree(SwampUnpack* self);

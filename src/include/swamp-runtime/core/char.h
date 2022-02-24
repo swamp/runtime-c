@@ -7,6 +7,6 @@
 
 #include <swamp-runtime/swamp.h>
 
-void* swampCoreCharFindFunction(const char* fullyQualifiedName);
+const void* swampCoreCharFindFunction(const char* fullyQualifiedName);
 
 #endif

@@ -51,6 +51,7 @@ typedef int (*SwampUnmanagedCompact)(struct SwampUnmanaged **original, struct Sw
 typedef int (*SwampUnmanagedClone)(struct SwampUnmanaged **original, struct SwampDynamicMemory* memory, struct SwampUnmanagedMemory* unmanagedMemory);
 typedef int (*SwampUnmanagedDestroy)(void* self);
 
+#define SWAMP_C_FN(fn) ((const void*)fn)
 
 #define SWAMP_UNMANAGED_PTR(type, unmanaged) (type) ((unmanaged)->ptr)
 
@@ -145,7 +146,7 @@ typedef struct SwampList##type { \
 SWAMP_INLINE const void* swampListGetItem(const SwampList* list, size_t index)
 {
     if (index >= list->count) {
-        CLOG_ERROR("index in list doesnt exist");
+        CLOG_ERROR("index in list doesnt exist")
         return 0;
     }
 

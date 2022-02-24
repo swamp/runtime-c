@@ -107,7 +107,7 @@ static void init_sin_table(int sine[])
     }
 }
 
-int trueModulo(int a, int b)
+static int trueModulo(int a, int b)
 {
     int r = a % b;
     return r < 0 ? r + b : r;
@@ -140,23 +140,23 @@ static SwampFixed32 degreeToFixedAngle(SwampInt32 degreeAngle)
     return (degreeAngle * MAX_FIXED_RADIAN) / MAX_DEGREE;
 }
 
-void swampCoreMathSin(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* angle)
+static void swampCoreMathSin(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* angle)
 {
     *result = sinHelper(*angle);
 }
 
-void swampCoreMathCos(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* angle)
+static void swampCoreMathCos(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* angle)
 {
     const int quarterTurn = (628 / 4);
     *result = sinHelper(*angle + quarterTurn);
 }
 
-void swampCoreMathRnd(SwampInt32* result, SwampMachineContext* context, const SwampInt32* basis, const SwampInt32* modulus)
+static void swampCoreMathRnd(SwampInt32* result, SwampMachineContext* context, const SwampInt32* basis, const SwampInt32* modulus)
 {
     *result = (int) pseudoRandom(*basis + *modulus * 5303);
 }
 
-void swampCoreMathATan(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* y, const SwampFixed32* x)
+static void swampCoreMathATan(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* y, const SwampFixed32* x)
 {
     SwampInt32 yInt = fixedAngleToDegree(*y);
     SwampInt32 xInt = fixedAngleToDegree(*x);
@@ -166,12 +166,12 @@ void swampCoreMathATan(SwampInt32* result, SwampMachineContext* context, const S
     *result = degreeToFixedAngle(fast_degrees);
 }
 
-void swampCoreMathMid(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a, const SwampFixed32* b)
+static void swampCoreMathMid(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a, const SwampFixed32* b)
 {
     *result = (*b + *a) / 2;
 }
 
-void swampCoreMathAbs(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a)
+static void swampCoreMathAbs(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a)
 {
     if (*a >= 0) {
         *result = *a;
@@ -181,7 +181,7 @@ void swampCoreMathAbs(SwampInt32* result, SwampMachineContext* context, const Sw
     *result = -*a;
 }
 
-void swampCoreMathSign(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a)
+static void swampCoreMathSign(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* a)
 {
     if (*a == 0) {
         *result = 0;
@@ -200,23 +200,23 @@ static int clamp(int v, int min, int max)
     return (v < min ? min : (v > max ? max : v));
 }
 
-void swampCoreMathClamp(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* min, const SwampFixed32* max, const SwampFixed32* v)
+static void swampCoreMathClamp(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* min, const SwampFixed32* max, const SwampFixed32* v)
 {
     *result = clamp(*v, *min, *max);
 }
 
-void swampCoreMathLerp(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* t, const SwampInt32* start, const SwampInt32* end)
+static void swampCoreMathLerp(SwampInt32* result, SwampMachineContext* context, const SwampFixed32* t, const SwampInt32* start, const SwampInt32* end)
 {
     *result = (*start * SWAMP_FIXED_FACTOR + *t * (*end - *start)) / SWAMP_FIXED_FACTOR;
 }
 
-void swampCoreMathMetronome(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* cycleCount, const SwampInt32* enableCount, const SwampInt32* offset)
+static void swampCoreMathMetronome(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* cycleCount, const SwampInt32* enableCount, const SwampInt32* offset)
 {
     int cycleFrameNumber = (*offset + *t) % *cycleCount;
     *result = cycleFrameNumber < *enableCount;
 }
 
-void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* value, const SwampInt32* randomMaxDelta)
+static void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* value, const SwampInt32* randomMaxDelta)
 {
     int span = (*randomMaxDelta * 2) + 1;
     int delta = ((int) pseudoRandom(*t) % span) - *randomMaxDelta;
@@ -258,7 +258,7 @@ void swampCoreMathRemainderBy(SwampInt32* result, SwampMachineContext* context, 
 }
 
 // Euclidean modulus. Always returns positive results. Sometimes referred to as 'Floored'.
-void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value)
+static void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const SwampInt32* divider, const SwampInt32* value)
 {
     if (*divider == 0) {
         SWAMP_LOG_SOFT_ERROR("Error modBy() can not handle 0");
@@ -271,23 +271,23 @@ void swampCoreMathMod(SwampInt32* result, SwampMachineContext* context, const Sw
     *result = remainder;
 }
 
-void* swampCoreMathFindFunction(const char* fullyQualifiedName)
+const void* swampCoreMathFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Math.remainderBy", swampCoreMathRemainderBy},
-        {"Math.abs", swampCoreMathAbs},
-        {"Math.atan", swampCoreMathATan},
-        {"Math.atan2", swampCoreMathATan},
-        {"Math.clamp", swampCoreMathClamp},
-        {"Math.cos", swampCoreMathCos},
-        {"Math.sin", swampCoreMathSin},
-        {"Math.sign", swampCoreMathSign},
-        {"Math.drunk", swampCoreMathRandomDelta},
-        {"Math.lerp", swampCoreMathLerp},
-        {"Math.metronome", swampCoreMathMetronome},
-        {"Math.mid", swampCoreMathMid},
-        {"Math.mod", swampCoreMathMod},
-        {"Math.rnd", swampCoreMathRnd},
+        {"Math.remainderBy", SWAMP_C_FN(swampCoreMathRemainderBy)},
+        {"Math.abs", SWAMP_C_FN(swampCoreMathAbs)},
+        {"Math.atan", SWAMP_C_FN(swampCoreMathATan)},
+        {"Math.atan2", SWAMP_C_FN(swampCoreMathATan)},
+        {"Math.clamp", SWAMP_C_FN(swampCoreMathClamp)},
+        {"Math.cos", SWAMP_C_FN(swampCoreMathCos)},
+        {"Math.sin", SWAMP_C_FN(swampCoreMathSin)},
+        {"Math.sign", SWAMP_C_FN(swampCoreMathSign)},
+        {"Math.drunk", SWAMP_C_FN(swampCoreMathRandomDelta)},
+        {"Math.lerp", SWAMP_C_FN(swampCoreMathLerp)},
+        {"Math.metronome", SWAMP_C_FN(swampCoreMathMetronome)},
+        {"Math.mid", SWAMP_C_FN(swampCoreMathMid)},
+        {"Math.mod", SWAMP_C_FN(swampCoreMathMod)},
+        {"Math.rnd", SWAMP_C_FN(swampCoreMathRnd)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

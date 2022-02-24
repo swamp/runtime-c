@@ -7,29 +7,33 @@
 #include <swamp-runtime/panic.h>
 #include <swamp-runtime/core/bind.h>
 #include <swamp-runtime/core/maybe.h>
+#include <swamp-runtime/core/array.h>
+#include <swamp-runtime/core/blob.h>
+#include <swamp-runtime/core/int.h>
+#include <swamp-runtime/core/char.h>
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
 
 // fromList : List a -> Array a
-void swampCoreArrayFromList(SwampArray** result, SwampMachineContext* context, const SwampList** listValue)
+static void swampCoreArrayFromList(SwampArray** result, SwampMachineContext* context, const SwampList** listValue)
 {
     *result = (SwampArray*)(*listValue);
 }
 
 // toList : Array a -> List a
-void swampCoreArrayToList(SwampList** result, SwampMachineContext* context, const SwampArray** arrayValue)
+static void swampCoreArrayToList(SwampList** result, SwampMachineContext* context, const SwampArray** arrayValue)
 {
     *result = (SwampList*)(*arrayValue);
 }
 
 // length : Array a -> Int
-void swampCoreArrayLength(SwampInt32* result, SwampMachineContext* context, const SwampArray** array)
+static void swampCoreArrayLength(SwampInt32* result, SwampMachineContext* context, const SwampArray** array)
 {
     *result = (*array)->count;
 }
 
 // repeat : Int -> a -> Array a
-void swampCoreArrayRepeat(SwampMaybe * result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
+static void swampCoreArrayRepeat(SwampMaybe * result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -44,7 +48,7 @@ void swampCoreArrayRepeat(SwampMaybe * result, SwampMachineContext* context, con
 }
 
 // get : Int -> Array a -> Maybe a
-void swampCoreArrayGet(SwampMaybe * result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
+static void swampCoreArrayGet(SwampMaybe * result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -59,7 +63,7 @@ void swampCoreArrayGet(SwampMaybe * result, SwampMachineContext* context, const 
 }
 
 // grab : Int -> Array a -> a
-void swampCoreArrayGrab(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
+static void swampCoreArrayGrab(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -79,7 +83,7 @@ void swampCoreArrayGrab(void* result, SwampMachineContext* context, const SwampI
 }
 
 // set : Int -> a -> Array a -> Array a
-void swampCoreArraySet(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
+static void swampCoreArraySet(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -92,7 +96,7 @@ void swampCoreArraySet(void* result, SwampMachineContext* context, const SwampIn
 }
 
 // slice : Int -> Int -> Array a -> Array a
-void swampCoreArraySlice(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
+static void swampCoreArraySlice(void* result, SwampMachineContext* context, const SwampInt32* index, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -104,17 +108,17 @@ void swampCoreArraySlice(void* result, SwampMachineContext* context, const Swamp
     const void* ptr = ((const uint8_t*)array->value) + array->itemSize * *index;
 }
 
-void* swampCoreArrayFindFunction(const char* fullyQualifiedName)
+const void* swampCoreArrayFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Array.fromList", swampCoreArrayFromList},
-        {"Array.toList", swampCoreArrayToList},
-        {"Array.length", swampCoreArrayLength},
-        {"Array.get", swampCoreArrayGet},
-        {"Array.grab", swampCoreArrayGrab},
-        {"Array.set", swampCoreArraySet},
-        {"Array.slice", swampCoreArraySlice},
-        {"Array.repeat", swampCoreArrayRepeat},
+        {"Array.fromList", SWAMP_C_FN(swampCoreArrayFromList)},
+        {"Array.toList", SWAMP_C_FN(swampCoreArrayToList)},
+        {"Array.length", SWAMP_C_FN(swampCoreArrayLength)},
+        {"Array.get", SWAMP_C_FN(swampCoreArrayGet)},
+        {"Array.grab", SWAMP_C_FN(swampCoreArrayGrab)},
+        {"Array.set", SWAMP_C_FN(swampCoreArraySet)},
+        {"Array.slice", SWAMP_C_FN(swampCoreArraySlice)},
+        {"Array.repeat", SWAMP_C_FN(swampCoreArrayRepeat)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
@@ -125,3 +129,4 @@ void* swampCoreArrayFindFunction(const char* fullyQualifiedName)
     // SWAMP_LOG_INFO("didn't find: %s", function_name);
     return 0;
 }
+

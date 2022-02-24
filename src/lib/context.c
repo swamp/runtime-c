@@ -7,14 +7,14 @@
 #include <swamp-runtime/types.h>
 #include <tiny-libc/tiny_libc.h>
 
-void swampCallstackAlloc(SwampCallStack * self)
+static void swampCallstackAlloc(SwampCallStack * self)
 {
     self->maxCount = 1024;
     self->entries = tc_malloc_type_count(SwampCallStackEntry, self->maxCount);
     self->count = 0;
 }
 
-void swampCallstackDestroy(SwampCallStack* self)
+static void swampCallstackDestroy(SwampCallStack* self)
 {
     self->maxCount = 0;
     self->count = 0;
@@ -59,7 +59,7 @@ SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const c
     return 0;
 }
 
-int swampUnmanagedMemoryAdd(SwampUnmanagedMemory* self, const SwampUnmanaged* unmanaged)
+static int swampUnmanagedMemoryAdd(SwampUnmanagedMemory* self, const SwampUnmanaged* unmanaged)
 {
     if (self->count == self->capacity) {
         CLOG_ERROR("container add: out of space")
@@ -96,7 +96,7 @@ int swampUnmanagedMemoryOwns(const SwampUnmanagedMemory* self, const SwampUnmana
     return 0;
 }
 
-void swampUnmanagedMemoryForget(SwampUnmanagedMemory* self, const struct SwampUnmanaged* unmanaged)
+static void swampUnmanagedMemoryForget(SwampUnmanagedMemory* self, const struct SwampUnmanaged* unmanaged)
 {
     for (size_t i=0; i<self->capacity; ++i) {
         SwampUnmanagedMemoryEntry* entry = &self->unmanaged[i];
@@ -137,7 +137,7 @@ void swampUnmanagedMemoryReset(SwampUnmanagedMemory* self)
         tc_free((void*)entry->unmanaged->debugName);
         tc_free((void*)entry->unmanaged);
         if (result < 0) {
-            CLOG_ERROR("unmanaged destroy result was bad");
+            CLOG_ERROR("unmanaged destroy result was bad")
         }
 
         entry->unmanaged = 0;

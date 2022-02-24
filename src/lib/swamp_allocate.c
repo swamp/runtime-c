@@ -176,7 +176,7 @@ const SwampList* swampAllocateListAppendNoCopy(SwampDynamicMemory* self, const S
     return newList;
 }
 
-const uint8_t* swampAllocateOctets(SwampDynamicMemory* self, const uint8_t* octets, size_t octetCount)
+static const uint8_t* swampAllocateOctets(SwampDynamicMemory* self, const uint8_t* octets, size_t octetCount)
 {
     uint8_t* target = (uint8_t*) swampDynamicMemoryAlloc(self, 1, octetCount, 1);
     tc_memcpy_octets(target, octets, octetCount);

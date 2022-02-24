@@ -6,6 +6,7 @@
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/core/array.h>
 #include <swamp-runtime/core/bind.h>
+#include <swamp-runtime/core/blob.h>
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-runtime/core/types.h>
 #include <swamp-runtime/execute.h>
@@ -22,7 +23,7 @@ typedef struct BlobRect {
 } BlobRect;
 
 
-const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn)
+static const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn)
 {
     size_t typeIndex;
     if (fn->type == SwampFunctionTypeCurry) {
@@ -46,7 +47,7 @@ const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn
 }
 
 
-const SwtiType * getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
+static const SwtiType * getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
 {
     const SwtiType* maybeReturnType = getReturnType(typeInfo, fn);
     if (maybeReturnType->type != SwtiTypeCustom) {
@@ -71,7 +72,7 @@ const SwtiType * getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFuncti
     return justType->fields[0].fieldType;
 }
 
-void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -85,7 +86,7 @@ void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const S
 #define SwampCollectionIndex(coll, index) (((const uint8_t*) coll->value) + (index) *coll->itemSize)
 
 // tail : List a -> Maybe (List a)
-void swampCoreBlobTail(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreBlobTail(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -97,7 +98,7 @@ void swampCoreBlobTail(SwampMaybe* result, SwampMachineContext* context, const S
 }
 
 // isEmpty : List a -> Bool
-void swampCoreBlobIsEmpty(SwampBool* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreBlobIsEmpty(SwampBool* result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -105,13 +106,13 @@ void swampCoreBlobIsEmpty(SwampBool* result, SwampMachineContext* context, const
 }
 
 // length : List a -> Int
-void swampCoreBlobLength(SwampInt32* result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreBlobLength(SwampInt32* result, SwampMachineContext* context, const SwampList** _list)
 {
     *result = (*_list)->count;
 }
 
 // __externalfn fromArray : Array Int -> Blob
-void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, const SwampArray** _array)
+static void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, const SwampArray** _array)
 {
     const SwampArray* array = *_array;
 
@@ -129,7 +130,7 @@ void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* context, co
 }
 
 // __externalfn fromList : List Int -> Blob
-void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, const SwampList** _list)
+static void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, const SwampList** _list)
 {
     const SwampList* list = *_list;
 
@@ -149,7 +150,7 @@ void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* context, con
 }
 
 // __externalfn mapToBlob : (Int -> Int) -> Blob -> Blob
-void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
+static void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
@@ -191,12 +192,12 @@ void swampCoreBlobMapToBlob(SwampBlob** result, SwampMachineContext* context, Sw
 }
 
 // map2 : (a -> b -> c) -> List a -> List b -> List c
-void swampCoreBlobMap2(void)
+static void swampCoreBlobMap2(void)
 {
 }
 
 // __externalfn indexedMapToBlob : (Int -> Int -> Int) -> Blob -> Blob
-void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
+static void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
                              const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -245,7 +246,7 @@ void swampCoreBlobIndexedMapToBlob(SwampBlob** result, SwampMachineContext* cont
 }
 
 
-void swampCoreBlobIndexedMapToBlobMutable(const SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
+static void swampCoreBlobIndexedMapToBlobMutable(const SwampBlob** result, SwampMachineContext* context, SwampFunction** _fn,
                                    const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -292,9 +293,8 @@ void swampCoreBlobIndexedMapToBlobMutable(const SwampBlob** result, SwampMachine
 }
 
 
-
 // __externalfn map2d : ({ x : Int, y : Int } -> Int -> a) -> { width : Int, height : Int } -> Blob -> List a
-void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+static void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
                         const SwampCoreSize2i* blobSize, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -357,7 +357,7 @@ void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context, SwampF
 }
 
 // any : (Int -> Bool) -> Blob -> Bool
-void swampCoreBlobAny(SwampBool* result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
+static void swampCoreBlobAny(SwampBool* result, SwampMachineContext* context, SwampFunction** _fn, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
@@ -398,12 +398,12 @@ void swampCoreBlobAny(SwampBool* result, SwampMachineContext* context, SwampFunc
 }
 
 // find : (a -> Bool) -> Blob -> Maybe a
-void swampCoreBlobFind(void)
+static void swampCoreBlobFind(void)
 {
 }
 
 //  member : Int -> Blob -> Bool
-void swampCoreBlobMember(SwampBool* result, SwampMachineContext* context, SwampInt32* runeToLookFor,
+static void swampCoreBlobMember(SwampBool* result, SwampMachineContext* context, SwampInt32* runeToLookFor,
                          const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -413,13 +413,13 @@ void swampCoreBlobMember(SwampBool* result, SwampMachineContext* context, SwampI
 }
 
 // filterMap : (a -> Maybe b) -> Blob -> List b
-void swampCoreBlobFilterMap(void)
+static void swampCoreBlobFilterMap(void)
 {
 }
 
 // __externalfn slice2d : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int } -> Blob
 // -> Blob
-void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, const SwampCorePosition2i* slicePos,
+static void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, const SwampCorePosition2i* slicePos,
                           const SwampCoreSize2i* blobSize, SwampCoreSize2i* sliceSize, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -466,7 +466,7 @@ void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* context, cons
 }
 
 // __externalfn filterIndexedMap : (Int -> Int -> Maybe a) -> Blob -> List a
-void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+static void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
                                    const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -536,7 +536,7 @@ void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachineContext
 
 
 // __externalvarfn filterIndexedMap2d : ({ x : Int, y : Int } -> Int -> Maybe a) -> { width : Int, height : Int } -> Blob -> List a
-void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
+static void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachineContext* context, SwampFunction** _fn,
                                    const SwampCoreSize2i* blobSize, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -612,62 +612,62 @@ int swampBlobIsEmpty(const SwampBlob* blob) // TODO: Move this
 }
 
 //       filterMap2 : (a -> b -> Maybe c) -> List a -> List b -> List c
-void swampCoreBlobFilterMap2(void)
+static void swampCoreBlobFilterMap2(void)
 {
 }
 
 // filter : (a -> Bool) -> List a -> List a
-void swampCoreBlobFilter(void)
+static void swampCoreBlobFilter(void)
 {
 }
 
 // filter2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreBlobFilter2(void)
+static void swampCoreBlobFilter2(void)
 {
 }
 
 // remove : (a -> Bool) -> List a -> List a
-void swampCoreBlobRemove(void)
+static void swampCoreBlobRemove(void)
 {
 }
 
 // remove2 : (a -> b -> Bool) -> List a -> List b -> List b
-void swampCoreBlobRemove2(void)
+static void swampCoreBlobRemove2(void)
 {
 }
 
 // concatMap : (a -> List b) -> List a -> List b
-void swampCoreBlobConcatMap(void)
+static void swampCoreBlobConcatMap(void)
 {
 }
 
 // concat : List (List a) -> List a
-void swampCoreBlobConcat(void)
+static void swampCoreBlobConcat(void)
 {
 }
 
 // range : Int -> Int -> List Int
-void swampCoreBlobRange(void)
+static void swampCoreBlobRange(void)
 {
 }
 
 // foldl : (a -> b -> b) -> b -> List a -> b
-void swampCoreBlobFoldl(void)
+static void swampCoreBlobFoldl(void)
 {
 }
 
 // unzip : List (a, b) -> (List a, List b)
-void swampCoreBlobUnzip(void)
+static void swampCoreBlobUnzip(void)
 {
 }
 
 // foldlstop : (a -> b -> Maybe b) -> b -> List a -> b
-void swampCoreBlobFoldlStop(void)
+static void swampCoreBlobFoldlStop(void)
 {
 }
 
 // __externalfn get2d : { x : Int, y : Int } -> { width : Int, height : Int } -> Blob -> Maybe Int
-void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampCorePosition2i* position,
+static void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampCorePosition2i* position,
                         SwampCoreSize2i* size, const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -701,7 +701,7 @@ void swampCoreBlobGet2d(SwampMaybe* result, SwampMachineContext* context, SwampC
 
 // __externalfn fill2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> Int -> { width : Int, height : Int }
 // -> Blob -> Blob
-void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+static void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                          SwampCoreSize2i* blobDimensions, const SwampInt32* fillValue, const SwampCoreSize2i* fillSize,
                          const SwampBlob** _blob)
 {
@@ -749,7 +749,7 @@ void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* context,
 
 // __externalfn drawWindow2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int }
 // -> Blob -> Blob
-void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+static void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                          SwampCoreSize2i* size, const SwampCoreSize2i* fillSize,
                          const SwampBlob** _blob)
 {
@@ -812,7 +812,7 @@ void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineContext* co
 
 
 // __externalfn copy2d! : { x : Int, y : Int } -> { width : Int, height : Int } -> { width : Int, height : Int } -> Blob -> Blob -> Blob
-void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
+static void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* context, SwampCorePosition2i* position,
                                SwampCoreSize2i* targetBlobSize, const SwampCoreSize2i* sourceBlobSize, const SwampBlob** _sourceBlob,
                                const SwampBlob** _blob)
 {
@@ -862,7 +862,7 @@ void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* context,
 
 
 // __externalfn toString2d : { width : Int, height : Int } -> Blob -> String
-void swampCoreBlobToString2d(const SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
+static void swampCoreBlobToString2d(const SwampString** result, SwampMachineContext* context, SwampCoreSize2i* size,
                              const SwampBlob** _blob)
 {
     const SwampBlob* blob = *_blob;
@@ -894,7 +894,7 @@ void swampCoreBlobToString2d(const SwampString** result, SwampMachineContext* co
 }
 
 // __externalfn make : Int -> Blob
-void swampCoreBlobMake(SwampBlob** result, SwampMachineContext* context, const SwampInt32* octetCount)
+static void swampCoreBlobMake(SwampBlob** result, SwampMachineContext* context, const SwampInt32* octetCount)
 {
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory,
                                                      *octetCount);
@@ -906,24 +906,26 @@ void swampCoreBlobMake(SwampBlob** result, SwampMachineContext* context, const S
     *result = targetBlob;
 }
 
-
-void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
+const void* swampCoreBlobFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Blob.toString2d", swampCoreBlobToString2d}, {"Blob.mapToBlob", swampCoreBlobMapToBlob},
-        {"Blob.indexedMapToBlob", swampCoreBlobIndexedMapToBlob}, {"Blob.filterIndexedMap", swampCoreBlobFilterIndexedMap},
-        {"Blob.indexedMapToBlob!", swampCoreBlobIndexedMapToBlobMutable},
-        {"Blob.filterIndexedMap2d", swampCoreBlobFilterIndexedMap2d},
-        {"Blob.get2d", swampCoreBlobGet2d},           {"Blob.fromArray", swampCoreBlobFromArray},
-        {"Blob.fromList", swampCoreBlobFromList},
-        {"Blob.member", swampCoreBlobMember},
-        {"Blob.any", swampCoreBlobAny},
-        {"Blob.fill2d!", swampCoreBlobFill2d},
-        {"Blob.drawWindow2d!", swampCoreBlobDrawWindow2d},
-        {"Blob.copy2d!", swampCoreBlobCopy2d},
-        {"Blob.slice2d", swampCoreBlobSlice2d},
-        {"Blob.make", swampCoreBlobMake},
-        {"Blob.map2d", swampCoreBlobMap2d},
+        {"Blob.toString2d", SWAMP_C_FN(swampCoreBlobToString2d)},
+        {"Blob.mapToBlob", SWAMP_C_FN(swampCoreBlobMapToBlob)},
+        {"Blob.indexedMapToBlob", SWAMP_C_FN(swampCoreBlobIndexedMapToBlob)},
+        {"Blob.filterIndexedMap", SWAMP_C_FN(swampCoreBlobFilterIndexedMap)},
+        {"Blob.indexedMapToBlob!", SWAMP_C_FN(swampCoreBlobIndexedMapToBlobMutable)},
+        {"Blob.filterIndexedMap2d", SWAMP_C_FN(swampCoreBlobFilterIndexedMap2d)},
+        {"Blob.get2d", SWAMP_C_FN(swampCoreBlobGet2d)},
+        {"Blob.fromArray", SWAMP_C_FN(swampCoreBlobFromArray)},
+        {"Blob.fromList", SWAMP_C_FN(swampCoreBlobFromList)},
+        {"Blob.member", SWAMP_C_FN(swampCoreBlobMember)},
+        {"Blob.any", SWAMP_C_FN(swampCoreBlobAny)},
+        {"Blob.fill2d!", SWAMP_C_FN(swampCoreBlobFill2d)},
+        {"Blob.drawWindow2d!", SWAMP_C_FN(swampCoreBlobDrawWindow2d)},
+        {"Blob.copy2d!", SWAMP_C_FN(swampCoreBlobCopy2d)},
+        {"Blob.slice2d", SWAMP_C_FN(swampCoreBlobSlice2d)},
+        {"Blob.make", SWAMP_C_FN(swampCoreBlobMake)},
+        {"Blob.map2d", SWAMP_C_FN(swampCoreBlobMap2d)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

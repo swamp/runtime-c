@@ -86,14 +86,14 @@ void swampPanic(SwampMachineContext* context, const char* format, ...)
     CLOG_ERROR("raised from location:\n%s", outString);
 }
 
-void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
+static void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
     swampPanic(context, (*value)->characters);
 
     *result = 0;
 }
 
-void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
+static void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
 #if SWAMP_LOG_ENABLED
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
@@ -126,13 +126,13 @@ void swampCoreDebugToString(const SwampString** result, SwampMachineContext* con
     *result = swampStringAllocate(context->dynamicMemory, buf);
 }
 
-void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
+const void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Debug.log", (void*)swampCoreDebugLog},
-        {"Debug.logAny", (void*)swampCoreDebugLogAny},
-        {"Debug.toString", (void*)swampCoreDebugToString},
-        {"Debug.panic", (void*)swampCoreDebugPanic}
+        {"Debug.log", SWAMP_C_FN(swampCoreDebugLog)},
+        {"Debug.logAny", SWAMP_C_FN(swampCoreDebugLogAny)},
+        {"Debug.toString", SWAMP_C_FN(swampCoreDebugToString)},
+        {"Debug.panic", SWAMP_C_FN(swampCoreDebugPanic)}
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

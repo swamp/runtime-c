@@ -43,7 +43,7 @@ const SwampDebugInfoLinesEntry* swampDebugInfoFindLinesCallstack(const SwampCall
    return swampDebugInfoFindLinesDebugLines(func->debugInfoLines, opcodePosition);
 }
 
-const SwampDebugInfoLinesEntry* swampDebugInfoFindLinesInContext(const SwampMachineContext* machineContext)
+static const SwampDebugInfoLinesEntry* swampDebugInfoFindLinesInContext(const SwampMachineContext* machineContext)
 {
     return swampDebugInfoFindLinesCallstack(&machineContext->callStack);
 }
@@ -87,7 +87,7 @@ int swampDebugInfoFindLinesInContextToStringSingleLine(const SwampMachineContext
     return fldOutStreamWriteInt8(&stream, 0);
 }
 
-int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineContext* machineContext)
+static int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineContext* machineContext)
 {
     const SwampDebugInfoLinesEntry* entry = swampDebugInfoFindLinesInContext(machineContext);
     if (!entry) {
@@ -108,7 +108,7 @@ int swampDebugInfoWriteLineFromContext(FldOutStream* stream, const SwampMachineC
 
 int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineContext, const char** outString)
 {
-    static char temp[32 * 1024];
+    static uint8_t temp[32 * 1024];
 
     FldOutStream stream;
     fldOutStreamInit(&stream, temp, 32*1024);

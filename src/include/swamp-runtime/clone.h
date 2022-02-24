@@ -9,7 +9,7 @@ struct SwampDynamicMemory;
 struct SwampUnmanagedMemory;
 struct SwtiType;
 
-int swampClone(const void* state, const struct SwtiType* stateType, const struct SwampDynamicMemory* targetMemory,
+int swampClone(const void* state, const struct SwtiType* stateType, struct SwampDynamicMemory* targetMemory,
                struct SwampUnmanagedMemory* targetUnmanagedMemory, struct SwampUnmanagedMemory* sourceUnmanagedMemory, void** clonedState);
 
 #endif // SWAMP_RUNTIME_SRC_INCLUDE_SWAMP_RUNTIME_CLONE_H

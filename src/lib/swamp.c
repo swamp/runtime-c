@@ -140,14 +140,14 @@ SWAMP_INLINE SwampInt32 readSourceIntStackPointerPos(const uint8_t** pc, const u
 #define GET_OPERATOR_INT()                                                                                             \
     SwampInt32* targetRegister = readTargetStackIntPointerPos(&pc, bp);                                                \
     SwampInt32 a = readSourceIntStackPointerPos(&pc, bp);                                                              \
-    SwampInt32 b = readSourceIntStackPointerPos(&pc, bp);
+    SwampInt32 b = readSourceIntStackPointerPos(&pc, bp)
 
 #define GET_UNARY_OPERATOR_INT()                                                                                       \
     SwampInt32* targetRegister = readTargetStackIntPointerPos(&pc, bp);                                                \
-    SwampInt32 a = readSourceIntStackPointerPos(&pc, bp);
+    SwampInt32 a = readSourceIntStackPointerPos(&pc, bp)
 
-#define SET_OPERATOR_RESULT_INT(intValue) *targetRegister = intValue;
-#define SET_OPERATOR_RESULT_BOOL(boolValue) *((SwampBool*) targetRegister) = boolValue;
+#define SET_OPERATOR_RESULT_INT(intValue) *targetRegister = intValue
+#define SET_OPERATOR_RESULT_BOOL(boolValue) *((SwampBool*) targetRegister) = boolValue
 
 #define swampMemoryCopy(target, source, size) tc_memcpy_octets((void*) (target), source, size)
 
@@ -260,7 +260,6 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             case SwampOpcodeLoadBoolean: {
                 SwampBool* target = ((SwampBool*) readTargetStackPointerPos(&pc, bp));
                 *target = readBool(&pc);
-                ;
             } break;
 
             case SwampOpcodeLoadRune: {
@@ -776,7 +775,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             } break;
 
             default:
-                SWAMP_ERROR("Unknown opcode: %02x", *(pc - 1));
+                SWAMP_ERROR("Unknown opcode: %02x", *(pc - 1))
                 return 0;
         }
     }

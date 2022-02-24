@@ -9,7 +9,7 @@
 #include <swamp-runtime/core/maybe.h>
 
 // withDefault : a -> Maybe a -> a
-void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const SwampUnknownType* defaultValue, const SwampMaybe** maybe)
+static void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const SwampUnknownType* defaultValue, const SwampMaybe** maybe)
 {
     if (swampMaybeIsNothing(*maybe)) {
         tc_memcpy_octets(result, defaultValue->ptr, defaultValue->size);
@@ -18,10 +18,10 @@ void swampCoreMaybeWithDefault(void* result, SwampMachineContext* context, const
     }
 }
 
-void* swampCoreMaybeFindFunction(const char* fullyQualifiedName)
+const void* swampCoreMaybeFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
-        {"Maybe.withDefault", swampCoreMaybeWithDefault},
+        {"Maybe.withDefault", SWAMP_C_FN(swampCoreMaybeWithDefault)},
     };
 
     for (size_t i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {

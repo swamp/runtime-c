@@ -33,12 +33,12 @@ static const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunct
         const SwampFunc* internalFunc = (const SwampFunc*) fn;
         typeIndex = internalFunc->typeIndex;
     } else {
-        CLOG_ERROR("Not supported");
+        CLOG_ERROR("Not supported")
     }
 
     const SwtiType* functionType = swtiChunkTypeFromIndex(typeInfo, typeIndex);
     if (functionType->type != SwtiTypeFunction) {
-        CLOG_ERROR("wrong type");
+        CLOG_ERROR("wrong type")
     }
     const SwtiFunctionType* funcType = (const SwtiFunctionType*) functionType;
     const SwtiType* returnType = funcType->parameterTypes[funcType->parameterCount - 1];
@@ -47,25 +47,25 @@ static const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunct
 }
 
 
-static const SwtiType * getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
+static const SwtiType* getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
 {
     const SwtiType* maybeReturnType = getReturnType(typeInfo, fn);
     if (maybeReturnType->type != SwtiTypeCustom) {
-        CLOG_ERROR("must be a maybe type to return");
+        CLOG_ERROR("must be a maybe type to return")
     }
 
     const SwtiCustomType* customType = (const SwtiCustomType*) maybeReturnType;
 
 #if CONFIGURATION_DEBUG
     if (!tc_str_equal(customType->internal.name, "Maybe")) {
-        CLOG_ERROR("must be a maybe type");
+        CLOG_ERROR("must be a maybe type")
     }
 #endif
 
     const SwtiCustomTypeVariant* justType = &customType->variantTypes[1];
 #if CONFIGURATION_DEBUG
     if (!tc_str_equal(justType->name, "Just")) {
-        CLOG_ERROR("must be a maybe type");
+        CLOG_ERROR("must be a maybe type")
     }
 #endif
 
@@ -117,7 +117,7 @@ static void swampCoreBlobFromArray(SwampBlob** result, SwampMachineContext* cont
     const SwampArray* array = *_array;
 
     if (array->itemSize != sizeof(SwampInt32)) {
-        CLOG_ERROR("must be swamp integer array for blob");
+        CLOG_ERROR("must be swamp integer array for blob")
     }
 
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, array->count);
@@ -135,7 +135,7 @@ static void swampCoreBlobFromList(SwampBlob** result, SwampMachineContext* conte
     const SwampList* list = *_list;
 
     if (list->itemSize != sizeof(SwampInt32)) {
-        CLOG_ERROR("must be swamp integer array for blob");
+        CLOG_ERROR("must be swamp integer array for blob")
     }
 
     SwampBlob* targetBlob = swampBlobAllocatePrepare(context->dynamicMemory, list->count);
@@ -312,7 +312,7 @@ static void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context,
     swampContextCreateTemp(&ownContext, context, "Blob.map2d");
 
     if (blobSize->width <= 0) {
-        CLOG_ERROR("width must be greater than zero");
+        CLOG_ERROR("width must be greater than zero")
     }
 
     const SwtiType* returnType = getReturnType(context->typeInfo, fn);
@@ -434,12 +434,12 @@ static void swampCoreBlobSlice2d(SwampBlob** result, SwampMachineContext* contex
     }
 
     if ((blob->octetCount % blobSize->width) != 0) {
-        CLOG_ERROR("wrong slice2d, not an even blob 2d");
+        CLOG_ERROR("wrong slice2d, not an even blob 2d")
     }
 
     SwampInt32 calculatedHeight = blob->octetCount / blobSize->width;
     if (calculatedHeight != blobSize->height) {
-        CLOG_ERROR("wrong height");
+        CLOG_ERROR("wrong height")
     }
 
     SwampInt32 lowerSide = sliceRect.position.y + sliceRect.size.height;
@@ -513,7 +513,7 @@ static void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachine
 
         int runErr = swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         if (runErr < 0) {
-            CLOG_ERROR("couldn't run %d", runErr);
+            CLOG_ERROR("couldn't run %d", runErr)
             return;
         }
 
@@ -585,7 +585,7 @@ static void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachi
 
         int runErr = swampRun(&fnResult, &ownContext, internalFunction, parameters, 1);
         if (runErr < 0) {
-            CLOG_ERROR("couldn't run %d", runErr);
+            CLOG_ERROR("couldn't run %d", runErr)
             return;
         }
 
@@ -710,27 +710,27 @@ static void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* c
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= blobDimensions->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, blobDimensions->width);
+        SWAMP_ERROR("position X is out of bounds %d %d", position->x, blobDimensions->width)
         return;
     }
 
     if (position->y < 0 || position->y >= blobDimensions->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, blobDimensions->height);
+        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, blobDimensions->height)
         return;
     }
 
     int index = position->y * blobDimensions->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount)
         return;
     }
 
     if (position->x + fillSize->width > blobDimensions->width) {
-        CLOG_ERROR("fill blobDimensions is wrong");
+        CLOG_ERROR("fill blobDimensions is wrong")
     }
 
     if (position->y + fillSize->height > blobDimensions->height) {
-        CLOG_ERROR("fill blobDimensions is wrong");
+        CLOG_ERROR("fill blobDimensions is wrong")
     }
 
     const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -758,27 +758,27 @@ static void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineCont
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= size->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, size->width);
+        SWAMP_ERROR("position X is out of bounds %d %d", position->x, size->width)
         return;
     }
 
     if (position->y < 0 || position->y >= size->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, size->height);
+        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, size->height)
         return;
     }
 
     int index = position->y * size->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount)
         return;
     }
 
     if (position->x + fillSize->width > size->width) {
-        CLOG_ERROR("fill size is wrong");
+        CLOG_ERROR("fill size is wrong")
     }
 
     if (position->y + fillSize->height > size->height) {
-        CLOG_ERROR("fill size is wrong");
+        CLOG_ERROR("fill size is wrong")
     }
 
     const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -826,27 +826,27 @@ static void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* c
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= targetBlobSize->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, targetBlobSize->width);
+        SWAMP_ERROR("position X is out of bounds %d %d", position->x, targetBlobSize->width)
         return;
     }
 
     if (position->y < 0 || position->y >= targetBlobSize->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, targetBlobSize->height);
+        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, targetBlobSize->height)
         return;
     }
 
     int index = position->y * targetBlobSize->width + position->x;
     if (index < 0 || index >= targetBlob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, sourceBlob->octetCount);
+        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, sourceBlob->octetCount)
         return;
     }
 
     if (position->x + sourceBlobSize->width > targetBlobSize->width) {
-        CLOG_ERROR("fill size is wrong");
+        CLOG_ERROR("fill size is wrong")
     }
 
     if (position->y + sourceBlobSize->height > targetBlobSize->height) {
-        CLOG_ERROR("fill size is wrong");
+        CLOG_ERROR("fill size is wrong")
     }
 
     const SwampBlob* newBlob = targetBlob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);

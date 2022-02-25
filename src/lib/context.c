@@ -54,7 +54,7 @@ SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const c
         }
     }
 
-    CLOG_ERROR("could not allocate unmanaged struct");
+    CLOG_ERROR("could not allocate unmanaged struct")
 
     return 0;
 }
@@ -79,7 +79,7 @@ static int swampUnmanagedMemoryAdd(SwampUnmanagedMemory* self, const SwampUnmana
         }
     }
 
-    CLOG_ERROR("could not add unmanaged struct");
+    CLOG_ERROR("could not add unmanaged struct")
 
     return 0;
 }
@@ -106,7 +106,7 @@ static void swampUnmanagedMemoryForget(SwampUnmanagedMemory* self, const struct 
         }
     }
 
-    CLOG_ERROR("did not own that pointer");
+    CLOG_ERROR("did not own that pointer")
 }
 
 
@@ -128,7 +128,7 @@ void swampUnmanagedMemoryReset(SwampUnmanagedMemory* self)
             continue;
         }
         if (!entry->unmanaged->destroy) {
-            CLOG_ERROR("you must specify a destroy function for unmanaged");
+            CLOG_ERROR("you must specify a destroy function for unmanaged")
         }
 #if SWAMP_UNMANAGED_MEMORY_ENABLE_LOG
         CLOG_VERBOSE("unmanaged memory: destroying unreferenced '%s' (%p)", entry->unmanaged->debugName, entry->unmanaged)
@@ -197,7 +197,7 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     swampStackMemoryInit(&target->stackMemory, stackMemory, 32*1024);
 
     if (!context->debugInfoFiles) {
-        CLOG_ERROR("Must have debug info");
+        CLOG_ERROR("Must have debug info")
     }
 
     target->bp = target->stackMemory.memory;

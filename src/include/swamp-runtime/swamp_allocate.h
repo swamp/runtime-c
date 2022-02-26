@@ -13,7 +13,6 @@
 
 const struct SwampString* swampStringAllocate( SwampDynamicMemory* self, const char* s);
 const SwampString* swampStringAllocateWithSize(SwampDynamicMemory* self, const char* s, size_t stringLength);
-SwampUnmanaged* swampUnmanagedAllocate(SwampDynamicMemory* self);
 struct SwampFunc* swampFuncAllocate( SwampDynamicMemory* self, const uint8_t* opcodes, size_t opcodeCount,
                                     size_t parametersOctetSize, size_t returnOctetSize);
 struct SwampCurryFunc * swampCurryFuncAllocate( SwampDynamicMemory* self, uint16_t typeIdIndex, uint8_t firstAlign, const SwampFunc* sourceFunc, const void* parameters, size_t parametersOctetSize);

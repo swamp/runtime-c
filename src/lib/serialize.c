@@ -7,12 +7,8 @@
 #else
 #include <arpa/inet.h>
 #endif
-#include <stdlib.h>
 #include <string.h>
-#include <swamp-runtime/log.h>
-#include <swamp-runtime/serialize.h>
 #include <swamp-runtime/swamp.h>
-#include <swamp-runtime/types.h>
 #include <swamp-typeinfo/typeinfo.h>
 
 static void write_u16(uint8_t** p, uint16_t v)

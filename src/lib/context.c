@@ -167,6 +167,7 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
     self->debugString = debugString;
     self->parent = 0;
     self->debugInfoFiles = debugInfoFiles;
+    self->hackIsPredicting = 0;
     swampCallstackAlloc(&self->callStack);
 }
 
@@ -211,5 +212,6 @@ void swampContextCreateTemp(SwampMachineContext* target, const SwampMachineConte
     target->debugInfoFiles = context->debugInfoFiles;
     target->parent = context;
     target->debugString = debugString;
+    target->hackIsPredicting = context->hackIsPredicting;
     swampCallstackAlloc(&target->callStack);
 }

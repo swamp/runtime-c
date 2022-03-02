@@ -61,6 +61,7 @@ typedef struct SwampMachineContext {
     const struct SwampMachineContext* parent;
     const char* debugString;
     SwampUnmanagedMemory* unmanagedMemory;
+    int hackIsPredicting;
 } SwampMachineContext;
 
 void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* memory, const SwampStaticMemory* constantStaticMemory,

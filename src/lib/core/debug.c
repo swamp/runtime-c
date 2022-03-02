@@ -14,7 +14,8 @@
 #include <swamp-runtime/debug.h>
 #include <swamp-runtime/debug_variables.h>
 
-#define SWAMP_LOG_ENABLED (CONFIGURATION_DEBUG)
+#define SWAMP_LOG_ENABLED 1
+    //(CONFIGURATION_DEBUG)
 
 #if SWAMP_LOG_ENABLED
 #include <tinge/tinge.h>
@@ -24,6 +25,10 @@
 
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
+    if (context->hackIsPredicting) {
+        *result = 0;
+        return;
+    }
 #if SWAMP_LOG_ENABLED
     const char* filenameAndLocation;
 
@@ -60,7 +65,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
         variableString = "";
     }
 
-    fldOutStreamWritef(&stream, "%s", variableString);
+    fldOutStreamWritef(&stream, "\n%s", variableString);
 
 #endif
 
@@ -97,6 +102,10 @@ static void swampCoreDebugPanic(SwampString** result, SwampMachineContext* conte
 
 static void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
+    if (context->hackIsPredicting) {
+        *result = 0;
+        return;
+    }
 #if SWAMP_LOG_ENABLED
     const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
 

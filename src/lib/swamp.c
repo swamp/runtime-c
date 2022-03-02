@@ -277,6 +277,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
             case SwampOpcodeSetEnum: {
                 uint8_t* target = ((uint8_t*) readTargetStackPointerPos(&pc, bp));
                 *target = readU8(&pc);
+                size_t itemSize = readShortRange(&pc);
+                tc_mem_clear(target+1, itemSize-1);
             } break;
 
             case SwampOpcodeListConj: {

@@ -13,11 +13,14 @@
 #include <stdarg.h>
 #include <swamp-runtime/debug.h>
 #include <swamp-runtime/debug_variables.h>
-#include <tinge/tinge.h>
-#include <flood/out_stream.h>
-
 
 #define SWAMP_LOG_ENABLED (CONFIGURATION_DEBUG)
+
+#if SWAMP_LOG_ENABLED
+#include <tinge/tinge.h>
+#include <flood/out_stream.h>
+#endif
+
 
 void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
 {
@@ -50,7 +53,6 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
     tingeStateReset(&tinge);
     fldOutStreamWritef(&stream, "%s", (*value)->characters);
 
-    fldOutStreamWritef(&stream, "\n");
 #if 0
     const char* variableString;
     int variablesErr = swampDebugInfoFindVariablesInContextToString(context, &variableString);
@@ -62,7 +64,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 
 #endif
 
-    CLOG_OUTPUT("%s", buf);
+    CLOG_OUTPUT_STDERR("%s", buf);
     *result = *value;
 #else
     *result = 0;
@@ -107,7 +109,7 @@ static void swampCoreDebugLogAny(SwampString** result, SwampMachineContext* cont
 #define MaxBufSize (8*1024)
     char buf[MaxBufSize];
 
-    CLOG_OUTPUT("%s log: %s", filenameAndLocation, swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
+    CLOG_OUTPUT_STDERR("%s log: %s", filenameAndLocation, swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSize));
 #else
 #endif
     *result = 0;

@@ -26,10 +26,6 @@ void swampMemoryPositionAlign(SwampMemoryPosition* position, size_t align)
     }
 }
 
-
-
-
-
 int swampUnmanagedVerifyWithName(const SwampUnmanaged* unmanaged, const char* debugName)
 {
     if (!unmanaged->ptr) {

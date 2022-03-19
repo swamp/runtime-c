@@ -15,6 +15,6 @@ version = "*"
 name = 'piot/raff-c'
 version = "*"
 
-# swamp/typeinfo-c
-# piot/clog
-# piot/tiny-libc
+[[dependencies]]
+name = 'piot/tinge-c'
+version = "*"

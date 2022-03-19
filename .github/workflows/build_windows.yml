@@ -8,10 +8,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      #- name: install Go
-      #  uses: actions/setup-go@v2
-      #  with:
-      #    go-version: 1.18
+      - name: go version
+        run: go version
+
+      - name: install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2

@@ -34,7 +34,7 @@ void swampUnmanagedMemoryInit(SwampUnmanagedMemory* self)
 SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const char* debugName)
 {
     if (self->count == self->capacity) {
-        CLOG_ERROR("container add: out of space")
+        CLOG_ERROR("swampUnmanagedMemoryAllocate: out of space %zu", self->capacity)
         return 0;
     }
 
@@ -62,7 +62,7 @@ SwampUnmanaged* swampUnmanagedMemoryAllocate(SwampUnmanagedMemory* self, const c
 static int swampUnmanagedMemoryAdd(SwampUnmanagedMemory* self, const SwampUnmanaged* unmanaged)
 {
     if (self->count == self->capacity) {
-        CLOG_ERROR("container add: out of space")
+        CLOG_ERROR("swampUnmanagedMemoryAdd: out of space %zu", self->capacity)
         return 0;
     }
 
@@ -102,6 +102,7 @@ static void swampUnmanagedMemoryForget(SwampUnmanagedMemory* self, const struct 
         SwampUnmanagedMemoryEntry* entry = &self->unmanaged[i];
         if (entry->unmanaged == unmanaged) {
             entry->unmanaged = 0;
+            self->count--;
             return;
         }
     }

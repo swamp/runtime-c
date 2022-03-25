@@ -10,12 +10,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <swamp-runtime/log.h>
-struct SwampMachineContext;
+#include <stdbool.h>
+#include <assert.h>
 
-typedef uint8_t SwampBool;
+typedef bool SwampBool;
+static_assert(sizeof(bool) == 1, "bools needs to be exactly one octet");
 
-#define SwampTrue (1)
-#define SwampFalse (0)
+#define SwampTrue (true)
+#define SwampFalse (false)
 
 #define SWAMP_FIXED_FACTOR (1000)
 
@@ -86,9 +88,6 @@ typedef struct SwampResult {
 
 #define SWAMP_FIXED32_TO_FLOAT(v) (v / (float) SWAMP_FIXED_FACTOR)
 #define SWAMP_INT_FIXED_TO_FLOAT(v) SWAMP_FIXED32_TO_FLOAT((v));
-
-
-
 
 typedef uint8_t SwampMaybe;
 
@@ -192,6 +191,8 @@ typedef struct SwampCurryFunc {
     uint16_t typeIdIndex;
     uint8_t firstParameterAlign;
 } SwampCurryFunc;
+
+struct SwampMachineContext;
 
 typedef void (*SwampExternalFunction0)(void* result, struct SwampMachineContext* context);
 typedef void (*SwampExternalFunction1)(void* result, struct SwampMachineContext* context, const void* argument1);

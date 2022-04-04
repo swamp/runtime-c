@@ -145,8 +145,6 @@ static int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int 
 
 static int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
 {
-    int errorCode;
-
     RaffTag expectedPacketName = {'l', 'd', 'g', '0'};
     RaffTag expectedPacketIcon = {0xF0, 0x9F, 0x97, 0x92};
 

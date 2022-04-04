@@ -18,7 +18,7 @@ void swampLedgerInit(SwampLedger* self, const uint8_t* ledgerOctets, size_t ledg
 const SwampFunc* swampLedgerFindFunction(const SwampLedger* self, const char* name)
 {
     const uint8_t* const constantStaticMemory = self->constantStaticMemory;
-    const SwampConstantLedgerEntry* entries = ( const SwampConstantLedgerEntry*) self->ledgerOctets;
+    const SwampConstantLedgerEntry* entries = (const SwampConstantLedgerEntry*) self->ledgerOctets;
 
     const SwampConstantLedgerEntry* entry = entries;
     while (entry->constantType != 0) {

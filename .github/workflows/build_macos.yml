@@ -8,32 +8,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: install Go
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.11
+        with:
+          cmake-version: "3.22.x"
+
+      - name: Install Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-        with:
-          cmake-version: "3.22.x"
-
       - name: deps fetch dependencies
         run: go run github.com/piot/deps/src/deps@main fetch -m clone
         env:
-          GITHUB_TOKEN: ${{ secrets.DEPS_PAT }}
+          GITHUB_TOKEN: ${{secrets.DEPS_PAT}}
 
       - name: create cmake cache
-        run: cmake -DCMAKE_BUILD_TYPE=Release .
+        run: cmake -DCMAKE_BUILD_TYPE=Debug .
         working-directory: src/
 
-      - name: cmake build
+      - name: build
         run: cmake --build . --clean-first
         working-directory: src/
 
       - uses: actions/upload-artifact@v2
         with:
-          name: Swamp Runtime MacOS
+          name: runtime MacOS Library
           path: |
-            src/bin/runtime-example
-            src/lib/libswamp-runtime.a
+            src/libruntime.a

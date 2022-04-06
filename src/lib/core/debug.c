@@ -91,6 +91,8 @@ void swampPanic(SwampMachineContext* context, const char* format, ...)
     swampDebugInfoFindLinesInContextToString(context, &outString);
 
     CLOG_ERROR("raised from location:\n%s", outString);
+
+    CLOG_BREAK;
 }
 
 static void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)

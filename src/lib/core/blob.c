@@ -10,6 +10,7 @@
 #include <swamp-runtime/core/maybe.h>
 #include <swamp-runtime/core/types.h>
 #include <swamp-runtime/execute.h>
+#include <swamp-runtime/panic.h>
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/swamp_allocate.h>
 #include <swamp-runtime/types.h>
@@ -710,27 +711,27 @@ static void swampCoreBlobFill2d(const SwampBlob** result, SwampMachineContext* c
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= blobDimensions->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, blobDimensions->width)
+        swampPanic(context,"position X is out of bounds %d %d", position->x, blobDimensions->width);
         return;
     }
 
     if (position->y < 0 || position->y >= blobDimensions->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, blobDimensions->height)
+        swampPanic(context, "position Y is out of bounds %d %d", position->y, blobDimensions->height);
         return;
     }
 
     int index = position->y * blobDimensions->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount)
+        swampPanic(context, "position is out of octet count bounds %d %zu", index, blob->octetCount);
         return;
     }
 
     if (position->x + fillSize->width > blobDimensions->width) {
-        CLOG_ERROR("fill blobDimensions is wrong")
+        swampPanic(context,"fill blobDimensions is wrong");
     }
 
     if (position->y + fillSize->height > blobDimensions->height) {
-        CLOG_ERROR("fill blobDimensions is wrong")
+        swampPanic(context,"fill blobDimensions is wrong");
     }
 
     const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -758,27 +759,27 @@ static void swampCoreBlobDrawWindow2d(const SwampBlob** result, SwampMachineCont
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= size->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, size->width)
+        swampPanic(context, "position X is out of bounds %d of width %d", position->x, size->width);
         return;
     }
 
     if (position->y < 0 || position->y >= size->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, size->height)
+        swampPanic(context, "position Y is out of bounds %d of height %d", position->y, size->height);
         return;
     }
 
     int index = position->y * size->width + position->x;
     if (index < 0 || index >= blob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, blob->octetCount)
+        swampPanic(context, "position is out of octet count bounds %d %zu", index, blob->octetCount);
         return;
     }
 
     if (position->x + fillSize->width > size->width) {
-        CLOG_ERROR("fill size is wrong")
+        swampPanic(context, "fill size is wrong");
     }
 
     if (position->y + fillSize->height > size->height) {
-        CLOG_ERROR("fill size is wrong")
+        swampPanic(context, "fill size is wrong");
     }
 
     const SwampBlob* newBlob = blob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);
@@ -826,27 +827,27 @@ static void swampCoreBlobCopy2d(const SwampBlob** result, SwampMachineContext* c
     // These checks are not really needed. You can just check the index, but this
     // gives more valuable information about what went wrong.
     if (position->x < 0 || position->x >= targetBlobSize->width) {
-        SWAMP_ERROR("position X is out of bounds %d %d", position->x, targetBlobSize->width)
+        swampPanic(context, "position X is out of bounds %d %d", position->x, targetBlobSize->width);
         return;
     }
 
     if (position->y < 0 || position->y >= targetBlobSize->height) {
-        SWAMP_ERROR("position Y is out of bounds %d %d", position->y, targetBlobSize->height)
+        swampPanic(context, "position Y is out of bounds %d %d", position->y, targetBlobSize->height);
         return;
     }
 
     int index = position->y * targetBlobSize->width + position->x;
     if (index < 0 || index >= targetBlob->octetCount) {
-        SWAMP_ERROR("position is out of octet count bounds %d %zu", index, sourceBlob->octetCount)
+        swampPanic(context, "position is out of octet count bounds %d %zu", index, sourceBlob->octetCount);
         return;
     }
 
     if (position->x + sourceBlobSize->width > targetBlobSize->width) {
-        CLOG_ERROR("fill size is wrong")
+        swampPanic(context, "fill size is wrong. Source x: %d + width: %d vs target width %d", position->x, sourceBlobSize->width, targetBlobSize->width);
     }
 
     if (position->y + sourceBlobSize->height > targetBlobSize->height) {
-        CLOG_ERROR("fill size is wrong")
+        swampPanic(context, "fill size is wrong. Source y:%d height: %d vs target height %d", position->y, sourceBlobSize->height, targetBlobSize->height);
     }
 
     const SwampBlob* newBlob = targetBlob; // MUTABLE! // swampBlobAllocatePrepare(context->dynamicMemory, blob->octetCount);

@@ -88,6 +88,7 @@ add_library(swamp-runtime
 target_include_directories(swamp-runtime PUBLIC include)
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/dump-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}swamp/typeinfo-c/src/include)
+target_include_directories(swamp-runtime PUBLIC ${deps}swamp/typeinfo-serialize-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/clog/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/tiny-libc/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/flood-c/src/include)

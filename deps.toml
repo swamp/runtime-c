@@ -8,6 +8,10 @@ name = 'swamp/dump-c'
 version = "*"
 
 [[dependencies]]
+name = 'swamp/typeinfo-serialize-c'
+version = "*"
+
+[[dependencies]]
 name = 'piot/monotonic-time-c'
 version = "*"
 

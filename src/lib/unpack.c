@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 #include <swamp-runtime/log.h>
 #include <swamp-runtime/types.h>
-#include <swamp-typeinfo/deserialize.h>
+#include <swamp-typeinfo-serialize/deserialize.h>
 #include <swamp-typeinfo/typeinfo.h>
 
 #include <clog/clog.h>
@@ -98,7 +98,7 @@ static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verbo
         return upcomingOctetsInChunk;
     }
 
-    int errorCode = swtiDeserialize(&s->octets[s->position], upcomingOctetsInChunk, &self->typeInfoChunk);
+    int errorCode = swtisDeserialize(&s->octets[s->position], upcomingOctetsInChunk, &self->typeInfoChunk);
     if (errorCode < 0) {
         CLOG_SOFT_ERROR("swtiDeserialize: error %d", errorCode);
         return errorCode;

@@ -162,7 +162,7 @@ void swampContextInit(SwampMachineContext* self, SwampDynamicMemory* dynamicMemo
     swampStackMemoryInit(&self->stackMemory, stackMemory, 32*1024);
     self->bp = self->stackMemory.memory;
     self->tempResultSize = 2 * 1024;
-    self->tempResult = malloc(self->tempResultSize);
+    self->tempResult = tc_malloc(self->tempResultSize);
     self->typeInfo = typeInfo;
     self->constantStaticMemory = staticMemory;
     self->debugString = debugString;

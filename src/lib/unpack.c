@@ -134,7 +134,7 @@ static int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int 
     if (upcomingOctetsInChunk > self->constantStaticMemoryMaxSize) {
         SWAMP_ERROR("too much static memory")
     }
-    self->constantStaticMemoryOctets = malloc(self->constantStaticMemoryMaxSize);
+    self->constantStaticMemoryOctets = tc_malloc(self->constantStaticMemoryMaxSize);
     tc_memcpy_octets((void*)self->constantStaticMemoryOctets, &s->octets[s->position], upcomingOctetsInChunk);
     self->constantStaticMemorySize = upcomingOctetsInChunk;
 
@@ -158,7 +158,7 @@ static int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExtern
         SWAMP_LOG_INFO("done!\n");
     }
 
-    self->ledger.ledgerOctets = malloc(upcomingOctetsInChunk);
+    self->ledger.ledgerOctets = tc_malloc(upcomingOctetsInChunk);
     tc_memcpy_octets((void*)self->ledger.ledgerOctets, &s->octets[s->position], upcomingOctetsInChunk);
     self->ledger.ledgerSize = upcomingOctetsInChunk;
     self->ledger.constantStaticMemory = self->constantStaticMemoryOctets;
@@ -224,7 +224,7 @@ static void readWholeFile(const char* filename, SwampOctetStream* stream)
         return;
     }
 
-    source = malloc(sizeof(uint8_t) * (bufsize));
+    source = tc_malloc(sizeof(uint8_t) * (bufsize));
 
     if (fseek(fp, 0L, SEEK_SET) != 0) {
         SWAMP_LOG_INFO("swampUnpack seek error");
@@ -247,8 +247,8 @@ void swampUnpackInit(SwampUnpack* self, int verbose_flag)
 
 void swampUnpackFree(SwampUnpack* self)
 {
-    free((void*)self->constantStaticMemoryOctets);
-    free((void*)self->ledger.ledgerOctets);
+    tc_free((void*)self->constantStaticMemoryOctets);
+    tc_free((void*)self->ledger.ledgerOctets);
     swtiChunkDestroy(&self->typeInfoChunk);
 }
 
@@ -258,7 +258,7 @@ int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, SwampResol
     SwampOctetStream* s = &stream;
     readWholeFile(pack_filename, s);
     int result = swampUnpackSwampOctetStream(self, s, bindFn, verboseFlag);
-    free((void*) s->octets);
+    tc_free((void*) s->octets);
     return result;
 }
 

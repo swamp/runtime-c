@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See LICENSE in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 #include <clog/clog.h>
+#include <imprint/allocator.h>
 #include <swamp-runtime/dynamic_memory.h>
 #include <swamp-runtime/log.h>
 
@@ -23,11 +24,11 @@ void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOc
     self->ownAlloc = 0;
 }
 
-void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, size_t maxOctetSize)
+void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, struct ImprintAllocator* allocator, size_t maxOctetSize)
 {
-    swampDynamicMemoryInit(self, tc_malloc(maxOctetSize), maxOctetSize);
-    self->ownAlloc = 1;
+    swampDynamicMemoryInit(self, IMPRINT_ALLOC(allocator, maxOctetSize, "swamp dynamic memory"), maxOctetSize);
 }
+
 
 void swampDynamicMemoryReset(SwampDynamicMemory* self)
 {

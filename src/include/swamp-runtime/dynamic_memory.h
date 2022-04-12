@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct ImprintAllocator;
+
 typedef struct SwampDynamicMemoryLedgerEntry {
     const char* debugName;
     size_t itemSize;
@@ -26,7 +28,7 @@ typedef struct SwampDynamicMemory {
 } SwampDynamicMemory;
 
 void swampDynamicMemoryInit(SwampDynamicMemory* self, void* memory, size_t maxOctetSize);
-void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, size_t maxOctetSize);
+void swampDynamicMemoryInitOwnAlloc(SwampDynamicMemory* self, struct ImprintAllocator* allocator, size_t maxOctetSize);
 void swampDynamicMemoryDestroy(SwampDynamicMemory* self);
 void swampDynamicMemoryDebugOutput(const SwampDynamicMemory* self);
 void swampDynamicMemoryReset(SwampDynamicMemory* self);

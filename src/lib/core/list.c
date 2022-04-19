@@ -640,7 +640,7 @@ static void swampCoreListFoldlStop(void* result, SwampMachineContext* context, S
 
     tc_memcpy_octets(result, lastKnownGoodValue, bSize);
 
-    swampContextDestroy(&ownContext);
+    swampContextDestroyTemp(&ownContext);
 }
 
 // unzip : List (a, b) -> (List a, List b)

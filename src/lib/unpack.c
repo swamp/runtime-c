@@ -88,7 +88,7 @@ static int verifyMarker(SwampOctetStream* s, RaffTag expectedMarker, int verbose
     return 0;
 }
 
-static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
+static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verboseFlag, struct ImprintAllocator* allocator)
 {
     RaffTag expectedPacketName = {'s', 't', 'i', '0'};
     RaffTag expectedPacketIcon = {0xF0, 0x9F, 0x93, 0x9C};
@@ -98,7 +98,7 @@ static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verbo
         return upcomingOctetsInChunk;
     }
 
-    int errorCode = swtisDeserialize(&s->octets[s->position], upcomingOctetsInChunk, &self->typeInfoChunk);
+    int errorCode = swtisDeserialize(&s->octets[s->position], upcomingOctetsInChunk, &self->typeInfoChunk, allocator);
     if (errorCode < 0) {
         CLOG_SOFT_ERROR("swtiDeserialize: error %d", errorCode);
         return errorCode;
@@ -168,7 +168,7 @@ static int readLedger(SwampUnpack* self, SwampOctetStream* s, SwampResolveExtern
     return 0;
 }
 
-int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag)
+int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag, struct ImprintAllocator* allocator)
 {
     int errorCode = readAndVerifyRaffHeader(s);
     if (errorCode != 0) {
@@ -183,7 +183,7 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampRes
         return upcomingOctetsInChunk;
     }
 
-    if ((errorCode = readTypeInformation(self, s, verboseFlag)) < 0) {
+    if ((errorCode = readTypeInformation(self, s, verboseFlag, allocator)) < 0) {
         SWAMP_LOG_SOFT_ERROR("problem with type information chunk");
         return errorCode;
     }
@@ -252,12 +252,12 @@ void swampUnpackFree(SwampUnpack* self)
     swtiChunkDestroy(&self->typeInfoChunk);
 }
 
-int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, SwampResolveExternalFunction bindFn, int verboseFlag)
+int swampUnpackFilename(SwampUnpack* self, const char* pack_filename, SwampResolveExternalFunction bindFn, int verboseFlag, struct ImprintAllocator* allocator)
 {
     SwampOctetStream stream;
     SwampOctetStream* s = &stream;
     readWholeFile(pack_filename, s);
-    int result = swampUnpackSwampOctetStream(self, s, bindFn, verboseFlag);
+    int result = swampUnpackSwampOctetStream(self, s, bindFn, verboseFlag, allocator);
     tc_free((void*) s->octets);
     return result;
 }

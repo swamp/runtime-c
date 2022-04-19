@@ -10,6 +10,8 @@
 #include <swamp-runtime/ledger.h>
 
 struct SwampFunc;
+struct ImprintAllocator;
+
 
 typedef struct SwampOctetStream {
     const uint8_t* octets;
@@ -34,8 +36,8 @@ typedef const void* (*SwampResolveExternalFunction)(const char* fullyQualifiedNa
 
 void swampUnpackInit(SwampUnpack* self, int verboseFlag);
 void swampUnpackFree(SwampUnpack* self);
-int swampUnpackFilename(SwampUnpack* self, const char* packFilename, SwampResolveExternalFunction bindFn, int verboseFlag);
-int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag);
+int swampUnpackFilename(SwampUnpack* self, const char* packFilename, SwampResolveExternalFunction bindFn, int verboseFlag, struct  ImprintAllocator* allocator);
+int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampResolveExternalFunction bindFn, int verboseFlag, struct ImprintAllocator* allocator);
 const struct SwampFunc* swampUnpackEntryPoint(SwampUnpack* self);
 
 #endif

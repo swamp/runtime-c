@@ -74,7 +74,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
             }
         }
     } else {
-        int dumpResult = swampDumpToAscii(value, foundType, 0, 0, &stream);
+        int dumpResult = swampDumpToAscii(value, foundType, swampDumpFlagNoStringQuotesOnce, 0, &stream);
         if (dumpResult < 0) {
             CLOG_ERROR("could not dump result")
         }

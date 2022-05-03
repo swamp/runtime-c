@@ -8,7 +8,7 @@
 #include <swamp-runtime/swamp.h>
 #include <swamp-runtime/context.h>
 
-void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const struct SwampString** value);
+void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value);
 void swampCoreDebugToString(const SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value);
 const void* swampCoreDebugFindFunction(const char* fullyQualifiedName);
 

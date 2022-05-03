@@ -18,17 +18,22 @@
     //(CONFIGURATION_DEBUG)
 
 #if SWAMP_LOG_ENABLED
-#include <tinge/tinge.h>
 #include <flood/out_stream.h>
+#include <swamp-dump/dump_ascii_no_color.h>
+#include <swamp-dump/types.h>
+#include <tinge/tinge.h>
 #endif
 
 
-void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampString** value)
+void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
     if (context->hackIsPredicting) {
         *result = 0;
         return;
     }
+
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
+
 #if SWAMP_LOG_ENABLED
     const char* filenameAndLocation;
 
@@ -56,7 +61,26 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
     fldOutStreamWrites(&stream, "log: ");
 
     tingeStateReset(&tinge);
-    fldOutStreamWritef(&stream, "%s", (*value)->characters);
+
+    const SwtiType* unAliasType = swtiUnalias(foundType);
+    if (unAliasType->type == SwtiTypeTuple) {
+        const SwtiTupleType* tuple = (const SwtiTupleType*) unAliasType;
+        for (size_t i = 0; i < tuple->fieldCount; i++) {
+            const SwtiTupleTypeField* field = &tuple->fields[i];
+            int errorCode = swampDumpToAscii(value + field->memoryOffsetInfo.memoryOffset, field->fieldType, swampDumpFlagNoStringQuotesOnce,
+                                             0, &stream);
+            if (errorCode != 0) {
+                CLOG_ERROR("tuple inline", errorCode);
+            }
+        }
+    } else {
+        int dumpResult = swampDumpToAscii(value, foundType, 0, 0, &stream);
+        if (dumpResult < 0) {
+            CLOG_ERROR("could not dump result")
+        }
+    }
+
+    tingeStateReset(&tinge);
 
 #if 0
     const char* variableString;
@@ -70,7 +94,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
 #endif
 
     CLOG_OUTPUT_STDERR("%s", buf);
-    *result = *value;
+    *result = 0;
 #else
     *result = 0;
 #endif
@@ -95,9 +119,13 @@ void swampPanic(SwampMachineContext* context, const char* format, ...)
     CLOG_BREAK;
 }
 
-static void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampString** value)
+static void swampCoreDebugPanic(SwampString** result, SwampMachineContext* context, const SwampInt32* typeIndex, const void* value)
 {
-    swampPanic(context, (*value)->characters);
+    static char buf[1024];
+    const SwtiType* foundType = swtiChunkTypeFromIndex(context->typeInfo, *typeIndex);
+
+    const char* str = swampDumpToAsciiString(value, foundType, 0, buf, 1024);
+    swampPanic(context, str);
 
     *result = 0;
 }
@@ -134,7 +162,7 @@ void swampCoreDebugToString(const SwampString** result, SwampMachineContext* con
 #define MaxBufSizeToString (32*1024)
     static char buf[MaxBufSizeToString];
 
-    swampDumpToAsciiString(value, foundType, 0, buf, MaxBufSizeToString);
+    swampDumpToAsciiStringNoColor(value, foundType, 0, buf, MaxBufSizeToString);
 
     *result = swampStringAllocate(context->dynamicMemory, buf);
 }
@@ -143,7 +171,7 @@ const void* swampCoreDebugFindFunction(const char* fullyQualifiedName)
 {
     SwampBindingInfo info[] = {
         {"Debug.log", SWAMP_C_FN(swampCoreDebugLog)},
-        {"Debug.logAny", SWAMP_C_FN(swampCoreDebugLogAny)},
+        //{"Debug.logAny", SWAMP_C_FN(swampCoreDebugLogAny)},
         {"Debug.toString", SWAMP_C_FN(swampCoreDebugToString)},
         {"Debug.panic", SWAMP_C_FN(swampCoreDebugPanic)}
     };

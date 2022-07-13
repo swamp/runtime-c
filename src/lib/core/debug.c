@@ -67,7 +67,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
         const SwtiTupleType* tuple = (const SwtiTupleType*) unAliasType;
         for (size_t i = 0; i < tuple->fieldCount; i++) {
             const SwtiTupleTypeField* field = &tuple->fields[i];
-            int errorCode = swampDumpToAscii(value + field->memoryOffsetInfo.memoryOffset, field->fieldType, swampDumpFlagNoStringQuotesOnce,
+            int errorCode = swampDumpToAscii((const uint8_t *)value + field->memoryOffsetInfo.memoryOffset, field->fieldType, swampDumpFlagNoStringQuotesOnce,
                                              0, &stream);
             if (errorCode != 0) {
                 CLOG_ERROR("tuple inline", errorCode);

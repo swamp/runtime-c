@@ -178,8 +178,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
     }
 
     if (result->expectedOctetSize != f->returnOctetSize) {
-        SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize,
-                             f->returnOctetSize);
+        SWAMP_LOG_SOFT_ERROR("swampRun: expected result %zu, but function returns %zu (%s)", result->expectedOctetSize,
+                             f->returnOctetSize, f->debugName);
         return -2;
     }
 
@@ -229,8 +229,8 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                        // CLOG_VERBOSE("swampRun(%s) is complete", call_stack_entry->func->debugName);
                     }
                     if (result->expectedOctetSize != f->returnOctetSize) {
-                        SWAMP_LOG_SOFT_ERROR("expected result %zu, but function returns %zu", result->expectedOctetSize,
-                                             f->returnOctetSize);
+                        SWAMP_LOG_SOFT_ERROR("opcode return: expected result %zu, but function returns %zu (%s)", result->expectedOctetSize,
+                                             f->returnOctetSize, f->debugName);
                         return -3;
                     }
 

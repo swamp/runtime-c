@@ -104,7 +104,7 @@ static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verbo
         return errorCode;
     }
 
-    if (verboseFlag && 0) {
+    if (verboseFlag) {
         swtiChunkDebugOutput(&self->typeInfoChunk, 0, "readTypeInformation");
     }
 
@@ -207,26 +207,28 @@ int swampUnpackSwampOctetStream(SwampUnpack* self, SwampOctetStream* s, SwampRes
 
 static void readWholeFile(const char* filename, SwampOctetStream* stream)
 {
-    uint8_t* source = 0;
     FILE* fp = fopen(filename, "rb");
     if (fp == 0) {
         SWAMP_LOG_INFO("swampUnpack readWholeFile error:%s", filename);
         return;
     }
     if (fseek(fp, 0L, SEEK_END) != 0) {
+        fclose(fp);
         SWAMP_LOG_INFO("swampUnpack seek err:");
         return;
     }
 
     long bufsize = ftell(fp);
     if (bufsize == -1) {
+        fclose(fp);
         SWAMP_LOG_INFO("swampUnpack bufsize error");
         return;
     }
 
-    source = tc_malloc(sizeof(uint8_t) * (bufsize));
+    uint8_t* source = tc_malloc(sizeof(uint8_t) * (bufsize));
 
     if (fseek(fp, 0L, SEEK_SET) != 0) {
+        fclose(fp);
         SWAMP_LOG_INFO("swampUnpack seek error");
         return;
     }

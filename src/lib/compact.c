@@ -44,9 +44,9 @@ static int compactOrClone(void* v, const SwtiType* type, int doClone, SwampDynam
             const SwtiCustomType* custom = (const SwtiCustomType*) type;
             const uint8_t enumIndex = *(const uint8_t*) v;
             if (enumIndex >= custom->variantCount) {
-                CLOG_ERROR("illegal variant index %d", enumIndex)
+                CLOG_ERROR("compactOrClone: illegal variant index %d", enumIndex)
             }
-            const SwtiCustomTypeVariant* variant = &custom->variantTypes[enumIndex];
+            const SwtiCustomTypeVariant* variant = custom->variantTypes[enumIndex];
             for (size_t i = 0; i < variant->paramCount; ++i) {
                 const SwtiCustomTypeVariantField* field = &variant->fields[i];
                 int errorCode = compactOrClone(((uint8_t*) v + field->memoryOffsetInfo.memoryOffset), field->fieldType,

@@ -63,7 +63,7 @@ static const SwtiType* getReturnMaybeType(const SwtiChunk* typeInfo, const Swamp
     }
 #endif
 
-    const SwtiCustomTypeVariant* justType = &customType->variantTypes[1];
+    const SwtiCustomTypeVariant* justType = customType->variantTypes[1];
 #if CONFIGURATION_DEBUG
     if (!tc_str_equal(justType->name, "Just")) {
         CLOG_ERROR("must be a maybe type")

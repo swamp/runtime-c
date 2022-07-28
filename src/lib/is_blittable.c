@@ -50,8 +50,8 @@ int swampIsBlittableOrEcs(const SwtiType* maybeBlittableType)
         case SwtiTypeCustom: {
             const SwtiCustomType* custom = (const SwtiCustomType*) unaliasedType;
             for (size_t i = 0; i < custom->variantCount; ++i) {
-                for (size_t j = 0; j < custom->variantTypes[i].paramCount; ++j) {
-                    if (!swampIsBlittableOrEcs(custom->variantTypes[i].fields[j].fieldType)) {
+                for (size_t j = 0; j < custom->variantTypes[i]->paramCount; ++j) {
+                    if (!swampIsBlittableOrEcs(custom->variantTypes[i]->fields[j].fieldType)) {
                         return 0;
                     }
                 }

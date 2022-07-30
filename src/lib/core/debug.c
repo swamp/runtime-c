@@ -162,7 +162,7 @@ void swampCoreDebugToString(const SwampString** result, SwampMachineContext* con
 #define MaxBufSizeToString (32*1024)
     static char buf[MaxBufSizeToString];
 
-    swampDumpToAsciiStringNoColor(value, foundType, 0, buf, MaxBufSizeToString);
+    swampDumpToAsciiStringNoColor(value, foundType, swampDumpFlagNoStringQuotesOnce, buf, MaxBufSizeToString);
 
     *result = swampStringAllocate(context->dynamicMemory, buf);
 }

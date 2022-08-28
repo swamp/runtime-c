@@ -95,20 +95,12 @@ target_include_directories(swamp-runtime PUBLIC ${deps}piot/flood-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/raff-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/monotonic-time-c/src/include)
 target_include_directories(swamp-runtime PUBLIC ${deps}piot/tinge-c/src/include)
-
-# target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-c/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}swamp/ecs-wrap-c/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}swamp/yaml-load-c/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}piot/impact-swamp/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}piot/impact/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}piot/basal-c/src/include) # remove this later
-#target_include_directories(swamp-runtime PUBLIC ${deps}piot/tyran/src/include) # remove this later
+target_include_directories(swamp-runtime PUBLIC ${deps}piot/imprint/src/include)
 
 set_target_properties(swamp-runtime
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
-
 
 if (useSanitizers)
     target_link_libraries(swamp-runtime ${sanitizers})
@@ -125,4 +117,3 @@ else()
 endif()
 
 target_link_libraries(swamp-runtime m)
-

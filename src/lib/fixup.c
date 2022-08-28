@@ -5,8 +5,6 @@
 #include <clog/clog.h>
 #include <stddef.h>
 #include <swamp-runtime/fixup.h>
-#include <swamp-runtime/types.h>
-#include <swamp-runtime/swamp_unpack.h>
 #include <swamp-runtime/context.h>
 #include <swamp-runtime/debug.h>
 #include <swamp-runtime/debug_variables.h>
@@ -30,7 +28,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
     const SwampConstantLedgerEntry* entry = entries;
     int detectedError = 0;
     while (entry->constantType != 0) {
-        // CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
+        //CLOG_INFO("= ledger: constant type:%d position:%d", entry->constantType, entry->offset);
         const uint8_t* p = (dynamicMemoryOctets + entry->offset);
         switch (entry->constantType) {
             case LedgerTypeFunc: {
@@ -49,7 +47,7 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                     FIXUP_DYNAMIC_POINTER(variablesEntry->name, const char*);
                 }
                 //swampDebugInfoVariablesOutput(func->debugInfoVariables, func->debugName);
-                // CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
+                //CLOG_INFO("  func: '%s' opcode count %d first opcode: %02X", func->debugName, func->opcodeCount, *func->opcodes)
                 if (tc_str_equal(func->debugName, "main")) {
                     entryFunc = func;
                 }

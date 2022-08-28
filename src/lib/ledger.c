@@ -5,7 +5,6 @@
 #include <swamp-runtime/ledger.h>
 #include <swamp-runtime/types.h>
 #include <swamp-runtime/fixup.h>
-#include <clog/clog.h>
 #include <swamp-runtime/debug.h>
 
 void swampLedgerInit(SwampLedger* self, const uint8_t* ledgerOctets, size_t ledgerSize, const uint8_t* constantStaticMemory)

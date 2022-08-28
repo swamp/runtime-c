@@ -20,5 +20,13 @@ name = 'piot/raff-c'
 version = "*"
 
 [[dependencies]]
+name = 'piot/imprint'
+version = "*"
+
+[[dependencies]]
+name = 'piot/tinge-c'
+version = "*"
+
+[[dependencies]]
 name = 'piot/tinge-c'
 version = "*"

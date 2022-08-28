@@ -7,13 +7,11 @@
 #include <swamp-typeinfo-serialize/deserialize.h>
 #include <swamp-typeinfo/typeinfo.h>
 
-#include <clog/clog.h>
 #include <raff/raff.h>
 #include <raff/tag.h>
 
 #include <string.h> // strcmp
 #include <swamp-runtime/fixup.h>
-#include <swamp-runtime/swamp_unpack.h>
 
 static int readAndVerifyRaffHeader(SwampOctetStream* s)
 {

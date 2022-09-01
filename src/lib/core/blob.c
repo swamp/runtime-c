@@ -24,54 +24,9 @@ typedef struct BlobRect {
 } BlobRect;
 
 
-static const SwtiType* getReturnType(const SwtiChunk* typeInfo, const SwampFunction* fn)
-{
-    size_t typeIndex;
-    if (fn->type == SwampFunctionTypeCurry) {
-        const SwampCurryFunc* curry = (const SwampCurryFunc*) fn;
-        typeIndex = curry->typeIdIndex;
-    } else if (fn->type == SwampFunctionTypeInternal) {
-        const SwampFunc* internalFunc = (const SwampFunc*) fn;
-        typeIndex = internalFunc->typeIndex;
-    } else {
-        CLOG_ERROR("Not supported")
-    }
-
-    const SwtiType* functionType = swtiChunkTypeFromIndex(typeInfo, typeIndex);
-    if (functionType->type != SwtiTypeFunction) {
-        CLOG_ERROR("wrong type")
-    }
-    const SwtiFunctionType* funcType = (const SwtiFunctionType*) functionType;
-    const SwtiType* returnType = funcType->parameterTypes[funcType->parameterCount - 1];
-
-    return returnType;
-}
 
 
-static const SwtiType* getReturnMaybeType(const SwtiChunk* typeInfo, const SwampFunction* fn)
-{
-    const SwtiType* maybeReturnType = getReturnType(typeInfo, fn);
-    if (maybeReturnType->type != SwtiTypeCustom) {
-        CLOG_ERROR("must be a maybe type to return")
-    }
 
-    const SwtiCustomType* customType = (const SwtiCustomType*) maybeReturnType;
-
-#if CONFIGURATION_DEBUG
-    if (!tc_str_equal(customType->internal.name, "Maybe")) {
-        CLOG_ERROR("must be a maybe type")
-    }
-#endif
-
-    const SwtiCustomTypeVariant* justType = customType->variantTypes[1];
-#if CONFIGURATION_DEBUG
-    if (!tc_str_equal(justType->name, "Just")) {
-        CLOG_ERROR("must be a maybe type")
-    }
-#endif
-
-    return justType->fields[0].fieldType;
-}
 
 static void swampCoreBlobHead(SwampMaybe* result, SwampMachineContext* context, const SwampList** _list)
 {
@@ -316,7 +271,7 @@ static void swampCoreBlobMap2d(SwampList** result, SwampMachineContext* context,
         CLOG_ERROR("width must be greater than zero")
     }
 
-    const SwtiType* returnType = getReturnType(context->typeInfo, fn);
+    const SwtiType* returnType = swampCoreGetFunctionReturnType(context->typeInfo, fn);
 
     SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
     SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
@@ -473,8 +428,8 @@ static void swampCoreBlobFilterIndexedMap(const SwampList** result, SwampMachine
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
 
-    const SwtiType* returnType = getReturnMaybeType(context->typeInfo, fn);
-    const SwtiType* maybeReturnType = getReturnType(context->typeInfo, fn);
+    const SwtiType* returnType = swampCoreMaybeReturnType(context->typeInfo, fn);
+    const SwtiType* maybeReturnType = swampCoreGetFunctionReturnType(context->typeInfo, fn);
 
     SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
     SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);
@@ -543,8 +498,8 @@ static void swampCoreBlobFilterIndexedMap2d(const SwampList** result, SwampMachi
     const SwampBlob* blob = *_blob;
     const SwampFunction* fn = *_fn;
 
-    const SwtiType* returnType = getReturnMaybeType(context->typeInfo, fn);
-    const SwtiType* maybeReturnType = getReturnType(context->typeInfo, fn);
+    const SwtiType* returnType = swampCoreMaybeReturnType(context->typeInfo, fn);
+    const SwtiType* maybeReturnType = swampCoreGetFunctionReturnType(context->typeInfo, fn);
 
     SwtiMemorySize returnSize = swtiGetMemorySize(returnType);
     SwtiMemoryAlign returnAlign = swtiGetMemoryAlign(returnType);

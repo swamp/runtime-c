@@ -8,7 +8,18 @@
 #include <swamp-runtime/swamp.h>
 #include <tiny-libc/tiny_libc.h>
 
+struct SwtiType;
+struct SwtiChunk;
+struct SwampFunction;
+struct SwtiFunctionType;
+
 const void* swampCoreMaybeFindFunction(const char* fullyQualifiedName);
+const struct SwtiType* swampCoreMaybeReturnType(const struct SwtiChunk* typeInfo, const struct SwampFunction* fn);
+
+const struct SwtiFunctionType* swampCoreGetFunctionType(const struct SwtiChunk* typeInfo, const struct SwampFunction* fn);
+const struct SwtiType* swampCoreGetFunctionReturnType(const struct SwtiChunk* typeInfo, const struct SwampFunction* fn);
+const struct SwtiType* swampCoreMaybeType(const struct SwtiType* maybeReturnType);
+
 
 #define swampMaybeNothing(result) *result = 0
 #define swampMaybeJust(result, align, value, octetSize) *result = 1;  tc_memcpy_octets(result+align, value, octetSize)

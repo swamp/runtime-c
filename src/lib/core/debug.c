@@ -38,7 +38,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
     const char* filenameAndLocation;
 
 #define SWAMP_LOG_BUF_SIZE (64*1024)
-    static char buf[SWAMP_LOG_BUF_SIZE];
+    static uint8_t buf[SWAMP_LOG_BUF_SIZE];
 
     FldOutStream stream;
 
@@ -70,7 +70,7 @@ void swampCoreDebugLog(const SwampString** result, SwampMachineContext* context,
             int errorCode = swampDumpToAscii((const uint8_t *)value + field->memoryOffsetInfo.memoryOffset, field->fieldType, swampDumpFlagNoStringQuotesOnce,
                                              0, &stream);
             if (errorCode != 0) {
-                CLOG_ERROR("tuple inline", errorCode);
+                CLOG_ERROR("tuple inline %d", errorCode);
             }
         }
     } else {

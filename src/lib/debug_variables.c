@@ -82,11 +82,11 @@ int swampDebugInfoVariablesInCallStackEntryToString(const SwampCallStackEntry* c
 
 static int swampDebugInfoFindVariablesInCallStackToString(const SwampCallStack* callStack, const SwtiChunk* typeInformation, const char** outString) {
 #define TEMP_SIZE (128 * 1024)
-    static char temp[TEMP_SIZE];
+    static uint8_t temp[TEMP_SIZE];
 
     FldOutStream stream;
     fldOutStreamInit(&stream, temp, TEMP_SIZE);
-    *outString = temp;
+    *outString = (const char*) temp;
 
     fldOutStreamWritef(&stream, "==== variables ===\n");
     for (int i=callStack->count; i>=0; --i) {

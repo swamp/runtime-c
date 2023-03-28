@@ -9,7 +9,7 @@ void swampDebugInfoLinesOutput(const SwampDebugInfoLines* lines)
 {
     CLOG_INFO("debug lines count %d %zu %zu", lines->count, sizeof(SwampDebugInfoLinesEntry), offsetof(SwampDebugInfoLines, lines));
     for (size_t i=0; i<lines->count;++i) {
-        const SwampDebugInfoLinesEntry* entry = &lines->lines[i];
+        CLOG_EXECUTE(const SwampDebugInfoLinesEntry* entry = &lines->lines[i];)
         CLOG_INFO(" %zu entry %04X file:%d ", i, entry->opcodePosition, entry->sourceFileId);
     }
 }
@@ -63,11 +63,11 @@ int swampDebugInfoFilesFindFile(const SwampDebugInfoFiles* files, uint16_t fileI
 int swampDebugInfoFindLinesInContextToStringSingleLine(const SwampMachineContext* machineContext, const char** outString)
 {
 #define LINES_DEBUG_SIZE (32*1024)
-    static char temp[LINES_DEBUG_SIZE];
+    static uint8_t temp[LINES_DEBUG_SIZE];
 
     FldOutStream stream;
     fldOutStreamInit(&stream, temp, LINES_DEBUG_SIZE);
-    *outString = temp;
+    *outString = (const char*)temp;
 
     const SwampDebugInfoLinesEntry* entry = swampDebugInfoFindLinesInContext(machineContext);
     if (!entry) {
@@ -112,7 +112,7 @@ int swampDebugInfoFindLinesInContextToString(const SwampMachineContext* machineC
 
     FldOutStream stream;
     fldOutStreamInit(&stream, temp, 32*1024);
-    *outString = temp;
+    *outString = (const char*) temp;
 
     for (const SwampMachineContext* context = machineContext; context; context = context->parent) {
         swampDebugInfoWriteLineFromContext(&stream, context);

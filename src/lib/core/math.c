@@ -218,8 +218,8 @@ static void swampCoreMathMetronome(SwampBool* result, SwampMachineContext* conte
 
 static void swampCoreMathRandomDelta(SwampBool* result, SwampMachineContext* context, const SwampInt32* t, const SwampInt32* value, const SwampInt32* randomMaxDelta)
 {
-    int span = (*randomMaxDelta * 2) + 1;
-    int delta = ((int) pseudoRandom(*t) % span) - *randomMaxDelta;
+    // TODO: int span = (*randomMaxDelta * 2) + 1;
+    // TODO: int delta = ((int) pseudoRandom(*t) % span) - *randomMaxDelta;
     *result = 0; // TODO:  value + delta;
 }
 

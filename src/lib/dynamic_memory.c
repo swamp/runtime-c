@@ -54,7 +54,7 @@ void swampDynamicMemoryDestroy(SwampDynamicMemory* self)
 void swampDynamicMemoryDebugOutput(const SwampDynamicMemory* self)
 {
     for (size_t i=0; i<self->ledgerCount; ++i) {
-        const SwampDynamicMemoryLedgerEntry* entry = &self->ledgerEntries[i];
+        CLOG_EXECUTE(const SwampDynamicMemoryLedgerEntry* entry = &self->ledgerEntries[i];)
         CLOG_INFO("ledger %zu: %zu '%s' (%zux%zu align: %zu)", i, entry->itemCount*entry->itemSize, entry->debugName, entry->itemCount, entry->itemSize,  entry->itemAlign);
     }
 }
@@ -84,7 +84,7 @@ void* swampDynamicMemoryAlloc(SwampDynamicMemory* self, size_t itemCount, size_t
     }
     size_t usedSize = (uintptr_t )self->p - (uintptr_t )self->memory;
     if (usedSize + total > (long)self->maxAllocatedSize) {
-        SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %zu items of %zu at %ld of %zu", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
+        SWAMP_LOG_ERROR("overrrun dynamic memory. Requested %zu items of %zu at %I64d of %zu", itemCount, itemSize, self->p - self->memory, self->maxAllocatedSize);
         return 0;
     }
 

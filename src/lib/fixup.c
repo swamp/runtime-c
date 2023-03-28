@@ -12,7 +12,7 @@
 static void logMemory(const uint8_t* octets, size_t count) {
     const uint8_t* p = octets;
     for (size_t i=0; i<count; ++i) {
-        uint8_t data = *p;
+        CLOG_EXECUTE(uint8_t data = *p;)
         CLOG_INFO("%zu %02X", i, data);
         p++;
     }
@@ -103,10 +103,8 @@ const SwampFunc* swampFixupLedger(const uint8_t* const dynamicMemoryOctets, Swam
                 SwampResourceNameChunkEntry* resourceNameChunk = (SwampResourceNameChunkEntry*) p;
                 FIXUP_DYNAMIC_POINTER(resourceNameChunk->resourceNames, const char**);
                 for (size_t i=0; i<resourceNameChunk->resourceCount; ++i) {
-                    const char* str = resourceNameChunk->resourceNames[i];
                     FIXUP_DYNAMIC_STRING(resourceNameChunk->resourceNames[i]);
                 }
-                //CLOG_INFO("first resource name is '%s'", *resourceNameChunk->resourceNames);
             } break;
             case LedgerTypeResourceName: {
                 // Intentionally do nothing

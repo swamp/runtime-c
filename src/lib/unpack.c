@@ -113,8 +113,6 @@ static int readTypeInformation(SwampUnpack* self, SwampOctetStream* s, int verbo
 
 static int readConstantStaticMemory(SwampUnpack* self, SwampOctetStream* s, int verboseFlag)
 {
-    int errorCode;
-
     RaffTag expectedPacketName = {'d', 'm', 'e', '1'};
     RaffTag expectedPacketIcon = {0xF0, 0x9F, 0x92, 0xBB};
 

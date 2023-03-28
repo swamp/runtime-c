@@ -92,7 +92,7 @@ static void swampCoreArraySet(void* result, SwampMachineContext* context, const 
         return;
     }
 
-    const void* ptr = ((const uint8_t*)array->value) + array->itemSize * *index;
+    //const void* ptr = ((const uint8_t*)array->value) + array->itemSize * *index;
 }
 
 // slice : Int -> Int -> Array a -> Array a
@@ -105,7 +105,7 @@ static void swampCoreArraySlice(void* result, SwampMachineContext* context, cons
         return;
     }
 
-    const void* ptr = ((const uint8_t*)array->value) + array->itemSize * *index;
+    //const void* ptr = ((const uint8_t*)array->value) + array->itemSize * *index;
 }
 
 const void* swampCoreArrayFindFunction(const char* fullyQualifiedName)

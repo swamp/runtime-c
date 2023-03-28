@@ -320,7 +320,7 @@ int swampRun(SwampResult* result, SwampMachineContext* context, const SwampFunc*
                 const void* params[8];
                 for (uint8_t i = 0; i < count; i++) {
                     uint16_t offset = readU16(&pc);
-                    uint16_t size = readU16(&pc);
+                    readU16(&pc); // uint16_t size =
                     params[i] = basePointer + offset;
                 }
                 switch (count - 1) { // externalfunction->paramCOunt
